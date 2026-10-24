@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#101827">
+    <meta name="description" content="Registre receitas e despesas financeiras.">
+    <title>Novo Lançamento | Meu Financeiro</title>
+
+    <link rel="stylesheet" href="style1.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <a href="index.html" class="brand">
+                <span class="brand-icon">₿</span>
+                <span>Meu<span class="brand-accent">Financeiro</span></span>
+            </a>
+
+            <p class="menu-label">MENU PRINCIPAL</p>
+
+            <nav class="navigation">
+                <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
+                <a href="lancamentos.html" class="nav-link active">＋ <span>Novo lançamento</span></a>
+                <a href="relatorios.html" class="nav-link">▥ <span>Relatórios</span></a>
+                <a href="historico.html" class="nav-link">◷ <span>Histórico</span></a>
+                <a href="planejamento.html" class="nav-link">◎ <span>Planejamento</span></a>
+                <a href="configuracoes.html" class="nav-link">⚙ <span>Configurações</span></a>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <div class="tip-card">
+                    <span class="tip-icon">💡</span>
+                    <h3>Dica financeira</h3>
+                    <p>Categorizar seus gastos ajuda a enxergar onde é possível economizar com mais facilidade.</p>
+                </div>
+                <p class="sidebar-footer">SEU DINHEIRO, SUAS REGRAS.</p>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow">GESTÃO FINANCEIRA</p>
+                    <h1 id="formTitle">Novo lançamento</h1>
+                    <p class="subtitle" id="todayText">Registre seus rendimentos e despesas.</p>
+                </div>
+                <a href="historico.html" class="button button-secondary">
+                    Ver histórico
+                </a>
+            </header>
+
+            <article class="panel" style="max-width: 860px; margin: 24px 0 30px;">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Dados da movimentação</h2>
+                        <p>Preencha os detalhes para manter suas contas atualizadas.</p>
+                    </div>
+                </div>
+
+                <form id="transactionForm">
+                    <input type="hidden" id="editId">
+
+                    <div class="form-row transaction-basic-row">
+                        <div class="field">
+                            <label for="typeButton">Tipo de lançamento</label>
+                            <div class="filter-select transaction-type-select" id="typeControl">
+                                <select id="type" class="filter-native-select" required aria-label="Tipo de lançamento">
+                                    <option value="despesa">Despesa</option>
+                                    <option value="receita">Receita extra</option>
+                                </select>
+                                <button type="button" class="filter-select-button" id="typeButton"
+                                    aria-haspopup="listbox" aria-expanded="false" aria-controls="typeOptions">
+                                    <span id="typeLabel">Despesa</span><span class="filter-select-chevron" aria-hidden="true">⌄</span>
+                                </button>
+                                <div class="filter-select-options" id="typeOptions" role="listbox" aria-label="Tipo de lançamento">
+                                    <button type="button" class="filter-select-option selected" role="option" aria-selected="true" data-value="despesa">Despesa</button>
+                                    <button type="button" class="filter-select-option" role="option" aria-selected="false" data-value="receita">Receita extra</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="description">Descrição</label>
+                            <input id="description" type="text" maxlength="100"
+                                placeholder="Ex.: Compra do supermercado" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row amount-category-row">
+                        <div class="field">
+                            <label for="amount">Valor (R$)</label>
+                            <input id="amount" type="number" min="0.01"
+                                max="100000000" step="0.01" placeholder="0,00" required>
+                        </div>
+
+                        <div class="field category-field">
+                            <label for="categoryPickerButton">Categoria</label>
+
+                            <div class="category-controls">
+                                <div class="category-picker" id="categoryPicker">
+                                    <select id="category" class="category-native-select"
+                                        aria-hidden="true" tabindex="-1">
+                                        <option value="Alimentação">🍽️ Alimentação</option>
+                                        <option value="Moradia">🏠 Moradia</option>
+                                        <option value="Água e luz">💡 Água e luz</option>
+                                        <option value="Transporte">🚗 Transporte</option>
+                                        <option value="Saúde">💊 Saúde</option>
+                                        <option value="Educação">📚 Educação</option>
+                                        <option value="Lazer">🎮 Lazer</option>
+                                        <option value="Compras">🛍️ Compras</option>
+                                        <option value="Assinaturas">📱 Assinaturas</option>
+                                        <option value="Salário">💼 Salário</option>
+                                        <option value="Investimentos">📈 Investimentos</option>
+                                        <option value="Outros">📦 Outros</option>
+                                    </select>
+
+                                    <button type="button" id="categoryPickerButton"
+                                        class="category-picker-button"
+                                        aria-haspopup="listbox" aria-expanded="false"
+                                        aria-controls="categoryOptions">
+                                        <span id="categoryPickerLabel">🍽️ Alimentação</span>
+                                        <span class="category-chevron" aria-hidden="true">⌄</span>
+                                    </button>
+
+                                    <div class="category-drawer" id="categoryOptions"
+                                        role="listbox" aria-label="Escolha uma categoria">
+                                        <button type="button" class="category-option selected"
+                                            role="option" aria-selected="true" data-value="Alimentação">🍽️ Alimentação</button>
+                                        <button type="button" class="category-option"
+                                            role="option" aria-selected="false" data-value="Moradia">🏠 Moradia</button>
+                                        <button type="button" class="category-option"
+                                            role="option" aria-selected="false" data-value="Água e luz">💡 Água e luz</button>
+                                        <button type="button" class="category-option"
+                                            role="option" aria-selected="false" data-value="Transporte">🚗 Transporte</button>
+                                        <button type="button" class="category-option"
+                                            role="option" aria-selected="false" data-value="Saúde">💊 Saúde</button>
+                                        <button type="button" class="category-option"
+                                            role="option" aria-selected="false" data-value="Educação">📚 Educação</button>
+                                        <button type="button" class="category-option"
+                                            role="option" aria-selected="false" data-value="Lazer">🎮 Lazer</button>
+                                        <button type="button" class="category-option"
+                                            role="option" aria-selected="false" data-value="Compras">🛍️ Compras</button>
+                                        <button type="button" class="category-option"
+                                            role="option" aria-selected="false" data-value="Assinaturas">📱 Assinaturas</button>
+                                        <button type="button" class="category-option"
+                                            role="option" aria-selected="false" data-value="Salário">💼 Salário</button>
+                                        <button type="button" class="category-option"
+                                            role="option" aria-selected="false" data-value="Investimentos">📈 Investimentos</button>
+                                        <button type="button" class="category-option"
+                                            role="option" aria-selected="false" data-value="Outros">📦 Outros</button>
+                                    </div>
+                                </div>
+
+                                <div class="custom-category-field">
+                                    <label for="customCategory">Ou escreva outra</label>
+                                    <input id="customCategory" type="text" maxlength="50"
+                                        placeholder="Ex.: Academia" autocomplete="off">
+                                </div>
+                            </div>
+                            <small class="category-help">Escolha uma categoria ou escreva uma personalizada.</small>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="transactionDate">Data do lançamento</label>
+                        <input id="transactionDate" type="date" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="notes">Observações (opcional)</label>
+                        <textarea id="notes" rows="2" maxlength="300"
+                            placeholder="Detalhes sobre esse lançamento..."></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="button button-primary" id="saveBtn">
+                            Salvar lançamento
+                        </button>
+                        <button type="button" class="button button-secondary hidden"
+                            id="cancelEditBtn">Cancelar edição</button>
+                    </div>
+                </form>
+            </article>
+
+            <footer class="main-footer">
+                <p>Meu Financeiro © <span id="currentYear"></span></p>
+                <p>Organize hoje. Conquiste amanhã. ✨</p>
+            </footer>
+        </main>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

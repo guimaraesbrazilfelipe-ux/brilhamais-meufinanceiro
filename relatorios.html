@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#101827">
+    <meta name="description" content="Relatórios financeiros e gráficos comparativos.">
+    <title>Relatórios | Meu Financeiro</title>
+
+    <link rel="stylesheet" href="style1.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <a href="index.html" class="brand">
+                <span class="brand-icon">₿</span>
+                <span>Meu<span class="brand-accent">Financeiro</span></span>
+            </a>
+
+            <p class="menu-label">MENU PRINCIPAL</p>
+
+            <nav class="navigation">
+                <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
+                <a href="lancamentos.html" class="nav-link">＋ <span>Novo lançamento</span></a>
+                <a href="relatorios.html" class="nav-link active">▥ <span>Relatórios</span></a>
+                <a href="historico.html" class="nav-link">◷ <span>Histórico</span></a>
+                <a href="planejamento.html" class="nav-link">◎ <span>Planejamento</span></a>
+                <a href="configuracoes.html" class="nav-link">⚙ <span>Configurações</span></a>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <div class="tip-card">
+                    <span class="tip-icon">💡</span>
+                    <h3>Dica financeira</h3>
+                    <p>Avalie mensalmente o gráfico de categorias para identificar despesas recorrentes que podem ser reduzidas.</p>
+                </div>
+                <p class="sidebar-footer">SEU DINHEIRO, SUAS REGRAS.</p>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow">ANÁLISE E INDICADORES</p>
+                    <h1>Relatórios financeiros</h1>
+                    <p class="subtitle" id="todayText">Acompanhe métricas detalhadas dos seus gastos.</p>
+                </div>
+                <a href="lancamentos.html" class="button button-primary">
+                    + Novo lançamento
+                </a>
+            </header>
+
+            <section class="month-toolbar">
+                <div>
+                    <label for="dashboardMonth">Período de análise</label>
+                    <input type="month" id="dashboardMonth">
+                </div>
+                <span class="status-pill">● Análise comparativa</span>
+            </section>
+
+            <section class="summary-grid" aria-label="Resumo do mês">
+                <article class="summary-card">
+                    <div class="summary-top">
+                        <span>Saldo do mês</span>
+                        <span class="summary-icon purple">◈</span>
+                    </div>
+                    <h2 id="monthBalance">R$ 0,00</h2>
+                    <p class="summary-description">Receitas menos despesas</p>
+                </article>
+
+                <article class="summary-card">
+                    <div class="summary-top">
+                        <span>Receitas do mês</span>
+                        <span class="summary-icon green">↗</span>
+                    </div>
+                    <h2 id="monthIncome">R$ 0,00</h2>
+                    <p class="summary-description">Salário e outras entradas</p>
+                </article>
+
+                <article class="summary-card">
+                    <div class="summary-top">
+                        <span>Despesas do mês</span>
+                        <span class="summary-icon red">↘</span>
+                    </div>
+                    <h2 id="monthExpenses">R$ 0,00</h2>
+                    <p class="summary-description">Total das saídas registradas</p>
+                </article>
+
+                <article class="summary-card">
+                    <div class="summary-top">
+                        <span>Taxa de economia</span>
+                        <span class="summary-icon blue">%</span>
+                    </div>
+                    <h2 id="savingsRate">0%</h2>
+                    <p class="summary-description">Parte da receita que sobrou</p>
+                </article>
+            </section>
+
+            <section class="content-grid">
+                <article class="panel chart-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Receitas x despesas</h2>
+                            <p>Comparação dos últimos 6 meses</p>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="monthlyChart" aria-label="Gráfico de receitas e despesas mensais"></canvas>
+                    </div>
+                </article>
+
+                <article class="panel chart-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Onde você gasta?</h2>
+                            <p>Distribuição das despesas do mês selecionado</p>
+                        </div>
+                    </div>
+                    <div class="chart-container doughnut-container">
+                        <canvas id="categoryChart" aria-label="Gráfico de despesas por categoria"></canvas>
+                    </div>
+                    <div id="categoryLegend" class="category-legend"></div>
+                </article>
+            </section>
+
+            <footer class="main-footer">
+                <p>Meu Financeiro © <span id="currentYear"></span></p>
+                <p>Organize hoje. Conquiste amanhã. ✨</p>
+            </footer>
+        </main>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

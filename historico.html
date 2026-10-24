@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#101827">
+    <meta name="description" content="Histórico completo de lançamentos e movimentações financeiras.">
+    <title>Histórico | Meu Financeiro</title>
+
+    <link rel="stylesheet" href="style1.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <a href="index.html" class="brand">
+                <span class="brand-icon">₿</span>
+                <span>Meu<span class="brand-accent">Financeiro</span></span>
+            </a>
+
+            <p class="menu-label">MENU PRINCIPAL</p>
+
+            <nav class="navigation">
+                <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
+                <a href="lancamentos.html" class="nav-link">＋ <span>Novo lançamento</span></a>
+                <a href="relatorios.html" class="nav-link">▥ <span>Relatórios</span></a>
+                <a href="historico.html" class="nav-link active">◷ <span>Histórico</span></a>
+                <a href="planejamento.html" class="nav-link">◎ <span>Planejamento</span></a>
+                <a href="configuracoes.html" class="nav-link">⚙ <span>Configurações</span></a>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <div class="tip-card">
+                    <span class="tip-icon">💡</span>
+                    <h3>Dica financeira</h3>
+                    <p>Mantenha descrições claras em cada lançamento para facilitar sua conferência e busca.</p>
+                </div>
+                <p class="sidebar-footer">SEU DINHEIRO, SUAS REGRAS.</p>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow">MOVIMENTAÇÕES</p>
+                    <h1>Histórico de lançamentos</h1>
+                    <p class="subtitle" id="todayText">Consulte, pesquise, edite e gerencie suas movimentações.</p>
+                </div>
+                <a href="lancamentos.html" class="button button-primary">
+                    + Novo lançamento
+                </a>
+            </header>
+
+            <article class="panel history-panel" style="margin: 24px 0 30px;">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Todas as movimentações</h2>
+                        <p>Filtre por tipo ou pesquise por palavras-chave na descrição ou categoria.</p>
+                    </div>
+                </div>
+
+                <div class="filter-row">
+                    <input type="search" id="searchTransactions"
+                        placeholder="Buscar lançamento por descrição, categoria..." aria-label="Buscar lançamento">
+                    <div class="filter-select" id="typeFilterControl">
+                        <select id="typeFilter" class="filter-native-select" aria-label="Filtrar por tipo">
+                            <option value="todos">Todos</option>
+                            <option value="receita">Receitas</option>
+                            <option value="despesa">Despesas</option>
+                        </select>
+                        <button type="button" class="filter-select-button" id="typeFilterButton"
+                            aria-haspopup="listbox" aria-expanded="false" aria-controls="typeFilterOptions">
+                            <span id="typeFilterLabel">Todos</span><span class="filter-select-chevron" aria-hidden="true">⌄</span>
+                        </button>
+                        <div class="filter-select-options" id="typeFilterOptions" role="listbox" aria-label="Filtrar lançamentos">
+                            <button type="button" class="filter-select-option selected" role="option" aria-selected="true" data-value="todos">Todos</button>
+                            <button type="button" class="filter-select-option" role="option" aria-selected="false" data-value="receita">Receitas</button>
+                            <button type="button" class="filter-select-option" role="option" aria-selected="false" data-value="despesa">Despesas</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="transactionList" class="transaction-list"></div>
+
+                <div class="history-footer">
+                    <span id="transactionCount">0 lançamentos</span>
+                    <button type="button" class="text-button" id="showAllBtn">
+                        Ver todos
+                    </button>
+                </div>
+            </article>
+
+            <footer class="main-footer">
+                <p>Meu Financeiro © <span id="currentYear"></span></p>
+                <p>Organize hoje. Conquiste amanhã. ✨</p>
+            </footer>
+        </main>
+    </div>
+
+    <div id="confirmDialog" class="confirm-dialog" role="dialog" aria-modal="true"
+        aria-labelledby="confirmDialogTitle" aria-describedby="confirmDialogMessage" aria-hidden="true">
+        <div class="confirm-dialog-card">
+            <button type="button" id="confirmDialogClose" class="confirm-dialog-close" aria-label="Fechar janela">×</button>
+            <div class="confirm-dialog-icon" aria-hidden="true">🗑️</div>
+            <p class="confirm-dialog-eyebrow">CONFIRMAÇÃO</p>
+            <h2 id="confirmDialogTitle">Excluir lançamento?</h2>
+            <p id="confirmDialogMessage" class="confirm-dialog-message">Tem certeza de que deseja excluir este lançamento?</p>
+            <div class="confirm-dialog-actions">
+                <button type="button" id="confirmDialogCancel" class="button button-secondary">Manter lançamento</button>
+                <button type="button" id="confirmDialogConfirm" class="button button-danger">Excluir lançamento</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

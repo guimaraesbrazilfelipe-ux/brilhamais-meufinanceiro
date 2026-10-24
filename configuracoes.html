@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#101827">
+    <meta name="description" content="Configurações financeiras e backup de dados.">
+    <title>Configurações | Meu Financeiro</title>
+
+    <link rel="stylesheet" href="style1.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <a href="index.html" class="brand">
+                <span class="brand-icon">₿</span>
+                <span>Meu<span class="brand-accent">Financeiro</span></span>
+            </a>
+
+            <p class="menu-label">MENU PRINCIPAL</p>
+
+            <nav class="navigation">
+                <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
+                <a href="lancamentos.html" class="nav-link">＋ <span>Novo lançamento</span></a>
+                <a href="relatorios.html" class="nav-link">▥ <span>Relatórios</span></a>
+                <a href="historico.html" class="nav-link">◷ <span>Histórico</span></a>
+                <a href="planejamento.html" class="nav-link">◎ <span>Planejamento</span></a>
+                <a href="configuracoes.html" class="nav-link active">⚙ <span>Configurações</span></a>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <div class="tip-card">
+                    <span class="tip-icon">💡</span>
+                    <h3>Dica de segurança</h3>
+                    <p>Faça backup dos seus dados regularmente exportando o arquivo JSON para seu dispositivo.</p>
+                </div>
+                <p class="sidebar-footer">SEU DINHEIRO, SUAS REGRAS.</p>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow">PREFERÊNCIAS E DADOS</p>
+                    <h1>Configurações financeiras</h1>
+                    <p class="subtitle" id="todayText">Informe sua renda mensal e faça backup das suas informações.</p>
+                </div>
+                <a href="lancamentos.html" class="button button-primary">
+                    + Novo lançamento
+                </a>
+            </header>
+
+            <section class="month-toolbar">
+                <div>
+                    <label for="dashboardMonth">Mês de referência do salário</label>
+                    <input type="month" id="dashboardMonth">
+                </div>
+                <span class="status-pill">● Dados e Backup</span>
+            </section>
+
+            <section class="panel settings-panel" style="max-width: 860px; margin: 24px 0 30px;">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Renda mensal</h2>
+                        <p>Informe sua renda fixa mensal para o período selecionado.</p>
+                    </div>
+                </div>
+
+                <form id="settingsForm" class="settings-form">
+                    <div class="field">
+                        <label for="salary">Salário mensal (R$)</label>
+                        <input type="number" id="salary" min="0" max="100000000"
+                            step="0.01" placeholder="Ex.: 2500,00" required>
+                        <small>O salário será considerado no mês de referência selecionado acima.</small>
+                    </div>
+                    <button type="submit" class="button button-primary">Salvar salário</button>
+                </form>
+
+                <div class="settings-actions">
+                    <div>
+                        <h3>Backup dos seus dados</h3>
+                        <p>Exporte um arquivo para guardar ou recuperar seus lançamentos.</p>
+                    </div>
+                    <div class="button-group">
+                        <button id="exportBtn" type="button" class="button button-secondary">
+                            Exportar backup
+                        </button>
+                        <button id="importBtn" type="button" class="button button-secondary">
+                            Importar backup
+                        </button>
+                        <input id="importFile" type="file" accept=".json,application/json" hidden>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="main-footer">
+                <p>Meu Financeiro © <span id="currentYear"></span></p>
+                <p>Organize hoje. Conquiste amanhã. ✨</p>
+            </footer>
+        </main>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

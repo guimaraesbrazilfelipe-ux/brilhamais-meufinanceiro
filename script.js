@@ -1,4 +1,3 @@
-
 "use strict";
 
 const $ = (selector) => document.querySelector(selector);
@@ -144,7 +143,12 @@ function saveData() {
 }
 
 function selectedMonth() {
-    return $("#dashboardMonth").value || currentMonth();
+    const monthInput = $("#dashboardMonth");
+    if (monthInput && monthInput.value) {
+        sessionStorage.setItem("meuFinanceiro.month", monthInput.value);
+        return monthInput.value;
+    }
+    return sessionStorage.getItem("meuFinanceiro.month") || currentMonth();
 }
 
 function transactionsForMonth(month) {
@@ -180,6 +184,7 @@ function getMonthlySummary(month) {
 
 function showToast(message) {
     const toast = $("#toast");
+    if (!toast) return;
 
     toast.textContent = message;
     toast.classList.add("show");
@@ -192,24 +197,32 @@ function showToast(message) {
 }
 
 function renderSummary() {
+    const balanceElement = $("#monthBalance");
+    const incomeElement = $("#monthIncome");
+    const expensesElement = $("#monthExpenses");
+    const savingsElement = $("#savingsRate");
+
+    if (!balanceElement || !incomeElement || !expensesElement || !savingsElement) return;
+
     const summary = getMonthlySummary(selectedMonth());
 
-    $("#monthBalance").textContent = money(summary.balance);
-    $("#monthIncome").textContent = money(summary.income);
-    $("#monthExpenses").textContent = money(summary.expenses);
-
-    const balanceElement = $("#monthBalance");
+    balanceElement.textContent = money(summary.balance);
+    incomeElement.textContent = money(summary.income);
+    expensesElement.textContent = money(summary.expenses);
 
     balanceElement.style.color =
         summary.balance < 0 ? "var(--red)" : "var(--text)";
 
-    $("#savingsRate").textContent =
+    savingsElement.textContent =
         `${summary.savingsRate.toLocaleString("pt-BR", {
             maximumFractionDigits: 1
         })}%`;
 }
 
 function renderMonthlyChart() {
+    const canvas = $("#monthlyChart");
+    if (!canvas) return;
+
     const labels = [];
     const incomeValues = [];
     const expenseValues = [];
@@ -235,7 +248,7 @@ function renderMonthlyChart() {
         monthlyChart.destroy();
     }
 
-    monthlyChart = new Chart($("#monthlyChart"), {
+    monthlyChart = new Chart(canvas, {
         type: "bar",
 
         data: {
@@ -343,6 +356,10 @@ function renderMonthlyChart() {
 }
 
 function renderCategoryChart() {
+    const canvas = $("#categoryChart");
+    const legend = $("#categoryLegend");
+    if (!canvas) return;
+
     const expenses = transactionsForMonth(selectedMonth())
         .filter((transaction) => transaction.type === "despesa");
 
@@ -363,7 +380,7 @@ function renderCategoryChart() {
         categoryChart.destroy();
     }
 
-    categoryChart = new Chart($("#categoryChart"), {
+    categoryChart = new Chart(canvas, {
         type: "doughnut",
 
         data: {
@@ -402,7 +419,7 @@ function renderCategoryChart() {
         }
     });
 
-    const legend = $("#categoryLegend");
+    if (!legend) return;
 
     if (!entries.length) {
         legend.innerHTML =
@@ -439,11 +456,17 @@ function formatDate(dateString) {
 }
 
 function renderTransactions() {
-    const search = $("#searchTransactions").value
-        .trim()
-        .toLocaleLowerCase("pt-BR");
+    const list = $("#transactionList");
+    if (!list) return;
 
-    const type = $("#typeFilter").value;
+    const searchInput = $("#searchTransactions");
+    const search = searchInput ? searchInput.value.trim().toLocaleLowerCase("pt-BR") : "";
+
+    const typeFilter = $("#typeFilter");
+    const type = typeFilter ? typeFilter.value : "todos";
+
+    // Se estiver na Visão Geral (dashboard), limita automaticamente aos lançamentos mais recentes
+    const isDashboard = !$("#searchTransactions");
 
     const filtered = [...data.transactions]
         .filter((transaction) => {
@@ -466,18 +489,15 @@ function renderTransactions() {
                 b.id.localeCompare(a.id);
         });
 
-    const visible = showAllTransactions
-        ? filtered
-        : filtered.slice(0, 6);
-
-    const list = $("#transactionList");
+    const maxItems = isDashboard ? 4 : (showAllTransactions ? filtered.length : 6);
+    const visible = filtered.slice(0, maxItems);
 
     if (!visible.length) {
         list.innerHTML = `
             <div class="empty-state">
                 <div style="font-size:30px;margin-bottom:8px">🧾</div>
                 <p>Nenhum lançamento encontrado.</p>
-                <p>Adicione uma movimentação ou altere sua busca.</p>
+                <p>${isDashboard ? '<a href="lancamentos.html" class="text-button">+ Fazer lançamento</a>' : 'Adicione uma movimentação ou altere sua busca.'}</p>
             </div>
         `;
     } else {
@@ -528,70 +548,90 @@ function renderTransactions() {
         }).join("");
     }
 
-    $("#transactionCount").textContent =
-        `${filtered.length} lançamento${filtered.length === 1 ? "" : "s"}`;
+    const countElem = $("#transactionCount");
+    if (countElem) {
+        countElem.textContent = `${filtered.length} lançamento${filtered.length === 1 ? "" : "s"}`;
+    }
 
-    $("#showAllBtn").textContent = showAllTransactions
-        ? "Mostrar menos"
-        : "Ver todos";
+    const showAllBtn = $("#showAllBtn");
+    if (showAllBtn) {
+        showAllBtn.textContent = showAllTransactions
+            ? "Mostrar menos"
+            : "Ver todos";
 
-    $("#showAllBtn").classList.toggle("hidden", filtered.length <= 6);
+        showAllBtn.classList.toggle("hidden", filtered.length <= 6);
+    }
 }
 
 function renderPlanning() {
+    const budgetInput = $("#budget");
+    if (!budgetInput) return;
+
     const month = selectedMonth();
     const summary = getMonthlySummary(month);
 
     const budget = Number(data.budgets[month] || 0);
     const spent = summary.expenses;
 
-    $("#budget").value = budget || "";
+    budgetInput.value = budget || "";
 
     const budgetPercent = budget > 0 ? spent / budget * 100 : 0;
 
-    $("#budgetProgress").style.width =
-        `${Math.min(100, budgetPercent)}%`;
-
-    $("#budgetProgress").style.background =
-        budget > 0 && spent > budget ? "var(--red)" : "var(--purple)";
-
-    if (!budget) {
-        $("#budgetStatus").textContent = "Nenhum limite definido.";
-    } else if (spent > budget) {
-        $("#budgetStatus").textContent =
-            `Você ultrapassou o limite em ${money(spent - budget)}.`;
-    } else {
-        $("#budgetStatus").textContent =
-            `${money(budget - spent)} disponíveis de ${money(budget)} (${budgetPercent.toLocaleString("pt-BR", {
-                maximumFractionDigits: 1
-            })}% utilizado).`;
+    const budgetProgress = $("#budgetProgress");
+    if (budgetProgress) {
+        budgetProgress.style.width = `${Math.min(100, budgetPercent)}%`;
+        budgetProgress.style.background =
+            budget > 0 && spent > budget ? "var(--red)" : "var(--purple)";
     }
 
-    const goal = Number(data.goals[month] || 0);
+    const budgetStatus = $("#budgetStatus");
+    if (budgetStatus) {
+        if (!budget) {
+            budgetStatus.textContent = "Nenhum limite definido.";
+        } else if (spent > budget) {
+            budgetStatus.textContent =
+                `Você ultrapassou o limite em ${money(spent - budget)}.`;
+        } else {
+            budgetStatus.textContent =
+                `${money(budget - spent)} disponíveis de ${money(budget)} (${budgetPercent.toLocaleString("pt-BR", {
+                    maximumFractionDigits: 1
+                })}% utilizado).`;
+        }
+    }
 
-    $("#goal").value = goal || "";
+    const goalInput = $("#goal");
+    if (goalInput) {
+        const goal = Number(data.goals[month] || 0);
+        goalInput.value = goal || "";
 
-    // A meta considera a economia positiva do mês.
-    const saved = Math.max(0, summary.balance);
-    const goalPercent = goal > 0 ? saved / goal * 100 : 0;
+        const saved = Math.max(0, summary.balance);
+        const goalPercent = goal > 0 ? saved / goal * 100 : 0;
 
-    $("#goalProgress").style.width =
-        `${Math.min(100, goalPercent)}%`;
+        const goalProgress = $("#goalProgress");
+        if (goalProgress) {
+            goalProgress.style.width = `${Math.min(100, goalPercent)}%`;
+        }
 
-    if (!goal) {
-        $("#goalStatus").textContent = "Nenhuma meta definida.";
-    } else if (saved >= goal) {
-        $("#goalStatus").textContent =
-            `Parabéns! Sua meta de ${money(goal)} foi alcançada.`;
-    } else {
-        $("#goalStatus").textContent =
-            `Faltam ${money(goal - saved)} para sua meta de ${money(goal)}.`;
+        const goalStatus = $("#goalStatus");
+        if (goalStatus) {
+            if (!goal) {
+                goalStatus.textContent = "Nenhuma meta definida.";
+            } else if (saved >= goal) {
+                goalStatus.textContent =
+                    `Parabéns! Sua meta de ${money(goal)} foi alcançada.`;
+            } else {
+                goalStatus.textContent =
+                    `Faltam ${money(goal - saved)} para sua meta de ${money(goal)}.`;
+            }
+        }
     }
 }
 
 function renderSettings() {
-    $("#salary").value =
-        data.salaries[selectedMonth()] || "";
+    const salaryInput = $("#salary");
+    if (salaryInput) {
+        salaryInput.value = data.salaries[selectedMonth()] || "";
+    }
 }
 
 function renderAll() {
@@ -689,12 +729,6 @@ function setupCategoryPicker() {
         closeCategoryDrawer();
     });
 
-    /*
-     * A gaveta não fecha ao mover o mouse para fora do seletor.
-     * Ela fecha quando uma categoria é escolhida,
-     * ao clicar fora ou ao pressionar Escape.
-     */
-
     document.addEventListener("click", (event) => {
         if (!picker.contains(event.target)) {
             closeCategoryDrawer();
@@ -721,21 +755,36 @@ function setupCategoryPicker() {
 ================================ */
 
 function resetTransactionForm() {
-    $("#transactionForm").reset();
+    const form = $("#transactionForm");
+    if (!form) return;
 
-    $("#editId").value = "";
-    $("#transactionDate").value = todayISO();
-    $("#type").value = "despesa";
-    $("#category").value = "Alimentação";
-    $("#customCategory").value = "";
+    form.reset();
+
+    if ($("#editId")) $("#editId").value = "";
+    if ($("#transactionDate")) $("#transactionDate").value = todayISO();
+    if ($("#type")) $("#type").value = "despesa";
+    if ($("#category")) $("#category").value = "Alimentação";
+    if ($("#customCategory")) $("#customCategory").value = "";
+
+    const typeLabel = $("#typeLabel");
+    if (typeLabel) typeLabel.textContent = "Despesa";
+    document.querySelectorAll("#typeOptions .filter-select-option").forEach((opt) => {
+        const isDespesa = opt.dataset.value === "despesa";
+        opt.classList.toggle("selected", isDespesa);
+        opt.setAttribute("aria-selected", String(isDespesa));
+    });
 
     syncCategoryPicker("Alimentação");
     closeCategoryDrawer();
 
-    $("#formTitle").textContent = "Novo lançamento";
-    $("#saveBtn").textContent = "Salvar lançamento";
+    const title = $("#formTitle");
+    if (title) title.textContent = "Novo lançamento";
 
-    $("#cancelEditBtn").classList.add("hidden");
+    const saveBtn = $("#saveBtn");
+    if (saveBtn) saveBtn.textContent = "Salvar lançamento";
+
+    const cancelBtn = $("#cancelEditBtn");
+    if (cancelBtn) cancelBtn.classList.add("hidden");
 }
 
 function editTransaction(id) {
@@ -745,8 +794,25 @@ function editTransaction(id) {
 
     if (!transaction) return;
 
+    // Se estiver em outra página (como historico.html ou index.html), navega para lancamentos.html com o ID
+    if (!$("#transactionForm")) {
+        window.location.href = `lancamentos.html?edit=${encodeURIComponent(id)}`;
+        return;
+    }
+
     $("#editId").value = transaction.id;
     $("#type").value = transaction.type;
+
+    const typeLabel = $("#typeLabel");
+    if (typeLabel) {
+        typeLabel.textContent = transaction.type === "receita" ? "Receita extra" : "Despesa";
+    }
+    document.querySelectorAll("#typeOptions .filter-select-option").forEach((opt) => {
+        const match = opt.dataset.value === transaction.type;
+        opt.classList.toggle("selected", match);
+        opt.setAttribute("aria-selected", String(match));
+    });
+
     $("#description").value = transaction.description;
     $("#amount").value = transaction.amount;
 
@@ -765,18 +831,24 @@ function editTransaction(id) {
     $("#transactionDate").value = transaction.date;
     $("#notes").value = transaction.notes || "";
 
-    $("#formTitle").textContent = "Editar lançamento";
-    $("#saveBtn").textContent = "Salvar alterações";
+    const formTitle = $("#formTitle");
+    if (formTitle) formTitle.textContent = "Editar lançamento";
 
-    $("#cancelEditBtn").classList.remove("hidden");
+    const saveBtn = $("#saveBtn");
+    if (saveBtn) saveBtn.textContent = "Salvar alterações";
 
-    $("#lancamentos").scrollIntoView({
-        behavior: "smooth"
-    });
+    const cancelBtn = $("#cancelEditBtn");
+    if (cancelBtn) cancelBtn.classList.remove("hidden");
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function showConfirmDialog({ title, message, confirmLabel = "Excluir", danger = true }) {
     const dialog = $("#confirmDialog");
+    if (!dialog) {
+        return Promise.resolve(confirm(message));
+    }
+
     const titleElement = $("#confirmDialogTitle");
     const messageElement = $("#confirmDialogMessage");
     const confirmButton = $("#confirmDialogConfirm");
@@ -842,7 +914,7 @@ async function deleteTransaction(id) {
         return;
     }
 
-    if ($("#editId").value === id) {
+    if ($("#editId") && $("#editId").value === id) {
         resetTransactionForm();
     }
 
@@ -939,17 +1011,28 @@ function handleTransactionSubmit(event) {
         return;
     }
 
-    // A tela acompanha automaticamente o mês do lançamento.
-    $("#dashboardMonth").value = date.slice(0, 7);
-
-    resetTransactionForm();
-    renderAll();
+    sessionStorage.setItem("meuFinanceiro.month", date.slice(0, 7));
+    if ($("#dashboardMonth")) {
+        $("#dashboardMonth").value = date.slice(0, 7);
+    }
 
     showToast(
         id
             ? "Lançamento atualizado com sucesso!"
             : "Lançamento salvo com sucesso!"
     );
+
+    // Se estiver na página de lançamentos e estava editando de outra página, pode voltar para o histórico
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("edit")) {
+        setTimeout(() => {
+            window.location.href = "historico.html";
+        }, 1200);
+        return;
+    }
+
+    resetTransactionForm();
+    renderAll();
 }
 
 /* ==============================
@@ -1184,23 +1267,27 @@ async function importBackup(file) {
             error.message || "Não foi possível importar o arquivo."
         );
     } finally {
-        $("#importFile").value = "";
+        const fileInput = $("#importFile");
+        if (fileInput) fileInput.value = "";
     }
 }
 
 /* ==============================
-   NAVEGAÇÃO E INICIALIZAÇÃO
+   NAVEGAÇÃO E VALIDAÇÃO
 ================================ */
 
 function setupNavigation() {
-    document.querySelectorAll(".nav-link").forEach((link) => {
-        link.addEventListener("click", () => {
-            document.querySelectorAll(".nav-link").forEach((item) => {
-                item.classList.remove("active");
-            });
+    // Detecta a página atual pela URL e marca a classe active no link correto
+    const currentPath = window.location.pathname.split("/").pop() || "index.html";
 
-            link.classList.add("active");
-        });
+    document.querySelectorAll(".nav-link").forEach((link) => {
+        const href = link.getAttribute("href");
+        if (!href) return;
+
+        const isCurrent = href === currentPath ||
+            (href === "index.html" && (currentPath === "" || currentPath === "index1.html"));
+
+        link.classList.toggle("active", isCurrent);
     });
 }
 
@@ -1283,186 +1370,228 @@ function setupModernValidation() {
 
 function init() {
     setupModernValidation();
-    const today = todayISO();
 
-    $("#transactionDate").value = today;
-    $("#dashboardMonth").value = currentMonth();
+    const monthInput = $("#dashboardMonth");
+    if (monthInput) {
+        monthInput.value = selectedMonth();
+        monthInput.addEventListener("change", (e) => {
+            sessionStorage.setItem("meuFinanceiro.month", e.target.value);
+            renderAll();
+        });
+    }
 
-    $("#todayText").textContent = new Date().toLocaleDateString(
-        "pt-BR",
-        {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric"
-        }
-    );
+    const todayDateInput = $("#transactionDate");
+    if (todayDateInput && !todayDateInput.value) {
+        todayDateInput.value = todayISO();
+    }
 
-    $("#currentYear").textContent = new Date().getFullYear();
+    const todayText = $("#todayText");
+    if (todayText) {
+        todayText.textContent = new Date().toLocaleDateString(
+            "pt-BR",
+            {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric"
+            }
+        );
+    }
 
-    $("#transactionForm").addEventListener(
-        "submit",
-        handleTransactionSubmit
-    );
+    const currentYear = $("#currentYear");
+    if (currentYear) {
+        currentYear.textContent = new Date().getFullYear();
+    }
 
-    $("#settingsForm").addEventListener(
-        "submit",
-        handleSalarySubmit
-    );
+    const transactionForm = $("#transactionForm");
+    if (transactionForm) {
+        transactionForm.addEventListener("submit", handleTransactionSubmit);
+    }
 
-    $("#budgetForm").addEventListener(
-        "submit",
-        handleBudgetSubmit
-    );
+    const settingsForm = $("#settingsForm");
+    if (settingsForm) {
+        settingsForm.addEventListener("submit", handleSalarySubmit);
+    }
 
-    $("#goalForm").addEventListener(
-        "submit",
-        handleGoalSubmit
-    );
+    const budgetForm = $("#budgetForm");
+    if (budgetForm) {
+        budgetForm.addEventListener("submit", handleBudgetSubmit);
+    }
 
-    $("#dashboardMonth").addEventListener("change", renderAll);
+    const goalForm = $("#goalForm");
+    if (goalForm) {
+        goalForm.addEventListener("submit", handleGoalSubmit);
+    }
 
-    $("#searchTransactions").addEventListener(
-        "input",
-        renderTransactions
-    );
+    const searchInput = $("#searchTransactions");
+    if (searchInput) {
+        searchInput.addEventListener("input", renderTransactions);
+    }
 
-    $("#typeFilter").addEventListener(
-        "change",
-        renderTransactions
-    );
+    const typeFilter = $("#typeFilter");
+    if (typeFilter) {
+        typeFilter.addEventListener("change", renderTransactions);
+    }
 
-    // Filtro customizado: mantém o select original como fonte do valor filtrado.
+    // Filtro customizado
     const filterControl = $("#typeFilterControl");
     const filterButton = $("#typeFilterButton");
     const filterLabel = $("#typeFilterLabel");
-    const filterSelect = $("#typeFilter");
 
-    filterButton.addEventListener("click", () => {
-        const isOpen = filterControl.classList.toggle("open");
-        filterButton.setAttribute("aria-expanded", String(isOpen));
-    });
-
-    $("#typeFilterOptions").addEventListener("click", (event) => {
-        const option = event.target.closest(".filter-select-option");
-        if (!option) return;
-
-        filterSelect.value = option.dataset.value;
-        filterLabel.textContent = option.textContent.trim();
-        $("#typeFilterOptions").querySelectorAll(".filter-select-option").forEach((item) => {
-            const selected = item === option;
-            item.classList.toggle("selected", selected);
-            item.setAttribute("aria-selected", String(selected));
+    if (filterControl && filterButton && typeFilter && filterLabel) {
+        filterButton.addEventListener("click", () => {
+            const isOpen = filterControl.classList.toggle("open");
+            filterButton.setAttribute("aria-expanded", String(isOpen));
         });
 
-        filterControl.classList.remove("open");
-        filterButton.setAttribute("aria-expanded", "false");
-        filterSelect.dispatchEvent(new Event("change", { bubbles: true }));
-    });
+        const filterOptions = $("#typeFilterOptions");
+        if (filterOptions) {
+            filterOptions.addEventListener("click", (event) => {
+                const option = event.target.closest(".filter-select-option");
+                if (!option) return;
 
-    // Seletor personalizado de tipo de lançamento, com o mesmo visual do filtro "Todos".
+                typeFilter.value = option.dataset.value;
+                filterLabel.textContent = option.textContent.trim();
+                filterOptions.querySelectorAll(".filter-select-option").forEach((item) => {
+                    const selected = item === option;
+                    item.classList.toggle("selected", selected);
+                    item.setAttribute("aria-selected", String(selected));
+                });
+
+                filterControl.classList.remove("open");
+                filterButton.setAttribute("aria-expanded", "false");
+                typeFilter.dispatchEvent(new Event("change", { bubbles: true }));
+            });
+        }
+    }
+
+    // Seletor de Tipo no formulário
     const typeControl = $("#typeControl");
     const typeButton = $("#typeButton");
     const typeLabel = $("#typeLabel");
     const typeSelect = $("#type");
 
-    typeButton.addEventListener("click", () => {
-        const isOpen = typeControl.classList.toggle("open");
-        typeButton.setAttribute("aria-expanded", String(isOpen));
-        if (isOpen) {
-            filterControl.classList.remove("open");
-            filterButton.setAttribute("aria-expanded", "false");
-        }
-    });
-
-    $("#typeOptions").addEventListener("click", (event) => {
-        const option = event.target.closest(".filter-select-option");
-        if (!option) return;
-
-        typeSelect.value = option.dataset.value;
-        typeLabel.textContent = option.textContent.trim();
-        $("#typeOptions").querySelectorAll(".filter-select-option").forEach((item) => {
-            const selected = item === option;
-            item.classList.toggle("selected", selected);
-            item.setAttribute("aria-selected", String(selected));
+    if (typeControl && typeButton && typeSelect && typeLabel) {
+        typeButton.addEventListener("click", () => {
+            const isOpen = typeControl.classList.toggle("open");
+            typeButton.setAttribute("aria-expanded", String(isOpen));
+            if (isOpen && filterControl) {
+                filterControl.classList.remove("open");
+                if (filterButton) filterButton.setAttribute("aria-expanded", "false");
+            }
         });
 
-        typeControl.classList.remove("open");
-        typeButton.setAttribute("aria-expanded", "false");
-        typeSelect.dispatchEvent(new Event("change", { bubbles: true }));
-    });
+        const typeOptions = $("#typeOptions");
+        if (typeOptions) {
+            typeOptions.addEventListener("click", (event) => {
+                const option = event.target.closest(".filter-select-option");
+                if (!option) return;
+
+                typeSelect.value = option.dataset.value;
+                typeLabel.textContent = option.textContent.trim();
+                typeOptions.querySelectorAll(".filter-select-option").forEach((item) => {
+                    const selected = item === option;
+                    item.classList.toggle("selected", selected);
+                    item.setAttribute("aria-selected", String(selected));
+                });
+
+                typeControl.classList.remove("open");
+                typeButton.setAttribute("aria-expanded", "false");
+                typeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+            });
+        }
+    }
 
     document.addEventListener("click", (event) => {
-        if (!filterControl.contains(event.target)) {
+        if (filterControl && !filterControl.contains(event.target)) {
             filterControl.classList.remove("open");
-            filterButton.setAttribute("aria-expanded", "false");
+            if (filterButton) filterButton.setAttribute("aria-expanded", "false");
         }
-        if (!typeControl.contains(event.target)) {
+        if (typeControl && !typeControl.contains(event.target)) {
             typeControl.classList.remove("open");
-            typeButton.setAttribute("aria-expanded", "false");
+            if (typeButton) typeButton.setAttribute("aria-expanded", "false");
         }
     });
 
     document.addEventListener("keydown", (event) => {
         if (event.key === "Escape") {
-            filterControl.classList.remove("open");
-            filterButton.setAttribute("aria-expanded", "false");
-            typeControl.classList.remove("open");
-            typeButton.setAttribute("aria-expanded", "false");
+            if (filterControl) {
+                filterControl.classList.remove("open");
+                if (filterButton) filterButton.setAttribute("aria-expanded", "false");
+            }
+            if (typeControl) {
+                typeControl.classList.remove("open");
+                if (typeButton) typeButton.setAttribute("aria-expanded", "false");
+            }
         }
     });
 
-    $("#transactionList").addEventListener("click", (event) => {
-        const button = event.target.closest("button[data-action]");
+    const transactionList = $("#transactionList");
+    if (transactionList) {
+        transactionList.addEventListener("click", (event) => {
+            const button = event.target.closest("button[data-action]");
 
-        if (!button) return;
+            if (!button) return;
 
-        const { action, id } = button.dataset;
+            const { action, id } = button.dataset;
 
-        if (action === "edit") {
-            editTransaction(id);
-        }
+            if (action === "edit") {
+                editTransaction(id);
+            }
 
-        if (action === "delete") {
-            deleteTransaction(id);
-        }
-    });
+            if (action === "delete") {
+                deleteTransaction(id);
+            }
+        });
+    }
 
-    $("#newTransactionBtn").addEventListener("click", () => {
-        resetTransactionForm();
+    const cancelEditBtn = $("#cancelEditBtn");
+    if (cancelEditBtn) {
+        cancelEditBtn.addEventListener("click", () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("edit")) {
+                window.location.href = "historico.html";
+            } else {
+                resetTransactionForm();
+            }
+        });
+    }
 
-        $("#lancamentos").scrollIntoView({
-            behavior: "smooth"
+    const showAllBtn = $("#showAllBtn");
+    if (showAllBtn) {
+        showAllBtn.addEventListener("click", () => {
+            showAllTransactions = !showAllTransactions;
+            renderTransactions();
+        });
+    }
+
+    const exportBtn = $("#exportBtn");
+    if (exportBtn) {
+        exportBtn.addEventListener("click", exportBackup);
+    }
+
+    const importBtn = $("#importBtn");
+    const importFile = $("#importFile");
+    if (importBtn && importFile) {
+        importBtn.addEventListener("click", () => {
+            importFile.click();
         });
 
-        $("#description").focus({
-            preventScroll: true
+        importFile.addEventListener("change", (event) => {
+            importBackup(event.target.files[0]);
         });
-    });
-
-    $("#cancelEditBtn").addEventListener(
-        "click",
-        resetTransactionForm
-    );
-
-    $("#showAllBtn").addEventListener("click", () => {
-        showAllTransactions = !showAllTransactions;
-        renderTransactions();
-    });
-
-    $("#exportBtn").addEventListener("click", exportBackup);
-
-    $("#importBtn").addEventListener("click", () => {
-        $("#importFile").click();
-    });
-
-    $("#importFile").addEventListener("change", (event) => {
-        importBackup(event.target.files[0]);
-    });
+    }
 
     setupNavigation();
     setupCategoryPicker();
     renderAll();
+
+    // Se a página de lançamentos recebeu um ID para edição via query string (?edit=...)
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get("edit");
+    if (editId) {
+        editTransaction(editId);
+    }
 }
 
 document.addEventListener("DOMContentLoaded", init);

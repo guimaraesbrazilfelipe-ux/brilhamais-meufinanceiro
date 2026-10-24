@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#101827">
+    <meta name="description" content="Planejamento de orçamento, teto de gastos e metas de economia.">
+    <title>Planejamento | Meu Financeiro</title>
+
+    <link rel="stylesheet" href="style1.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <a href="index.html" class="brand">
+                <span class="brand-icon">₿</span>
+                <span>Meu<span class="brand-accent">Financeiro</span></span>
+            </a>
+
+            <p class="menu-label">MENU PRINCIPAL</p>
+
+            <nav class="navigation">
+                <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
+                <a href="lancamentos.html" class="nav-link">＋ <span>Novo lançamento</span></a>
+                <a href="relatorios.html" class="nav-link">▥ <span>Relatórios</span></a>
+                <a href="historico.html" class="nav-link">◷ <span>Histórico</span></a>
+                <a href="planejamento.html" class="nav-link active">◎ <span>Planejamento</span></a>
+                <a href="configuracoes.html" class="nav-link">⚙ <span>Configurações</span></a>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <div class="tip-card">
+                    <span class="tip-icon">💡</span>
+                    <h3>Dica financeira</h3>
+                    <p>Definir uma meta de economia no começo do mês incentiva a guardar antes de gastar com supérfluos.</p>
+                </div>
+                <p class="sidebar-footer">SEU DINHEIRO, SUAS REGRAS.</p>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow">METAS E ORÇAMENTO</p>
+                    <h1>Planejamento financeiro</h1>
+                    <p class="subtitle" id="todayText">Defina limites e acompanhe suas metas de economia.</p>
+                </div>
+                <a href="lancamentos.html" class="button button-primary">
+                    + Novo lançamento
+                </a>
+            </header>
+
+            <section class="month-toolbar">
+                <div>
+                    <label for="dashboardMonth">Período de referência</label>
+                    <input type="month" id="dashboardMonth">
+                </div>
+                <span class="status-pill">● Orçamento mensal</span>
+            </section>
+
+            <section class="summary-grid" aria-label="Resumo do mês">
+                <article class="summary-card">
+                    <div class="summary-top">
+                        <span>Saldo do mês</span>
+                        <span class="summary-icon purple">◈</span>
+                    </div>
+                    <h2 id="monthBalance">R$ 0,00</h2>
+                    <p class="summary-description">Receitas menos despesas</p>
+                </article>
+
+                <article class="summary-card">
+                    <div class="summary-top">
+                        <span>Receitas do mês</span>
+                        <span class="summary-icon green">↗</span>
+                    </div>
+                    <h2 id="monthIncome">R$ 0,00</h2>
+                    <p class="summary-description">Salário e outras entradas</p>
+                </article>
+
+                <article class="summary-card">
+                    <div class="summary-top">
+                        <span>Despesas do mês</span>
+                        <span class="summary-icon red">↘</span>
+                    </div>
+                    <h2 id="monthExpenses">R$ 0,00</h2>
+                    <p class="summary-description">Total das saídas registradas</p>
+                </article>
+
+                <article class="summary-card">
+                    <div class="summary-top">
+                        <span>Taxa de economia</span>
+                        <span class="summary-icon blue">%</span>
+                    </div>
+                    <h2 id="savingsRate">0%</h2>
+                    <p class="summary-description">Parte da receita que sobrou</p>
+                </article>
+            </section>
+
+            <section class="panel planning-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Metas e limites do mês</h2>
+                        <p>Controle o teto máximo de gastos e acompanhe quanto já conseguiu poupar.</p>
+                    </div>
+                </div>
+
+                <div class="planning-grid">
+                    <div class="planning-card">
+                        <h3>Limite de gastos mensal</h3>
+                        <p>Escolha quanto pretende gastar no mês selecionado.</p>
+                        <form id="budgetForm" class="inline-form">
+                            <div class="field">
+                                <label for="budget">Limite mensal (R$)</label>
+                                <input type="number" id="budget" min="0"
+                                    max="100000000" step="0.01" placeholder="Ex.: 2000" required>
+                            </div>
+                            <button class="button button-primary" type="submit">Definir limite</button>
+                        </form>
+                        <div class="progress-track">
+                            <div class="progress-fill" id="budgetProgress"></div>
+                        </div>
+                        <p id="budgetStatus" class="progress-label">Nenhum limite definido.</p>
+                    </div>
+
+                    <div class="planning-card">
+                        <h3>Meta de economia</h3>
+                        <p>Defina quanto deseja guardar por mês.</p>
+                        <form id="goalForm" class="inline-form">
+                            <div class="field">
+                                <label for="goal">Meta mensal (R$)</label>
+                                <input type="number" id="goal" min="0"
+                                    max="100000000" step="0.01" placeholder="Ex.: 500" required>
+                            </div>
+                            <button class="button button-primary" type="submit">Definir meta</button>
+                        </form>
+                        <div class="progress-track">
+                            <div class="progress-fill goal-fill" id="goalProgress"></div>
+                        </div>
+                        <p id="goalStatus" class="progress-label">Nenhuma meta definida.</p>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="main-footer">
+                <p>Meu Financeiro © <span id="currentYear"></span></p>
+                <p>Organize hoje. Conquiste amanhã. ✨</p>
+            </footer>
+        </main>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
