@@ -1,0 +1,17 @@
+# Backups financeiros pessoais exportados pelo aplicativo (evita vazar dados reais)
+backup-financeiro*.json
+*.backup.json
+
+# Variáveis de ambiente e chaves privadas
+.env
+.env.*
+*.pem
+*.key
+
+# Arquivos temporários de sistema operacional e editores
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+*.log
