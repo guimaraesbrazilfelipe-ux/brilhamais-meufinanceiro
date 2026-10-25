@@ -10,7 +10,34 @@ const COLORS = [
     "#b4a0ff", "#e99b70", "#6ca4ec", "#9ca9bd"
 ];
 
+const EXPENSE_CATEGORIES = [
+    { name: "Alimentação", icon: "🍽️" },
+    { name: "Moradia", icon: "🏠" },
+    { name: "Água e luz", icon: "💡" },
+    { name: "Transporte", icon: "🚗" },
+    { name: "Saúde", icon: "💊" },
+    { name: "Educação", icon: "📚" },
+    { name: "Lazer", icon: "🎮" },
+    { name: "Compras", icon: "🛍️" },
+    { name: "Assinaturas", icon: "📱" },
+    { name: "Investimentos", icon: "📈" },
+    { name: "Outros", icon: "📦" }
+];
+
+const INCOME_CATEGORIES = [
+    { name: "Freelance / Bico", icon: "💻" },
+    { name: "Vendas / Desapego", icon: "🏷️" },
+    { name: "Rendimentos / Dividendos", icon: "📈" },
+    { name: "Bônus / Premiação", icon: "🎁" },
+    { name: "Reembolso", icon: "🔄" },
+    { name: "Presente / Doação", icon: "🎉" },
+    { name: "Aluguel / Locação", icon: "🔑" },
+    { name: "Prestação de serviços", icon: "🛠️" },
+    { name: "Outros", icon: "📦" }
+];
+
 const CATEGORY_ICONS = {
+    // Categorias de Despesas
     "Alimentação": "🍽️",
     "Moradia": "🏠",
     "Água e luz": "💡",
@@ -21,13 +48,28 @@ const CATEGORY_ICONS = {
     "Compras": "🛍️",
     "Assinaturas": "📱",
     "Investimentos": "📈",
+    // Categorias de Receitas Extras
+    "Freelance / Bico": "💻",
+    "Freelance": "💻",
+    "Bico": "💻",
+    "Vendas / Desapego": "🏷️",
+    "Vendas": "🏷️",
+    "Rendimentos / Dividendos": "📈",
+    "Rendimentos": "📈",
+    "Bônus / Premiação": "🎁",
+    "Bônus": "🎁",
+    "Reembolso": "🔄",
+    "Presente / Doação": "🎉",
+    "Presente": "🎉",
+    "Aluguel / Locação": "🔑",
+    "Prestação de serviços": "🛠️",
+    "Serviços": "🛠️",
     "Outros": "📦"
 };
 
 const CATEGORY_OPTIONS = [
-    "Alimentação", "Moradia", "Água e luz", "Transporte",
-    "Saúde", "Educação", "Lazer", "Compras",
-    "Assinaturas", "Investimentos", "Outros"
+    ...EXPENSE_CATEGORIES.map((c) => c.name),
+    ...INCOME_CATEGORIES.map((c) => c.name)
 ];
 
 function todayISO() {
@@ -715,6 +757,59 @@ function syncCategoryPicker(value) {
     });
 }
 
+function renderCategoryOptions(type = "despesa", selectedValue = null) {
+    const select = $("#category");
+    const drawer = $("#categoryOptions");
+    const label = $("#categoryPickerLabel");
+    const customInput = $("#customCategory");
+
+    if (!select || !drawer) return;
+
+    const categories = type === "receita" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+    const currentVal = selectedValue || select.value;
+    const isValidCategory = categories.some((c) => c.name === currentVal);
+    const targetValue = isValidCategory
+        ? currentVal
+        : (categories.find((c) => c.name === "Outros") ? "Outros" : categories[0].name);
+
+    select.innerHTML = "";
+    categories.forEach((cat) => {
+        const opt = document.createElement("option");
+        opt.value = cat.name;
+        opt.textContent = `${cat.icon} ${cat.name}`;
+        if (cat.name === targetValue) opt.selected = true;
+        select.appendChild(opt);
+    });
+
+    drawer.innerHTML = "";
+    categories.forEach((cat) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "category-option";
+        btn.setAttribute("role", "option");
+        btn.dataset.value = cat.name;
+        btn.textContent = `${cat.icon} ${cat.name}`;
+        const isSelected = cat.name === targetValue;
+        btn.classList.toggle("selected", isSelected);
+        btn.setAttribute("aria-selected", String(isSelected));
+        drawer.appendChild(btn);
+    });
+
+    const selectedCat = categories.find((c) => c.name === targetValue) || categories[0];
+    if (label) {
+        label.textContent = `${selectedCat.icon} ${selectedCat.name}`;
+    }
+
+    if (customInput) {
+        customInput.placeholder = type === "receita"
+            ? "Ex.: Consultoria, venda de artesanato..."
+            : "Ex.: Academia, dentista...";
+        if (!selectedValue) {
+            customInput.value = "";
+        }
+    }
+}
+
 function setupCategoryPicker() {
     const picker = $("#categoryPicker");
     const button = $("#categoryPickerButton");
@@ -724,6 +819,13 @@ function setupCategoryPicker() {
 
     if (!picker || !button || !options || !select || !customInput) {
         return;
+    }
+
+    const typeSelect = $("#type");
+    if (typeSelect) {
+        typeSelect.addEventListener("change", (e) => {
+            renderCategoryOptions(e.target.value);
+        });
     }
 
     button.addEventListener("click", () => {
@@ -764,7 +866,8 @@ function setupCategoryPicker() {
         }
     });
 
-    syncCategoryPicker(select.value);
+    const initialType = typeSelect ? typeSelect.value : "despesa";
+    renderCategoryOptions(initialType, select.value);
 }
 
 /* =========================================
@@ -1320,7 +1423,7 @@ function resetTransactionForm() {
         opt.setAttribute("aria-selected", String(isDespesa));
     });
 
-    syncCategoryPicker("Alimentação");
+    renderCategoryOptions("despesa", "Alimentação");
     closeCategoryDrawer();
     syncDatePicker();
 
@@ -1369,7 +1472,8 @@ function editTransaction(id) {
     $("#customCategory").value =
         isBuiltInCategory ? "" : transaction.category;
 
-    syncCategoryPicker(
+    renderCategoryOptions(
+        transaction.type,
         isBuiltInCategory ? transaction.category : "Outros"
     );
 
