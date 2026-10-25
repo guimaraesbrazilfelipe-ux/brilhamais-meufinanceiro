@@ -1094,6 +1094,208 @@ function setupDatePicker() {
     syncDatePicker();
 }
 
+/* =========================================
+   SELETOR DE MÊS E ANO MODERNO (DASHBOARD/RELATÓRIOS/ETC)
+========================================= */
+
+let mpCurrentYear = new Date().getFullYear();
+
+function syncMonthPicker() {
+    const input = $("#dashboardMonth");
+    const label = $("#monthPickerText");
+    if (!input || !label) return;
+
+    const val = input.value || selectedMonth();
+    const parts = val.split("-");
+    if (parts.length !== 2) return;
+
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+
+    label.textContent = `${DP_MONTH_NAMES[month]} de ${year}`;
+    mpCurrentYear = year;
+
+    renderMonthPickerMonths();
+}
+
+function renderMonthPickerMonths() {
+    const grid = $("#mpMonthsGrid");
+    const yearDisplay = $("#mpYearDisplay");
+    const input = $("#dashboardMonth");
+    if (!grid || !yearDisplay) return;
+
+    yearDisplay.textContent = String(mpCurrentYear);
+    grid.innerHTML = "";
+
+    const selectedVal = (input && input.value) ? input.value : selectedMonth();
+    const currentCalMonth = currentMonth();
+
+    DP_MONTH_NAMES.forEach((name, idx) => {
+        const monthStr = String(idx + 1).padStart(2, "0");
+        const iso = `${mpCurrentYear}-${monthStr}`;
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "mp-month-btn";
+        btn.textContent = name;
+
+        if (iso === currentCalMonth) {
+            btn.classList.add("current");
+        }
+        if (iso === selectedVal) {
+            btn.classList.add("selected");
+        }
+
+        btn.addEventListener("click", () => {
+            selectMonth(iso);
+        });
+        grid.appendChild(btn);
+    });
+}
+
+function selectMonth(isoString) {
+    const input = $("#dashboardMonth");
+    if (input) {
+        input.value = isoString;
+        sessionStorage.setItem("meuFinanceiro.month", isoString);
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    const parts = isoString.split("-");
+    if (parts.length === 2) {
+        mpCurrentYear = parseInt(parts[0], 10);
+    }
+    syncMonthPicker();
+    closeMonthPicker();
+}
+
+function openMonthPicker() {
+    const container = $("#customMonthPicker");
+    const trigger = $("#monthPickerTrigger");
+    if (!container || !trigger) return;
+
+    const input = $("#dashboardMonth");
+    const val = (input && input.value) ? input.value : selectedMonth();
+    const parts = val.split("-");
+    if (parts.length === 2) {
+        mpCurrentYear = parseInt(parts[0], 10);
+    }
+
+    renderMonthPickerMonths();
+
+    container.classList.add("open");
+    trigger.setAttribute("aria-expanded", "true");
+}
+
+function closeMonthPicker() {
+    const container = $("#customMonthPicker");
+    const trigger = $("#monthPickerTrigger");
+    if (!container) return;
+
+    container.classList.remove("open");
+    if (trigger) trigger.setAttribute("aria-expanded", "false");
+}
+
+function setupMonthPicker() {
+    const container = $("#customMonthPicker");
+    const trigger = $("#monthPickerTrigger");
+    const input = $("#dashboardMonth");
+    const backdrop = $("#monthPickerBackdrop");
+    const closeBtn = $("#mpCloseBtn");
+    const prevYearBtn = $("#mpPrevYearBtn");
+    const nextYearBtn = $("#mpNextYearBtn");
+    const currentMonthBtn = $("#mpCurrentMonthBtn");
+    const prevMonthBtn = $("#mpPrevMonthBtn");
+    const nextMonthBtn = $("#mpNextMonthBtn");
+
+    if (!container || !trigger || !input) return;
+
+    trigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (container.classList.contains("open")) {
+            closeMonthPicker();
+        } else {
+            openMonthPicker();
+        }
+    });
+
+    if (backdrop) {
+        backdrop.addEventListener("click", closeMonthPicker);
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeMonthPicker);
+    }
+
+    if (prevYearBtn) {
+        prevYearBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            mpCurrentYear--;
+            renderMonthPickerMonths();
+        });
+    }
+
+    if (nextYearBtn) {
+        nextYearBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            mpCurrentYear++;
+            renderMonthPickerMonths();
+        });
+    }
+
+    if (currentMonthBtn) {
+        currentMonthBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            selectMonth(currentMonth());
+        });
+    }
+
+    if (prevMonthBtn) {
+        prevMonthBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const curr = input.value || selectedMonth();
+            const parts = curr.split("-");
+            let y = parseInt(parts[0], 10);
+            let m = parseInt(parts[1], 10) - 1;
+            if (m === 0) {
+                m = 12;
+                y--;
+            }
+            selectMonth(`${y}-${String(m).padStart(2, "0")}`);
+        });
+    }
+
+    if (nextMonthBtn) {
+        nextMonthBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const curr = input.value || selectedMonth();
+            const parts = curr.split("-");
+            let y = parseInt(parts[0], 10);
+            let m = parseInt(parts[1], 10) + 1;
+            if (m === 13) {
+                m = 1;
+                y++;
+            }
+            selectMonth(`${y}-${String(m).padStart(2, "0")}`);
+        });
+    }
+
+    document.addEventListener("click", (e) => {
+        if (!container.contains(e.target)) {
+            closeMonthPicker();
+        }
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && container.classList.contains("open")) {
+            closeMonthPicker();
+        }
+    });
+
+    input.addEventListener("change", syncMonthPicker);
+
+    syncMonthPicker();
+}
+
 /* ==============================
    FORMULÁRIO DE LANÇAMENTOS
 ================================ */
@@ -2085,6 +2287,7 @@ function init() {
     setupPrivacyMode();
     setupCategoryPicker();
     setupDatePicker();
+    setupMonthPicker();
     renderAll();
 
     // Se a página de lançamentos recebeu um ID para edição via query string (?edit=...)

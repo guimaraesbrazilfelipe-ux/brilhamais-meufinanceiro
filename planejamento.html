@@ -70,8 +70,36 @@
 
             <section class="month-toolbar">
                 <div>
-                    <label for="dashboardMonth">Período de referência</label>
-                    <input type="month" id="dashboardMonth">
+                    <label for="monthPickerTrigger">Período de referência</label>
+                    <div class="custom-monthpicker" id="customMonthPicker">
+                        <input type="month" id="dashboardMonth" class="monthpicker-native-input" tabindex="-1" aria-hidden="true">
+                        <button type="button" class="monthpicker-trigger" id="monthPickerTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="monthPickerDropdown">
+                            <span class="monthpicker-trigger-left">
+                                <span class="monthpicker-icon" aria-hidden="true">📅</span>
+                                <span class="monthpicker-text" id="monthPickerText">Outubro de 2026</span>
+                            </span>
+                            <span class="monthpicker-chevron" aria-hidden="true">⌄</span>
+                        </button>
+
+                        <div class="monthpicker-backdrop" id="monthPickerBackdrop" aria-hidden="true"></div>
+
+                        <div class="monthpicker-dropdown" id="monthPickerDropdown" role="dialog" aria-modal="true" aria-label="Seletor de mês e ano" aria-hidden="true">
+                            <div class="mp-header">
+                                <button type="button" class="mp-nav-btn" id="mpPrevYearBtn" aria-label="Ano anterior">‹</button>
+                                <span class="mp-year-display" id="mpYearDisplay">2026</span>
+                                <button type="button" class="mp-nav-btn" id="mpNextYearBtn" aria-label="Próximo ano">›</button>
+                                <button type="button" class="mp-close-btn" id="mpCloseBtn" aria-label="Fechar seletor">✕</button>
+                            </div>
+
+                            <div class="mp-shortcuts">
+                                <button type="button" class="mp-shortcut-btn" id="mpCurrentMonthBtn">Mês atual</button>
+                                <button type="button" class="mp-shortcut-btn" id="mpPrevMonthBtn">Mês anterior</button>
+                                <button type="button" class="mp-shortcut-btn" id="mpNextMonthBtn">Próximo mês</button>
+                            </div>
+
+                            <div class="mp-months-grid" id="mpMonthsGrid"></div>
+                        </div>
+                    </div>
                 </div>
                 <span class="status-pill">● Orçamento mensal</span>
             </section>

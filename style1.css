@@ -1293,11 +1293,281 @@ input[type="month"],
 input[type="date"] {
     color-scheme: dark;
 }
-input[type="month"]::-webkit-calendar-picker-indicator,
-input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1) brightness(1.2);
+input[type="month"]::-webkit-calendar-picker-indicator:hover,
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
+/* =========================================
+   SELETOR DE MÊS E ANO MODERNO
+========================================= */
+.custom-monthpicker {
+    position: relative;
+    display: inline-block;
+    min-width: 200px;
+}
+
+.monthpicker-native-input {
+    position: absolute !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+}
+
+.monthpicker-trigger {
+    width: 100%;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 14px;
+    background: #182438;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
     cursor: pointer;
-    opacity: 0.8;
+    transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
+}
+
+.monthpicker-trigger:hover,
+.custom-monthpicker.open .monthpicker-trigger {
+    border-color: var(--purple-light);
+    background: #1d2d46;
+    box-shadow: 0 0 0 3px rgba(124, 93, 250, 0.18);
+}
+
+.monthpicker-trigger-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.monthpicker-icon {
+    font-size: 16px;
+    line-height: 1;
+}
+
+.monthpicker-text {
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.monthpicker-chevron {
+    color: var(--purple-light);
+    font-size: 13px;
+    line-height: 1;
+    transition: transform 0.25s ease;
+}
+
+.custom-monthpicker.open .monthpicker-chevron {
+    transform: rotate(180deg);
+}
+
+.monthpicker-backdrop {
+    display: none;
+}
+
+/* Dropdown de Mês no Desktop */
+.monthpicker-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 320px;
+    background: #131d2e;
+    border: 1px solid #2d3e5b;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.04);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-6px) scale(0.98);
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s;
+}
+
+.custom-monthpicker.open .monthpicker-dropdown {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+}
+
+.mp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.mp-year-display {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: 0.5px;
+}
+
+.mp-nav-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #2a3a54;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    font-size: 16px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.mp-nav-btn:hover {
+    background: rgba(124, 93, 250, 0.2);
+    border-color: var(--purple);
+    color: #fff;
+}
+
+.mp-close-btn {
+    display: none;
+}
+
+.mp-shortcuts {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.mp-shortcut-btn {
+    flex: 1;
+    padding: 6px 4px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(124, 93, 250, 0.1);
+    color: var(--purple-light);
+    border: 1px solid rgba(124, 93, 250, 0.2);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.mp-shortcut-btn:hover {
+    background: rgba(124, 93, 250, 0.22);
+    border-color: var(--purple);
+}
+
+.mp-months-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.mp-month-btn {
+    padding: 11px 4px;
+    border-radius: 9px;
+    border: 1px solid #2a3a54;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+}
+
+.mp-month-btn:hover {
+    background: rgba(124, 93, 250, 0.15);
+    border-color: var(--purple);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.mp-month-btn.current {
+    border-color: var(--purple-light);
+}
+
+.mp-month-btn.selected {
+    background: linear-gradient(135deg, #7c5dfa, #9475ff) !important;
+    border-color: var(--purple) !important;
+    color: #fff !important;
+    font-weight: 800;
+    box-shadow: 0 4px 12px rgba(124, 93, 250, 0.45);
+    transform: scale(1.03);
+}
+
+/* Mobile Modal para o MonthPicker */
+@media (max-width: 650px) {
+    .custom-monthpicker {
+        width: 100%;
+    }
+
+    .monthpicker-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(8, 12, 20, 0.75);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        z-index: 100000;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+
+    .custom-monthpicker.open .monthpicker-backdrop {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .monthpicker-dropdown {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        bottom: auto;
+        width: min(340px, 92vw);
+        background: #131d2e;
+        border: 1px solid #2e4162;
+        border-radius: 20px;
+        padding: 18px 16px;
+        box-shadow: 0 25px 55px rgba(0, 0, 0, 0.8);
+        z-index: 100001;
+        transform: translate(-50%, -46%) scale(0.95);
+    }
+
+    .custom-monthpicker.open .monthpicker-dropdown {
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    .mp-close-btn {
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: 1px solid #2a3a54;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--muted);
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .mp-close-btn:hover {
+        background: rgba(255, 99, 132, 0.2);
+        color: #ff6384;
+    }
 }
 
 @media (max-width: 650px) {
