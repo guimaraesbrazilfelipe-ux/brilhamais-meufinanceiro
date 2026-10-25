@@ -165,14 +165,25 @@ function sumTransactions(transactions, type) {
 
 function getMonthlySummary(month) {
     const transactions = transactionsForMonth(month);
-    const salary = Number(data.salaries[month] || 0);
-    const extraIncome = sumTransactions(transactions, "receita");
+    const salaryConfig = Number(data.salaries[month] || 0);
+
+    // Evita o bug de duplicar o salário se o usuário lançar na categoria 'Salário' e também salvar nas Configurações
+    const salaryFromTransactions = transactions
+        .filter((t) => t.type === "receita" && t.category === "Salário")
+        .reduce((sum, t) => sum + t.amount, 0);
+
+    const otherExtraIncome = transactions
+        .filter((t) => t.type === "receita" && t.category !== "Salário")
+        .reduce((sum, t) => sum + t.amount, 0);
+
+    const effectiveSalary = salaryFromTransactions > 0 ? salaryFromTransactions : salaryConfig;
+    const extraIncome = otherExtraIncome;
+    const income = effectiveSalary + extraIncome;
     const expenses = sumTransactions(transactions, "despesa");
-    const income = salary + extraIncome;
     const balance = income - expenses;
 
     return {
-        salary,
+        salary: effectiveSalary,
         extraIncome,
         income,
         expenses,
@@ -1168,6 +1179,61 @@ function exportBackup() {
     showToast("Backup exportado!");
 }
 
+function exportCSV() {
+    if (!data.transactions || !data.transactions.length) {
+        showToast("Nenhum lançamento para exportar.");
+        return;
+    }
+
+    const headers = ["Data", "Tipo", "Descrição", "Categoria", "Valor (R$)", "Observações"];
+    const rows = [...data.transactions]
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .map((t) => [
+            formatDate(t.date),
+            t.type === "receita" ? "Receita" : "Despesa",
+            `"${(t.description || "").replace(/"/g, '""')}"`,
+            `"${(t.category || "").replace(/"/g, '""')}"`,
+            Number(t.amount || 0).toFixed(2).replace(".", ","),
+            `"${(t.notes || "").replace(/"/g, '""')}"`
+        ]);
+
+    const csvContent = "\uFEFF" + [headers.join(";"), ...rows.map((r) => r.join(";"))].join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `meu-financeiro-${todayISO()}.csv`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast("Planilha CSV exportada com sucesso!");
+}
+
+function updatePrivacyButtons(isPrivate) {
+    document.querySelectorAll(".privacy-btn").forEach((btn) => {
+        const icon = btn.querySelector(".privacy-icon");
+        const text = btn.querySelector(".privacy-text");
+        if (icon) icon.textContent = isPrivate ? "🙈" : "👁️";
+        if (text) text.textContent = isPrivate ? "Exibir" : "Ocultar";
+        btn.setAttribute("title", isPrivate ? "Exibir valores na tela" : "Ocultar valores na tela");
+        btn.setAttribute("aria-pressed", String(isPrivate));
+    });
+}
+
+function setupPrivacyMode() {
+    const isPrivate = localStorage.getItem("meuFinanceiro.privacy") === "true";
+    document.body.classList.toggle("privacy-mode", isPrivate);
+    updatePrivacyButtons(isPrivate);
+
+    document.querySelectorAll(".privacy-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const current = document.body.classList.toggle("privacy-mode");
+            localStorage.setItem("meuFinanceiro.privacy", String(current));
+            updatePrivacyButtons(current);
+            showToast(current ? "Valores ocultados na tela." : "Valores visíveis.");
+        });
+    });
+}
+
 function validBackup(imported) {
     if (!imported || typeof imported !== "object") {
         return false;
@@ -1570,6 +1636,11 @@ function init() {
         exportBtn.addEventListener("click", exportBackup);
     }
 
+    const exportCsvBtn = $("#exportCsvBtn");
+    if (exportCsvBtn) {
+        exportCsvBtn.addEventListener("click", exportCSV);
+    }
+
     const importBtn = $("#importBtn");
     const importFile = $("#importFile");
     if (importBtn && importFile) {
@@ -1583,6 +1654,7 @@ function init() {
     }
 
     setupNavigation();
+    setupPrivacyMode();
     setupCategoryPicker();
     renderAll();
 

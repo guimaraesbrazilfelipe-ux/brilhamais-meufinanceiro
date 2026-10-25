@@ -8,6 +8,7 @@
     <title>Configurações | Meu Financeiro</title>
 
     <link rel="stylesheet" href="style1.css">
+    <link rel="manifest" href="manifest.json">
     <script src="script.js" defer></script>
 </head>
 <body>
@@ -46,9 +47,15 @@
                     <h1>Configurações financeiras</h1>
                     <p class="subtitle" id="todayText">Informe sua renda mensal e faça backup das suas informações.</p>
                 </div>
-                <a href="lancamentos.html" class="button button-primary">
-                    + Novo lançamento
-                </a>
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" class="privacy-btn" aria-label="Ocultar ou exibir valores">
+                        <span class="privacy-icon">👁️</span>
+                        <span class="privacy-text">Ocultar</span>
+                    </button>
+                    <a href="lancamentos.html" class="button button-primary">
+                        + Novo lançamento
+                    </a>
+                </div>
             </header>
 
             <section class="month-toolbar">
@@ -83,11 +90,14 @@
                         <p>Exporte um arquivo para guardar ou recuperar seus lançamentos.</p>
                     </div>
                     <div class="button-group">
+                        <button id="exportCsvBtn" type="button" class="button button-primary">
+                            📊 Exportar Excel (CSV)
+                        </button>
                         <button id="exportBtn" type="button" class="button button-secondary">
-                            Exportar backup
+                            Exportar backup JSON
                         </button>
                         <button id="importBtn" type="button" class="button button-secondary">
-                            Importar backup
+                            Importar backup JSON
                         </button>
                         <input id="importFile" type="file" accept=".json,application/json" hidden>
                     </div>

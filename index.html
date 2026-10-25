@@ -8,6 +8,7 @@
     <title>Visão Geral | Meu Financeiro</title>
 
     <link rel="stylesheet" href="style1.css">
+    <link rel="manifest" href="manifest.json">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js" defer></script>
 </head>
@@ -47,9 +48,15 @@
                     <h1>Visão geral</h1>
                     <p class="subtitle" id="todayText">Acompanhe sua vida financeira.</p>
                 </div>
-                <a href="lancamentos.html" class="button button-primary">
-                    + Novo lançamento
-                </a>
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" class="privacy-btn" aria-label="Ocultar ou exibir valores">
+                        <span class="privacy-icon">👁️</span>
+                        <span class="privacy-text">Ocultar</span>
+                    </button>
+                    <a href="lancamentos.html" class="button button-primary">
+                        + Novo lançamento
+                    </a>
+                </div>
             </header>
 
             <section class="month-toolbar">
@@ -63,37 +70,37 @@
             <section class="summary-grid" aria-label="Resumo financeiro">
                 <article class="summary-card">
                     <div class="summary-top">
-                        <span>Saldo do mês</span>
+                        <h2 class="summary-title">Saldo do mês</h2>
                         <span class="summary-icon purple">◈</span>
                     </div>
-                    <h2 id="monthBalance">R$ 0,00</h2>
+                    <p class="summary-amount" id="monthBalance">R$ 0,00</p>
                     <p class="summary-description">Receitas menos despesas</p>
                 </article>
 
                 <article class="summary-card">
                     <div class="summary-top">
-                        <span>Receitas do mês</span>
+                        <h2 class="summary-title">Receitas do mês</h2>
                         <span class="summary-icon green">↗</span>
                     </div>
-                    <h2 id="monthIncome">R$ 0,00</h2>
+                    <p class="summary-amount" id="monthIncome">R$ 0,00</p>
                     <p class="summary-description">Salário e outras entradas</p>
                 </article>
 
                 <article class="summary-card">
                     <div class="summary-top">
-                        <span>Despesas do mês</span>
+                        <h2 class="summary-title">Despesas do mês</h2>
                         <span class="summary-icon red">↘</span>
                     </div>
-                    <h2 id="monthExpenses">R$ 0,00</h2>
+                    <p class="summary-amount" id="monthExpenses">R$ 0,00</p>
                     <p class="summary-description">Total das saídas registradas</p>
                 </article>
 
                 <article class="summary-card">
                     <div class="summary-top">
-                        <span>Taxa de economia</span>
+                        <h2 class="summary-title">Taxa de economia</h2>
                         <span class="summary-icon blue">%</span>
                     </div>
-                    <h2 id="savingsRate">0%</h2>
+                    <p class="summary-amount" id="savingsRate">0%</p>
                     <p class="summary-description">Parte da receita que sobrou</p>
                 </article>
             </section>

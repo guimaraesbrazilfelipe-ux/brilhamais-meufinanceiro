@@ -1,0 +1,16 @@
+{
+  "name": "Meu Financeiro | Controle Pessoal",
+  "short_name": "Meu Financeiro",
+  "description": "Controle suas receitas, despesas, limites e metas financeiras.",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#101827",
+  "theme_color": "#101827",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%239475ff'/><text x='50' y='68' font-size='50' font-family='Arial,sans-serif' text-anchor='middle' fill='white'>₿</text></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

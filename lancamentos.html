@@ -8,6 +8,7 @@
     <title>Novo Lançamento | Meu Financeiro</title>
 
     <link rel="stylesheet" href="style1.css">
+    <link rel="manifest" href="manifest.json">
     <script src="script.js" defer></script>
 </head>
 <body>
@@ -46,9 +47,15 @@
                     <h1 id="formTitle">Novo lançamento</h1>
                     <p class="subtitle" id="todayText">Registre seus rendimentos e despesas.</p>
                 </div>
-                <a href="historico.html" class="button button-secondary">
-                    Ver histórico
-                </a>
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" class="privacy-btn" aria-label="Ocultar ou exibir valores">
+                        <span class="privacy-icon">👁️</span>
+                        <span class="privacy-text">Ocultar</span>
+                    </button>
+                    <a href="historico.html" class="button button-secondary">
+                        Ver histórico
+                    </a>
+                </div>
             </header>
 
             <article class="panel" style="max-width: 860px; margin: 24px 0 30px;">

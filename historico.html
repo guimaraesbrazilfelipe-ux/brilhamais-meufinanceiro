@@ -8,6 +8,7 @@
     <title>Histórico | Meu Financeiro</title>
 
     <link rel="stylesheet" href="style1.css">
+    <link rel="manifest" href="manifest.json">
     <script src="script.js" defer></script>
 </head>
 <body>
@@ -46,9 +47,15 @@
                     <h1>Histórico de lançamentos</h1>
                     <p class="subtitle" id="todayText">Consulte, pesquise, edite e gerencie suas movimentações.</p>
                 </div>
-                <a href="lancamentos.html" class="button button-primary">
-                    + Novo lançamento
-                </a>
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" class="privacy-btn" aria-label="Ocultar ou exibir valores">
+                        <span class="privacy-icon">👁️</span>
+                        <span class="privacy-text">Ocultar</span>
+                    </button>
+                    <a href="lancamentos.html" class="button button-primary">
+                        + Novo lançamento
+                    </a>
+                </div>
             </header>
 
             <article class="panel history-panel" style="margin: 24px 0 30px;">

@@ -311,11 +311,20 @@ h1 {
     background: #1c3452;
 }
 
-.summary-card h2 {
+.summary-card h2,
+.summary-card .summary-amount {
     font-size: clamp(19px, 2vw, 27px);
+    font-weight: 700;
     letter-spacing: -.7px;
     margin: 17px 0 5px;
     overflow-wrap: anywhere;
+}
+
+.summary-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    margin: 0;
 }
 
 .summary-description {
@@ -1600,18 +1609,68 @@ textarea::placeholder {
 
 
 
-/* Barra de rolagem do dashboard: invisível, mas a rolagem da página continua ativa. */
+/* Barra de rolagem estilizada e elegante */
 html,
 body {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    scrollbar-width: thin;
+    scrollbar-color: #3b4b66 #111b2b;
 }
 
 html::-webkit-scrollbar,
 body::-webkit-scrollbar {
-    width: 0;
-    height: 0;
-    display: none;
+    width: 8px;
+    height: 8px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+    background: #111b2b;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+    background: #2a3850;
+    border-radius: 8px;
+    border: 2px solid #111b2b;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+    background: var(--purple);
+}
+
+/* Modo Privacidade (ocultar saldos) */
+.privacy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 41px;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--panel-light);
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.privacy-btn:hover {
+    border-color: var(--purple);
+    background: #223049;
+    transform: translateY(-1px);
+}
+
+body.privacy-mode .summary-card h2,
+body.privacy-mode .summary-card .summary-amount,
+body.privacy-mode .transaction-amount,
+body.privacy-mode .legend-value,
+body.privacy-mode #budgetStatus,
+body.privacy-mode #goalStatus {
+    filter: blur(8px);
+    user-select: none;
+    transition: filter .22s ease;
 }
 
 /* Mantém os dois controles com a mesma altura visual, mesmo com regras anteriores. */
