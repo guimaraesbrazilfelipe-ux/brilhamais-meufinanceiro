@@ -2392,6 +2392,7 @@ function init() {
     setupCategoryPicker();
     setupDatePicker();
     setupMonthPicker();
+    setupWelcomeTutorial();
     renderAll();
 
     // Se a página de lançamentos recebeu um ID para edição via query string (?edit=...)
@@ -2400,6 +2401,140 @@ function init() {
     if (editId) {
         editTransaction(editId);
     }
+}
+
+/* =========================================
+   MINI TUTORIAL E GUIA DE INÍCIO RÁPIDO
+========================================= */
+
+function setupWelcomeTutorial() {
+    const overlay = $("#welcomeTutorial");
+    const app = $(".app");
+    if (!overlay) return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const forceTutorial = urlParams.get("tutorial") === "true" || urlParams.get("tutorial") === "1";
+    const tutorialCompleted = localStorage.getItem("meuFinanceiro.tutorialCompleted") === "true";
+
+    // Se ainda não concluiu ou foi requisitado pela URL/botão:
+    const shouldShow = forceTutorial || !tutorialCompleted;
+
+    if (!shouldShow) {
+        overlay.classList.add("hidden");
+        overlay.style.display = "none";
+        if (app) app.classList.remove("app-hidden-for-tutorial");
+        return;
+    }
+
+    // Esconde o app para mostrar o tutorial separado antes do site abrir
+    if (app) {
+        app.classList.add("app-hidden-for-tutorial");
+    }
+    overlay.classList.remove("hidden");
+    overlay.style.display = "flex";
+
+    let currentStep = 0;
+    const slides = overlay.querySelectorAll(".tutorial-slide");
+    const pills = overlay.querySelectorAll(".tutorial-nav-pill");
+    const dots = overlay.querySelectorAll(".tutorial-dot");
+    const prevBtn = $("#tutorialPrevBtn");
+    const nextBtn = $("#tutorialNextBtn");
+    const finishBtn = $("#tutorialFinishBtn");
+    const skipBtn = $("#tutorialSkipBtn");
+    const dontShowAgainCheck = $("#tutorialDontShowAgain");
+
+    function goToStep(index) {
+        if (index < 0) index = 0;
+        if (index >= slides.length) index = slides.length - 1;
+        currentStep = index;
+
+        slides.forEach((slide, i) => {
+            const isActive = i === currentStep;
+            slide.classList.toggle("active", isActive);
+            slide.setAttribute("aria-hidden", String(!isActive));
+        });
+
+        pills.forEach((pill, i) => {
+            const isActive = i === currentStep;
+            pill.classList.toggle("active", isActive);
+            pill.setAttribute("aria-selected", String(isActive));
+        });
+
+        dots.forEach((dot, i) => {
+            const isActive = i === currentStep;
+            dot.classList.toggle("active", isActive);
+        });
+
+        if (prevBtn) {
+            prevBtn.disabled = currentStep === 0;
+            prevBtn.classList.toggle("disabled", currentStep === 0);
+        }
+
+        const isLast = currentStep === slides.length - 1;
+        if (nextBtn) {
+            nextBtn.classList.toggle("hidden", isLast);
+        }
+        if (finishBtn) {
+            finishBtn.classList.toggle("hidden", !isLast);
+        }
+    }
+
+    function closeAndEnterApp() {
+        if (!dontShowAgainCheck || dontShowAgainCheck.checked) {
+            localStorage.setItem("meuFinanceiro.tutorialCompleted", "true");
+        }
+
+        overlay.classList.add("tutorial-exiting");
+
+        setTimeout(() => {
+            overlay.classList.remove("tutorial-exiting");
+            overlay.classList.add("hidden");
+            overlay.style.display = "none";
+
+            if (app) {
+                app.classList.remove("app-hidden-for-tutorial");
+                app.style.display = "flex";
+                if (window.history && window.history.replaceState) {
+                    const cleanUrl = window.location.pathname;
+                    window.history.replaceState({}, document.title, cleanUrl);
+                }
+                renderAll();
+                app.querySelectorAll(".panel, .summary-card, .planning-card, .tip-card").forEach((el) => {
+                    el.style.animation = "none";
+                    el.offsetHeight;
+                    el.style.animation = "";
+                });
+            }
+        }, 350);
+    }
+
+    if (prevBtn) prevBtn.addEventListener("click", () => goToStep(currentStep - 1));
+    if (nextBtn) nextBtn.addEventListener("click", () => goToStep(currentStep + 1));
+    if (finishBtn) finishBtn.addEventListener("click", closeAndEnterApp);
+    if (skipBtn) skipBtn.addEventListener("click", closeAndEnterApp);
+
+    pills.forEach((pill) => {
+        pill.addEventListener("click", () => {
+            const step = parseInt(pill.dataset.step, 10);
+            if (!isNaN(step)) goToStep(step);
+        });
+    });
+
+    dots.forEach((dot) => {
+        dot.addEventListener("click", () => {
+            const step = parseInt(dot.dataset.step, 10);
+            if (!isNaN(step)) goToStep(step);
+        });
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (overlay.classList.contains("hidden") || overlay.style.display === "none") return;
+        if (e.key === "ArrowRight") goToStep(currentStep + 1);
+        if (e.key === "ArrowLeft") goToStep(currentStep - 1);
+        if (e.key === "Escape") closeAndEnterApp();
+    });
+
+    goToStep(0);
 }
 
 document.addEventListener("DOMContentLoaded", init);

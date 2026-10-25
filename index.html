@@ -39,6 +39,7 @@
                 <a href="historico.html" class="nav-link">◷ <span>Histórico</span></a>
                 <a href="planejamento.html" class="nav-link">◎ <span>Planejamento</span></a>
                 <a href="configuracoes.html" class="nav-link">⚙ <span>Configurações</span></a>
+                <a href="index.html?tutorial=true" class="nav-link nav-link-tutorial">📖 <span>Como usar</span></a>
             </nav>
 
             <div class="sidebar-bottom">
@@ -214,6 +215,7 @@
             <a href="historico.html" class="nav-link">◷ <span>Histórico</span></a>
             <a href="planejamento.html" class="nav-link">◎ <span>Planejamento</span></a>
             <a href="configuracoes.html" class="nav-link">⚙ <span>Configurações</span></a>
+            <a href="index.html?tutorial=true" class="nav-link nav-link-tutorial">📖 <span>Como usar</span></a>
         </nav>
 
         <div class="mobile-drawer-bottom">
@@ -223,6 +225,151 @@
                 <p>Acompanhe seus gastos diariamente. Pequenas economias podem fazer diferença no fim do mês.</p>
             </div>
             <p class="sidebar-footer">SEU DINHEIRO, SUAS REGRAS.</p>
+        </div>
+    </div>
+
+    <!-- Mini Tutorial e Explicação Inicial (Separado do Gestor) -->
+    <div id="welcomeTutorial" class="welcome-tutorial-overlay" role="dialog" aria-modal="true" aria-label="Tutorial do Meu Financeiro">
+        <div class="tutorial-card">
+            <header class="tutorial-header">
+                <div class="tutorial-badge">
+                    <span>✨</span>
+                    <span>Guia de Início Rápido</span>
+                </div>
+                <button type="button" class="tutorial-skip-btn" id="tutorialSkipBtn" title="Ir direto para o site">
+                    Pular para o site ✕
+                </button>
+            </header>
+
+            <div class="tutorial-nav-pills" role="tablist" aria-label="Passos do tutorial">
+                <button type="button" class="tutorial-nav-pill active" role="tab" aria-selected="true" data-step="0">
+                    <span>⚙️</span><span>1. Salário</span>
+                </button>
+                <button type="button" class="tutorial-nav-pill" role="tab" aria-selected="false" data-step="1">
+                    <span>➕</span><span>2. Lançamentos</span>
+                </button>
+                <button type="button" class="tutorial-nav-pill" role="tab" aria-selected="false" data-step="2">
+                    <span>▦</span><span>3. Visão Geral</span>
+                </button>
+                <button type="button" class="tutorial-nav-pill" role="tab" aria-selected="false" data-step="3">
+                    <span>◎</span><span>4. Planejamento</span>
+                </button>
+                <button type="button" class="tutorial-nav-pill" role="tab" aria-selected="false" data-step="4">
+                    <span>🔒</span><span>5. Segurança</span>
+                </button>
+            </div>
+
+            <div class="tutorial-slides-wrapper">
+                <!-- Passo 1 -->
+                <div class="tutorial-slide active" data-step="0">
+                    <p class="slide-step-tag">Passo 1 de 5 · Comece por aqui</p>
+                    <div class="slide-title-row">
+                        <div class="slide-icon-box">⚙️</div>
+                        <h2>Defina sua Renda Mensal fixa</h2>
+                    </div>
+                    <p class="slide-description">
+                        O primeiro passo para usar o <strong>Meu Financeiro</strong> é abrir a aba <strong>Configurações</strong> e cadastrar seu <strong>salário ou renda fixa mensal</strong>. Esse valor é a base para o cálculo automático do seu saldo real e da sua taxa de economia.
+                    </p>
+                    <div class="slide-tip-box">
+                        <span>💡</span>
+                        <span><strong>Dica prática:</strong> O salário é atrelado ao mês selecionado no topo e não se mistura com lançamentos avulsos, garantindo contas 100% corretas.</span>
+                    </div>
+                </div>
+
+                <!-- Passo 2 -->
+                <div class="tutorial-slide" data-step="1">
+                    <p class="slide-step-tag">Passo 2 de 5 · Rotina diária</p>
+                    <div class="slide-title-row">
+                        <div class="slide-icon-box">➕</div>
+                        <h2>Adicione Despesas ou Renda Extra</h2>
+                    </div>
+                    <p class="slide-description">
+                        Na aba <strong>Novo lançamento</strong>, registre seus gastos do dia a dia com categorias práticas e ícones. E se você receber um dinheiro extra (freelancer, bico, vendas ou bonificações), mude o tipo para <strong>Receita extra</strong> para desbloquear categorias exclusivas!
+                    </p>
+                    <div class="slide-tip-box">
+                        <span>💡</span>
+                        <span><strong>Dica prática:</strong> Use o seletor de data moderno para registrar lançamentos de qualquer dia, mês ou ano em poucos cliques.</span>
+                    </div>
+                </div>
+
+                <!-- Passo 3 -->
+                <div class="tutorial-slide" data-step="2">
+                    <p class="slide-step-tag">Passo 3 de 5 · Controle total</p>
+                    <div class="slide-title-row">
+                        <div class="slide-icon-box">▦</div>
+                        <h2>Monitore seu Saldo na Visão Geral</h2>
+                    </div>
+                    <p class="slide-description">
+                        A tela de <strong>Visão geral</strong> é seu painel de bordo. Aqui você vê seus <strong>4 cards principais</strong>: Saldo Atual, Receitas, Despesas e a Taxa de Economia (quanto % da sua renda sobrou). Você também acompanha um gráfico com o balanço do mês.
+                    </p>
+                    <div class="slide-tip-box">
+                        <span>💡</span>
+                        <span><strong>Dica prática:</strong> Em locais públicos ou gravando tela? Clique no botão <strong>👁️ Ocultar</strong> para esconder os valores com um clique.</span>
+                    </div>
+                </div>
+
+                <!-- Passo 4 -->
+                <div class="tutorial-slide" data-step="3">
+                    <p class="slide-step-tag">Passo 4 de 5 · Metas inteligentes</p>
+                    <div class="slide-title-row">
+                        <div class="slide-icon-box">◎</div>
+                        <h2>Defina Limites no Planejamento</h2>
+                    </div>
+                    <p class="slide-description">
+                        Na aba <strong>Planejamento</strong>, determine seu teto de gastos para o mês. Uma barra visual de progresso mostra em tempo real o quanto você já gastou do limite estipulado, alertando caso passe do orçamento planejado.
+                    </p>
+                    <div class="slide-tip-box">
+                        <span>💡</span>
+                        <span><strong>Dica prática:</strong> Consulte a aba <strong>Relatórios</strong> para ver o gráfico em rosca e entender onde seu dinheiro está sendo mais gasto.</span>
+                    </div>
+                </div>
+
+                <!-- Passo 5 -->
+                <div class="tutorial-slide" data-step="4">
+                    <p class="slide-step-tag">Passo 5 de 5 · Privacidade e Backup</p>
+                    <div class="slide-title-row">
+                        <div class="slide-icon-box">🔒</div>
+                        <h2>Seus Dados Seguros e 100% Offline</h2>
+                    </div>
+                    <p class="slide-description">
+                        O Meu Financeiro é totalmente privado: <strong>nenhuma informação financeira é enviada para servidores externos</strong>. Seus lançamentos ficam salvos direto na memória do seu navegador. Na aba <strong>Configurações</strong>, exporte seus dados para <strong>Excel (CSV)</strong> ou faça backup em JSON a qualquer hora.
+                    </p>
+                    <div class="slide-tip-box">
+                        <span>🎉</span>
+                        <span><strong>Tudo pronto!</strong> Você já conhece todos os recursos essenciais. Clique no botão abaixo para acessar o seu site.</span>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="tutorial-footer">
+                <div class="tutorial-dots" aria-hidden="true">
+                    <span class="tutorial-dot active" data-step="0"></span>
+                    <span class="tutorial-dot" data-step="1"></span>
+                    <span class="tutorial-dot" data-step="2"></span>
+                    <span class="tutorial-dot" data-step="3"></span>
+                    <span class="tutorial-dot" data-step="4"></span>
+                </div>
+
+                <div class="tutorial-actions">
+                    <button type="button" class="tutorial-btn-nav disabled" id="tutorialPrevBtn" disabled>
+                        ← Anterior
+                    </button>
+                    <button type="button" class="tutorial-btn-primary" id="tutorialNextBtn">
+                        Próximo passo →
+                    </button>
+                    <button type="button" class="tutorial-btn-primary tutorial-btn-start hidden" id="tutorialFinishBtn">
+                        Acessar Meu Financeiro ✨
+                    </button>
+                </div>
+
+                <div class="tutorial-options-row">
+                    <label class="tutorial-checkbox-label">
+                        <input type="checkbox" id="tutorialDontShowAgain" checked>
+                        <span>Entendi! Não abrir automaticamente na próxima visita</span>
+                    </label>
+                    <span class="tutorial-help-hint">Você pode rever este tutorial a qualquer momento no menu "Como usar".</span>
+                </div>
+            </footer>
         </div>
     </div>
 </body>
