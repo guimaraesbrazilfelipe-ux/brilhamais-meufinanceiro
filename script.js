@@ -81,6 +81,16 @@ function todayISO() {
     return local.toISOString().slice(0, 10);
 }
 
+function yesterdayISO() {
+    const now = new Date();
+    now.setDate(now.getDate() - 1);
+    const local = new Date(
+        now.getTime() - now.getTimezoneOffset() * 60000
+    );
+
+    return local.toISOString().slice(0, 10);
+}
+
 function currentMonth() {
     return todayISO().slice(0, 7);
 }
@@ -891,53 +901,22 @@ function unpayRecurringBill(billId, month) {
     renderAll();
 }
 
-function deleteRecurringBill(billId) {
+async function deleteRecurringBill(billId) {
     const bill = (data.recurringBills || []).find((b) => b.id === billId);
     if (!bill) return;
 
-    const dialog = $("#confirmDialog");
-    if (dialog) {
-        const title = $("#confirmDialogTitle");
-        const msg = $("#confirmDialogMessage");
-        const confirmBtn = $("#confirmDialogConfirm");
-        const cancelBtn = $("#confirmDialogCancel");
-        const closeBtn = $("#confirmDialogClose");
+    const confirmed = await showConfirmDialog({
+        title: "Excluir conta fixa?",
+        message: `Tem certeza de que deseja remover "${bill.name}" das suas contas fixas?`,
+        confirmLabel: "Excluir conta"
+    });
 
-        if (title) title.textContent = "Excluir conta fixa?";
-        if (msg) msg.textContent = `Tem certeza de que deseja remover "${bill.name}" das suas contas fixas?`;
+    if (!confirmed) return;
 
-        dialog.classList.add("open");
-        dialog.setAttribute("aria-hidden", "false");
-
-        const cleanup = () => {
-            dialog.classList.remove("open");
-            dialog.setAttribute("aria-hidden", "true");
-            confirmBtn.removeEventListener("click", onConfirm);
-            if (cancelBtn) cancelBtn.removeEventListener("click", onCancel);
-            if (closeBtn) closeBtn.removeEventListener("click", onCancel);
-        };
-
-        const onConfirm = () => {
-            cleanup();
-            data.recurringBills = (data.recurringBills || []).filter((b) => b.id !== billId);
-            saveData();
-            showToast("Conta fixa excluída com sucesso.");
-            renderAll();
-        };
-
-        const onCancel = () => cleanup();
-
-        confirmBtn.addEventListener("click", onConfirm);
-        if (cancelBtn) cancelBtn.addEventListener("click", onCancel);
-        if (closeBtn) closeBtn.addEventListener("click", onCancel);
-    } else {
-        if (confirm(`Excluir conta fixa "${bill.name}"?`)) {
-            data.recurringBills = (data.recurringBills || []).filter((b) => b.id !== billId);
-            saveData();
-            showToast("Conta fixa excluída.");
-            renderAll();
-        }
-    }
+    data.recurringBills = (data.recurringBills || []).filter((b) => b.id !== billId);
+    saveData();
+    showToast("Conta fixa excluída com sucesso.");
+    renderAll();
 }
 
 function renderRecurringBills() {
@@ -1377,9 +1356,7 @@ function initSingleDatePicker(container) {
         if (!label) return;
 
         const todayStr = todayISO();
-        const d = new Date();
-        d.setDate(d.getDate() - 1);
-        const yesterdayStr = d.toISOString().split("T")[0];
+        const yesterdayStr = yesterdayISO();
 
         let suffix = "";
         if (info.val === todayStr) suffix = " (Hoje)";
@@ -1577,9 +1554,7 @@ function initSingleDatePicker(container) {
     if (yesterdayBtn) {
         yesterdayBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-            const d = new Date();
-            d.setDate(d.getDate() - 1);
-            selectDate(d.toISOString().split("T")[0]);
+            selectDate(yesterdayISO());
         });
     }
 
@@ -2224,6 +2199,14 @@ async function deleteTransaction(id) {
         (item) => item.id !== id
     );
 
+    if (transaction.recurringBillId) {
+        const bill = (data.recurringBills || []).find((b) => b.id === transaction.recurringBillId);
+        if (bill && Array.isArray(bill.paidMonths)) {
+            const txMonth = transaction.date.slice(0, 7);
+            bill.paidMonths = bill.paidMonths.filter((m) => m !== txMonth);
+        }
+    }
+
     if (!saveData()) {
         data.transactions = previous;
         return;
@@ -2330,9 +2313,10 @@ function handleTransactionSubmit(event) {
         return;
     }
 
+    sessionStorage.setItem("meuFinanceiro.date", date);
     sessionStorage.setItem("meuFinanceiro.month", date.slice(0, 7));
     if ($("#dashboardMonth")) {
-        $("#dashboardMonth").value = date.slice(0, 7);
+        $("#dashboardMonth").value = date;
     }
 
     showToast(
@@ -2836,11 +2820,7 @@ function init() {
 
     const monthInput = $("#dashboardMonth");
     if (monthInput) {
-        monthInput.value = selectedMonth();
-        monthInput.addEventListener("change", (e) => {
-            sessionStorage.setItem("meuFinanceiro.month", e.target.value);
-            renderAll();
-        });
+        monthInput.value = selectedDate();
     }
 
     const todayDateInput = $("#transactionDate");
