@@ -34,6 +34,7 @@
             <nav class="navigation desktop-navigation">
                 <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
                 <a href="lancamentos.html" class="nav-link">＋ <span>Novo lançamento</span></a>
+                <a href="agenda.html" class="nav-link">📅 <span>Agenda</span></a>
                 <a href="relatorios.html" class="nav-link">▥ <span>Relatórios</span></a>
                 <a href="historico.html" class="nav-link">◷ <span>Histórico</span></a>
                 <a href="planejamento.html" class="nav-link">◎ <span>Planejamento</span></a>
@@ -67,34 +68,58 @@
 
             <section class="month-toolbar">
                 <div>
-                    <label for="monthPickerTrigger">Mês de referência do salário</label>
-                    <div class="custom-monthpicker" id="customMonthPicker">
-                        <input type="month" id="dashboardMonth" class="monthpicker-native-input" tabindex="-1" aria-hidden="true">
-                        <button type="button" class="monthpicker-trigger" id="monthPickerTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="monthPickerDropdown">
-                            <span class="monthpicker-trigger-left">
-                                <span class="monthpicker-icon" aria-hidden="true">📅</span>
-                                <span class="monthpicker-text" id="monthPickerText">Outubro de 2026</span>
+                    <label for="datePickerTrigger">Período de referência (Dia, Mês e Ano)</label>
+                    <div class="custom-datepicker" id="customDatePicker">
+                        <input type="date" id="dashboardMonth" class="datepicker-native-input" tabindex="-1" aria-hidden="true">
+                        <button type="button" class="datepicker-trigger" id="datePickerTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="datePickerDropdown">
+                            <span class="datepicker-trigger-left">
+                                <span class="datepicker-icon" aria-hidden="true">📅</span>
+                                <span class="datepicker-text" id="datePickerText">Selecione uma data</span>
                             </span>
-                            <span class="monthpicker-chevron" aria-hidden="true">⌄</span>
+                            <span class="datepicker-chevron" aria-hidden="true">⌄</span>
                         </button>
 
-                        <div class="monthpicker-backdrop" id="monthPickerBackdrop" aria-hidden="true"></div>
+                        <div class="datepicker-backdrop" id="datePickerBackdrop" aria-hidden="true"></div>
 
-                        <div class="monthpicker-dropdown" id="monthPickerDropdown" role="dialog" aria-modal="true" aria-label="Seletor de mês e ano" aria-hidden="true">
-                            <div class="mp-header">
-                                <button type="button" class="mp-nav-btn" id="mpPrevYearBtn" aria-label="Ano anterior">‹</button>
-                                <span class="mp-year-display" id="mpYearDisplay">2026</span>
-                                <button type="button" class="mp-nav-btn" id="mpNextYearBtn" aria-label="Próximo ano">›</button>
-                                <button type="button" class="mp-close-btn" id="mpCloseBtn" aria-label="Fechar seletor">✕</button>
+                        <div class="datepicker-dropdown" id="datePickerDropdown" role="dialog" aria-modal="true" aria-label="Seletor de data" aria-hidden="true">
+                            <div class="dp-header">
+                                <button type="button" class="dp-btn-view" id="dpViewBtn" title="Alternar para seleção de mês e ano">
+                                    <span id="dpCurrentMonthYear">Outubro de 2026</span>
+                                    <span class="dp-view-chevron" aria-hidden="true">▾</span>
+                                </button>
+                                <div class="dp-nav-group">
+                                    <button type="button" class="dp-nav-btn dp-prev-btn" id="dpPrevBtn" aria-label="Mês anterior">‹</button>
+                                    <button type="button" class="dp-nav-btn dp-next-btn" id="dpNextBtn" aria-label="Próximo mês">›</button>
+                                    <button type="button" class="dp-close-btn" id="dpCloseBtn" aria-label="Fechar calendário">✕</button>
+                                </div>
                             </div>
 
-                            <div class="mp-shortcuts">
-                                <button type="button" class="mp-shortcut-btn" id="mpCurrentMonthBtn">Mês atual</button>
-                                <button type="button" class="mp-shortcut-btn" id="mpPrevMonthBtn">Mês anterior</button>
-                                <button type="button" class="mp-shortcut-btn" id="mpNextMonthBtn">Próximo mês</button>
+                            <div class="dp-shortcuts">
+                                <button type="button" class="dp-shortcut-btn dp-today-btn" id="dpTodayBtn">Hoje</button>
+                                <button type="button" class="dp-shortcut-btn dp-yesterday-btn" id="dpYesterdayBtn">Ontem</button>
                             </div>
 
-                            <div class="mp-months-grid" id="mpMonthsGrid"></div>
+                            <div class="dp-days-view" id="dpDaysView">
+                                <div class="dp-weekdays">
+                                    <span>Dom</span>
+                                    <span>Seg</span>
+                                    <span>Ter</span>
+                                    <span>Qua</span>
+                                    <span>Qui</span>
+                                    <span>Sex</span>
+                                    <span>Sáb</span>
+                                </div>
+                                <div class="dp-grid" id="dpGrid"></div>
+                            </div>
+
+                            <div class="dp-months-view hidden" id="dpMonthsView">
+                                <div class="dp-year-selector">
+                                    <button type="button" class="dp-nav-btn dp-prev-year-btn" id="dpPrevYearBtn" aria-label="Ano anterior">‹</button>
+                                    <span id="dpSelectedYear" class="dp-year-display">2026</span>
+                                    <button type="button" class="dp-nav-btn dp-next-year-btn" id="dpNextYearBtn" aria-label="Próximo ano">›</button>
+                                </div>
+                                <div class="dp-months-grid" id="dpMonthsGrid"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -168,6 +193,7 @@
         <nav class="navigation mobile-navigation">
             <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
             <a href="lancamentos.html" class="nav-link">＋ <span>Novo lançamento</span></a>
+            <a href="agenda.html" class="nav-link">📅 <span>Agenda</span></a>
             <a href="relatorios.html" class="nav-link">▥ <span>Relatórios</span></a>
             <a href="historico.html" class="nav-link">◷ <span>Histórico</span></a>
             <a href="planejamento.html" class="nav-link">◎ <span>Planejamento</span></a>

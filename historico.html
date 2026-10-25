@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#101827">
-    <meta name="description" content="Histórico completo de lançamentos e movimentações financeiras.">
-    <title>Histórico | Meu Financeiro</title>
+    <meta name="description" content="Histórico e relatórios completos por dia, mês e ano.">
+    <title>Histórico e Relatórios | Meu Financeiro</title>
 
     <link rel="stylesheet" href="style1.css">
     <link rel="manifest" href="manifest.json">
@@ -34,6 +34,7 @@
             <nav class="navigation desktop-navigation">
                 <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
                 <a href="lancamentos.html" class="nav-link">＋ <span>Novo lançamento</span></a>
+                <a href="agenda.html" class="nav-link">📅 <span>Agenda</span></a>
                 <a href="relatorios.html" class="nav-link">▥ <span>Relatórios</span></a>
                 <a href="historico.html" class="nav-link active">◷ <span>Histórico</span></a>
                 <a href="planejamento.html" class="nav-link">◎ <span>Planejamento</span></a>
@@ -44,8 +45,8 @@
             <div class="sidebar-bottom">
                 <div class="tip-card">
                     <span class="tip-icon">💡</span>
-                    <h3>Dica financeira</h3>
-                    <p>Mantenha descrições claras em cada lançamento para facilitar sua conferência e busca.</p>
+                    <h3>Dica do histórico</h3>
+                    <p>Alterne entre dia, mês e ano para analisar seus relatórios de qualquer época.</p>
                 </div>
                 <p class="sidebar-footer">SEU DINHEIRO, SUAS REGRAS.</p>
             </div>
@@ -54,9 +55,9 @@
         <main class="main-content">
             <header class="topbar">
                 <div>
-                    <p class="eyebrow">MOVIMENTAÇÕES</p>
-                    <h1>Histórico de lançamentos</h1>
-                    <p class="subtitle" id="todayText">Consulte, pesquise, edite e gerencie suas movimentações.</p>
+                    <p class="eyebrow">CONSULTA E ANÁLISE TEMPORAL</p>
+                    <h1>Histórico e relatórios por data</h1>
+                    <p class="subtitle" id="todayText">Escolha exatamente o dia, mês e ano para consultar relatórios completos e todas as movimentações.</p>
                 </div>
                 <div class="topbar-actions">
                     <a href="lancamentos.html" class="button button-primary btn-new-transaction">
@@ -65,10 +66,136 @@
                 </div>
             </header>
 
+            <section class="month-toolbar">
+                <div>
+                    <label for="datePickerTrigger">Data selecionada (Dia, Mês e Ano)</label>
+                    <div class="custom-datepicker" id="customDatePicker">
+                        <input type="date" id="dashboardMonth" class="datepicker-native-input" tabindex="-1" aria-hidden="true">
+                        <button type="button" class="datepicker-trigger" id="datePickerTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="datePickerDropdown">
+                            <span class="datepicker-trigger-left">
+                                <span class="datepicker-icon" aria-hidden="true">📅</span>
+                                <span class="datepicker-text" id="datePickerText">Selecione uma data</span>
+                            </span>
+                            <span class="datepicker-chevron" aria-hidden="true">⌄</span>
+                        </button>
+
+                        <div class="datepicker-backdrop" id="datePickerBackdrop" aria-hidden="true"></div>
+
+                        <div class="datepicker-dropdown" id="datePickerDropdown" role="dialog" aria-modal="true" aria-label="Seletor de data" aria-hidden="true">
+                            <div class="dp-header">
+                                <button type="button" class="dp-btn-view" id="dpViewBtn" title="Alternar para seleção de mês e ano">
+                                    <span id="dpCurrentMonthYear">Outubro de 2026</span>
+                                    <span class="dp-view-chevron" aria-hidden="true">▾</span>
+                                </button>
+                                <div class="dp-nav-group">
+                                    <button type="button" class="dp-nav-btn dp-prev-btn" id="dpPrevBtn" aria-label="Mês anterior">‹</button>
+                                    <button type="button" class="dp-nav-btn dp-next-btn" id="dpNextBtn" aria-label="Próximo mês">›</button>
+                                    <button type="button" class="dp-close-btn" id="dpCloseBtn" aria-label="Fechar calendário">✕</button>
+                                </div>
+                            </div>
+
+                            <div class="dp-shortcuts">
+                                <button type="button" class="dp-shortcut-btn dp-today-btn" id="dpTodayBtn">Hoje</button>
+                                <button type="button" class="dp-shortcut-btn dp-yesterday-btn" id="dpYesterdayBtn">Ontem</button>
+                            </div>
+
+                            <div class="dp-days-view" id="dpDaysView">
+                                <div class="dp-weekdays">
+                                    <span>Dom</span>
+                                    <span>Seg</span>
+                                    <span>Ter</span>
+                                    <span>Qua</span>
+                                    <span>Qui</span>
+                                    <span>Sex</span>
+                                    <span>Sáb</span>
+                                </div>
+                                <div class="dp-grid" id="dpGrid"></div>
+                            </div>
+
+                            <div class="dp-months-view hidden" id="dpMonthsView">
+                                <div class="dp-year-selector">
+                                    <button type="button" class="dp-nav-btn dp-prev-year-btn" id="dpPrevYearBtn" aria-label="Ano anterior">‹</button>
+                                    <span id="dpSelectedYear" class="dp-year-display">2026</span>
+                                    <button type="button" class="dp-nav-btn dp-next-year-btn" id="dpNextYearBtn" aria-label="Próximo ano">›</button>
+                                </div>
+                                <div class="dp-months-grid" id="dpMonthsGrid"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <span class="status-pill">● Filtro ativo</span>
+            </section>
+
+            <!-- Abas para alternar período: Dia, Mês, Ano ou Todos -->
+            <div class="period-tabs" role="tablist" aria-label="Filtrar por período">
+                <button type="button" class="period-tab-btn active" data-mode="day" role="tab" aria-selected="true">
+                    📅 Dia exato
+                </button>
+                <button type="button" class="period-tab-btn" data-mode="month" role="tab" aria-selected="false">
+                    🗓️ Mês completo
+                </button>
+                <button type="button" class="period-tab-btn" data-mode="year" role="tab" aria-selected="false">
+                    📆 Ano inteiro
+                </button>
+                <button type="button" class="period-tab-btn" data-mode="all" role="tab" aria-selected="false">
+                    ∞ Todos os lançamentos
+                </button>
+            </div>
+
+            <!-- Bloco de Relatórios do Período -->
+            <div id="historicalReportsContainer">
+                <section class="summary-grid" aria-label="Relatório do período">
+                    <article class="summary-card">
+                        <div class="summary-top">
+                            <h2 class="summary-title">Saldo do período</h2>
+                            <span class="summary-icon purple">◈</span>
+                        </div>
+                        <p class="summary-amount" id="historyPeriodBalance">R$ 0,00</p>
+                        <p class="summary-description" id="historyCurrentPeriodLabel">Período selecionado</p>
+                    </article>
+
+                    <article class="summary-card">
+                        <div class="summary-top">
+                            <h2 class="summary-title">Receitas</h2>
+                            <span class="summary-icon green">↗</span>
+                        </div>
+                        <p class="summary-amount" id="historyPeriodIncome">R$ 0,00</p>
+                        <p class="summary-description">Entradas no período</p>
+                    </article>
+
+                    <article class="summary-card">
+                        <div class="summary-top">
+                            <h2 class="summary-title">Despesas</h2>
+                            <span class="summary-icon red">↘</span>
+                        </div>
+                        <p class="summary-amount" id="historyPeriodExpenses">R$ 0,00</p>
+                        <p class="summary-description">Saídas no período</p>
+                    </article>
+
+                    <article class="summary-card">
+                        <div class="summary-top">
+                            <h2 class="summary-title">Taxa de economia</h2>
+                            <span class="summary-icon yellow">%</span>
+                        </div>
+                        <p class="summary-amount" id="historyPeriodSavings">0,0%</p>
+                        <p class="summary-description">Percentual poupado</p>
+                    </article>
+                </section>
+
+                <!-- Relatório por Categorias -->
+                <article class="category-breakdown-card">
+                    <div class="category-breakdown-header">
+                        <h3>📊 Relatório de despesas por categoria</h3>
+                    </div>
+                    <div id="historyCategoryBreakdown" class="category-breakdown-list"></div>
+                </article>
+            </div>
+
+            <!-- Movimentações do Período -->
             <article class="panel history-panel" style="margin: 24px 0 30px;">
                 <div class="panel-heading">
                     <div>
-                        <h2>Todas as movimentações</h2>
+                        <h2>Movimentações do período</h2>
                         <p>Filtre por tipo ou pesquise por palavras-chave na descrição ou categoria.</p>
                     </div>
                 </div>
@@ -98,9 +225,6 @@
 
                 <div class="history-footer">
                     <span id="transactionCount">0 lançamentos</span>
-                    <button type="button" class="text-button" id="showAllBtn">
-                        Ver todos
-                    </button>
                 </div>
             </article>
 
@@ -128,7 +252,7 @@
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-    <!-- Mobile Menu Drawer & Backdrop (diretos no body para evitar qualquer bug de posicionamento ou stacking context) -->
+    <!-- Mobile Menu Drawer & Backdrop -->
     <div class="mobile-menu-backdrop" id="mobileMenuBackdrop" aria-hidden="true"></div>
 
     <div class="mobile-menu-drawer" id="mobileMenuDrawer" role="dialog" aria-modal="true" aria-label="Menu de navegação">
@@ -145,6 +269,7 @@
         <nav class="navigation mobile-navigation">
             <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
             <a href="lancamentos.html" class="nav-link">＋ <span>Novo lançamento</span></a>
+            <a href="agenda.html" class="nav-link">📅 <span>Agenda</span></a>
             <a href="relatorios.html" class="nav-link">▥ <span>Relatórios</span></a>
             <a href="historico.html" class="nav-link active">◷ <span>Histórico</span></a>
             <a href="planejamento.html" class="nav-link">◎ <span>Planejamento</span></a>

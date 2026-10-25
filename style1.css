@@ -3066,3 +3066,363 @@ body.privacy-mode #goalStatus {
         gap: 6px;
     }
 }
+
+/* =========================================
+   SELETOR DE DATAS NA TOOLBAR
+========================================= */
+
+.month-toolbar .custom-datepicker {
+    position: relative;
+    display: inline-block;
+    min-width: 270px;
+    width: auto;
+}
+
+@media (max-width: 650px) {
+    .month-toolbar .custom-datepicker {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+/* =========================================
+   ABAS DE FILTRO DE PERÍODO (HISTÓRICO / RELATÓRIOS)
+========================================= */
+
+.period-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 18px 0 22px;
+    flex-wrap: wrap;
+}
+
+.period-tab-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--muted, #9ca9bd);
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.period-tab-btn:hover {
+    color: #ffffff;
+    background: rgba(124, 93, 250, 0.15);
+    border-color: rgba(148, 117, 255, 0.3);
+}
+
+.period-tab-btn.active {
+    background: linear-gradient(135deg, rgba(124, 93, 250, 0.35) 0%, rgba(69, 214, 160, 0.25) 100%);
+    border-color: #9475ff;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(124, 93, 250, 0.25);
+}
+
+/* =========================================
+   AGENDA FINANCEIRA (CALENDÁRIO INTERATIVO)
+========================================= */
+
+.agenda-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+    margin: 24px 0 30px;
+}
+
+@media (max-width: 950px) {
+    .agenda-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.agenda-calendar-panel {
+    background: var(--panel, #131d2e);
+    border: 1px solid var(--border, #24344d);
+    border-radius: var(--radius, 16px);
+    padding: 22px;
+}
+
+.agenda-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.agenda-header h2 {
+    font-size: 17px;
+    margin: 0;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.agenda-nav-group {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.agenda-nav-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s;
+}
+
+.agenda-nav-btn:hover {
+    background: var(--purple, #7c5dfa);
+    border-color: var(--purple-light, #9475ff);
+}
+
+.agenda-today-btn {
+    background: rgba(124, 93, 250, 0.15);
+    border: 1px solid rgba(148, 117, 255, 0.35);
+    color: var(--purple-light, #9475ff);
+    padding: 0 12px;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.agenda-today-btn:hover {
+    background: var(--purple, #7c5dfa);
+    color: #ffffff;
+}
+
+.agenda-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.agenda-weekdays span {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted, #9ca9bd);
+    text-transform: uppercase;
+    padding: 4px 0;
+}
+
+.agenda-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+}
+
+.agenda-day {
+    min-height: 72px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 6px 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    position: relative;
+    user-select: none;
+}
+
+.agenda-day:hover {
+    background: rgba(124, 93, 250, 0.12);
+    border-color: rgba(148, 117, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+.agenda-day.other-month {
+    opacity: 0.35;
+}
+
+.agenda-day.today {
+    border-color: #45d6a0;
+    box-shadow: 0 0 10px rgba(69, 214, 160, 0.2);
+}
+
+.agenda-day.today .agenda-day-num {
+    color: #45d6a0;
+    font-weight: 800;
+}
+
+.agenda-day.selected {
+    background: rgba(124, 93, 250, 0.25);
+    border-color: #9475ff;
+    box-shadow: 0 0 14px rgba(124, 93, 250, 0.35);
+}
+
+.agenda-day.selected .agenda-day-num {
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.agenda-day-num {
+    font-size: 12px;
+    font-weight: 600;
+    color: #c4d1e6;
+}
+
+.agenda-day-badges {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 4px;
+}
+
+.agenda-badge-item {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+.agenda-badge-item.income {
+    background: rgba(69, 214, 160, 0.2);
+    color: #45d6a0;
+    border: 1px solid rgba(69, 214, 160, 0.3);
+}
+
+.agenda-badge-item.expense {
+    background: rgba(255, 116, 133, 0.2);
+    color: #ff7485;
+    border: 1px solid rgba(255, 116, 133, 0.3);
+}
+
+@media (max-width: 650px) {
+    .agenda-day {
+        min-height: 52px;
+        padding: 4px;
+    }
+    .agenda-day-num {
+        font-size: 11px;
+    }
+    .agenda-badge-item {
+        font-size: 8px;
+        padding: 1px 2px;
+    }
+}
+
+/* Detalhes do Dia */
+.agenda-day-details-panel {
+    background: var(--panel, #131d2e);
+    border: 1px solid var(--border, #24344d);
+    border-radius: var(--radius, 16px);
+    padding: 22px;
+}
+
+.day-details-header {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.day-details-header h3 {
+    margin: 0 0 6px;
+    font-size: 16px;
+    color: #ffffff;
+}
+
+.day-summary-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+.day-summary-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 10px;
+    padding: 10px 8px;
+    text-align: center;
+}
+
+.day-summary-box span {
+    display: block;
+    font-size: 10px;
+    color: var(--muted, #9ca9bd);
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.day-summary-box strong {
+    display: block;
+    font-size: 13px;
+    margin-top: 2px;
+}
+
+.day-summary-box.income strong { color: var(--green, #45d6a0); }
+.day-summary-box.expense strong { color: var(--red, #ff7485); }
+.day-summary-box.balance strong { color: var(--purple-light, #9475ff); }
+
+/* Breakdown de categorias */
+.category-breakdown-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 22px;
+}
+
+.category-breakdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.category-breakdown-header h3 {
+    margin: 0;
+    font-size: 14px;
+    color: #ffffff;
+}
+
+.breakdown-item {
+    margin-bottom: 12px;
+}
+
+.breakdown-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.breakdown-bar-bg {
+    height: 7px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.breakdown-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.4s ease;
+}

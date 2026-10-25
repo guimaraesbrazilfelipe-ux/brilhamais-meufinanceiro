@@ -186,16 +186,80 @@ function saveData() {
 function selectedMonth() {
     const monthInput = $("#dashboardMonth");
     if (monthInput && monthInput.value) {
-        sessionStorage.setItem("meuFinanceiro.month", monthInput.value);
-        return monthInput.value;
+        const val = monthInput.value.slice(0, 7);
+        sessionStorage.setItem("meuFinanceiro.month", val);
+        return val;
     }
     return sessionStorage.getItem("meuFinanceiro.month") || currentMonth();
+}
+
+function selectedDate() {
+    const dateInput = $("#dashboardMonth") || $("#transactionDate");
+    if (dateInput && dateInput.value && dateInput.value.length === 10) {
+        sessionStorage.setItem("meuFinanceiro.date", dateInput.value);
+        return dateInput.value;
+    }
+    return sessionStorage.getItem("meuFinanceiro.date") || todayISO();
 }
 
 function transactionsForMonth(month) {
     return data.transactions.filter(
         (transaction) => transaction.date.startsWith(month)
     );
+}
+
+function transactionsForDate(date) {
+    return data.transactions.filter(
+        (transaction) => transaction.date === date
+    );
+}
+
+function transactionsForYear(year) {
+    const yearStr = String(year);
+    return data.transactions.filter(
+        (transaction) => transaction.date.startsWith(yearStr)
+    );
+}
+
+function getPeriodSummary(periodType = "month", value = null) {
+    let transactions = [];
+    let salary = 0;
+    const currentM = selectedMonth();
+    const currentD = selectedDate();
+
+    if (periodType === "day") {
+        const targetDate = value || currentD;
+        transactions = transactionsForDate(targetDate);
+        salary = 0;
+    } else if (periodType === "year") {
+        const targetYear = value || (currentD ? currentD.slice(0, 4) : new Date().getFullYear());
+        transactions = transactionsForYear(targetYear);
+        salary = Object.entries(data.salaries)
+            .filter(([m]) => m.startsWith(String(targetYear)))
+            .reduce((sum, [, val]) => sum + Number(val || 0), 0);
+    } else if (periodType === "all") {
+        transactions = [...data.transactions];
+        salary = Object.values(data.salaries).reduce((sum, val) => sum + Number(val || 0), 0);
+    } else {
+        const targetMonth = value || currentM;
+        return getMonthlySummary(targetMonth);
+    }
+
+    const expenses = sumTransactions(transactions, "despesa");
+    const extraIncome = sumTransactions(transactions, "receita");
+    const income = salary + extraIncome;
+    const balance = income - expenses;
+    const savingsRate = income > 0 ? (balance / income) * 100 : 0;
+
+    return {
+        salary,
+        extraIncome,
+        income,
+        expenses,
+        balance,
+        savingsRate,
+        transactions
+    };
 }
 
 function sumTransactions(transactions, type) {
@@ -696,6 +760,8 @@ function renderAll() {
     renderTransactions();
     renderPlanning();
     renderSettings();
+    renderAgenda();
+    renderHistoricalReports();
 }
 
 /* ==============================
@@ -871,7 +937,7 @@ function setupCategoryPicker() {
 }
 
 /* =========================================
-   SELETOR DE DATAS MODERNO (DIA, MÊS E ANO)
+   SELETOR DE DATAS MODERNO UNIVERSAL (DIA, MÊS E ANO)
 ========================================= */
 
 const DP_MONTH_NAMES = [
@@ -884,282 +950,276 @@ const DP_MONTH_NAMES_SHORT = [
     "Jul", "Ago", "Set", "Out", "Nov", "Dez"
 ];
 
-let dpCurrentYear = new Date().getFullYear();
-let dpCurrentMonth = new Date().getMonth();
-let dpViewMode = "days";
-
 function syncDatePicker() {
-    const input = $("#transactionDate");
-    const label = $("#datePickerText");
-    if (!input || !label) return;
-
-    const val = input.value || todayISO();
-    const parts = val.split("-");
-    if (parts.length !== 3) return;
-
-    const year = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1;
-    const day = parseInt(parts[2], 10);
-
-    const todayStr = todayISO();
-    const d = new Date();
-    d.setDate(d.getDate() - 1);
-    const yesterdayStr = d.toISOString().split("T")[0];
-
-    let suffix = "";
-    if (val === todayStr) suffix = " (Hoje)";
-    else if (val === yesterdayStr) suffix = " (Ontem)";
-
-    label.textContent = `${day} de ${DP_MONTH_NAMES[month]} de ${year}${suffix}`;
-
-    renderDatePickerDays();
-}
-
-function renderDatePickerDays() {
-    const grid = $("#dpGrid");
-    const headerTitle = $("#dpCurrentMonthYear");
-    const input = $("#transactionDate");
-    if (!grid || !headerTitle) return;
-
-    headerTitle.textContent = `${DP_MONTH_NAMES[dpCurrentMonth]} de ${dpCurrentYear}`;
-
-    const selectedVal = (input && input.value) ? input.value : todayISO();
-    const todayStr = todayISO();
-
-    const firstDayIndex = new Date(dpCurrentYear, dpCurrentMonth, 1).getDay();
-    const daysInMonth = new Date(dpCurrentYear, dpCurrentMonth + 1, 0).getDate();
-    const daysInPrevMonth = new Date(dpCurrentYear, dpCurrentMonth, 0).getDate();
-
-    grid.innerHTML = "";
-
-    // Dias do mês anterior
-    for (let i = firstDayIndex - 1; i >= 0; i--) {
-        const dayNum = daysInPrevMonth - i;
-        const prevMonth = dpCurrentMonth === 0 ? 11 : dpCurrentMonth - 1;
-        const prevYear = dpCurrentMonth === 0 ? dpCurrentYear - 1 : dpCurrentYear;
-        const iso = `${prevYear}-${String(prevMonth + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
-
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "dp-day other-month";
-        btn.textContent = String(dayNum);
-        btn.addEventListener("click", () => {
-            selectDate(iso);
-        });
-        grid.appendChild(btn);
-    }
-
-    // Dias do mês atual
-    for (let dayNum = 1; dayNum <= daysInMonth; dayNum++) {
-        const iso = `${dpCurrentYear}-${String(dpCurrentMonth + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
-
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "dp-day";
-        btn.textContent = String(dayNum);
-
-        if (iso === todayStr) {
-            btn.classList.add("today");
-        }
-        if (iso === selectedVal) {
-            btn.classList.add("selected");
-        }
-
-        btn.addEventListener("click", () => {
-            selectDate(iso);
-        });
-        grid.appendChild(btn);
-    }
-
-    // Dias do próximo mês para completar a grade
-    const currentSlots = firstDayIndex + daysInMonth;
-    const totalSlots = currentSlots > 35 ? 42 : 35;
-    const remainingSlots = totalSlots - currentSlots;
-    for (let dayNum = 1; dayNum <= remainingSlots; dayNum++) {
-        const nextMonth = dpCurrentMonth === 11 ? 0 : dpCurrentMonth + 1;
-        const nextYear = dpCurrentMonth === 11 ? dpCurrentYear + 1 : dpCurrentYear;
-        const iso = `${nextYear}-${String(nextMonth + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
-
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "dp-day other-month";
-        btn.textContent = String(dayNum);
-        btn.addEventListener("click", () => {
-            selectDate(iso);
-        });
-        grid.appendChild(btn);
-    }
-}
-
-function renderDatePickerMonths() {
-    const grid = $("#dpMonthsGrid");
-    const yearDisplay = $("#dpSelectedYear");
-    if (!grid || !yearDisplay) return;
-
-    yearDisplay.textContent = String(dpCurrentYear);
-    grid.innerHTML = "";
-
-    DP_MONTH_NAMES_SHORT.forEach((name, idx) => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "dp-month-btn";
-        if (idx === dpCurrentMonth) {
-            btn.classList.add("selected");
-        }
-        btn.textContent = name;
-        btn.addEventListener("click", () => {
-            dpCurrentMonth = idx;
-            switchDatePickerView("days");
-            renderDatePickerDays();
-        });
-        grid.appendChild(btn);
+    document.querySelectorAll(".custom-datepicker").forEach((c) => {
+        if (c._syncDatePicker) c._syncDatePicker();
     });
 }
 
-function switchDatePickerView(mode) {
-    dpViewMode = mode;
-    const daysView = $("#dpDaysView");
-    const monthsView = $("#dpMonthsView");
-    const viewBtnChevron = $(".dp-view-chevron");
-
-    if (mode === "months") {
-        if (daysView) daysView.classList.add("hidden");
-        if (monthsView) monthsView.classList.remove("hidden");
-        if (viewBtnChevron) viewBtnChevron.textContent = "▴";
-        renderDatePickerMonths();
-    } else {
-        if (monthsView) monthsView.classList.add("hidden");
-        if (daysView) daysView.classList.remove("hidden");
-        if (viewBtnChevron) viewBtnChevron.textContent = "▾";
-        renderDatePickerDays();
-    }
-}
-
-function selectDate(isoString) {
-    const input = $("#transactionDate");
-    if (input) {
-        input.value = isoString;
-        input.dispatchEvent(new Event("change", { bubbles: true }));
-    }
-    const parts = isoString.split("-");
-    if (parts.length === 3) {
-        dpCurrentYear = parseInt(parts[0], 10);
-        dpCurrentMonth = parseInt(parts[1], 10) - 1;
-    }
-
+function syncMonthPicker() {
     syncDatePicker();
-    closeDatePicker();
-}
-
-function openDatePicker() {
-    const container = $("#customDatePicker");
-    const trigger = $("#datePickerTrigger");
-    if (!container || !trigger) return;
-
-    switchDatePickerView("days");
-
-    const input = $("#transactionDate");
-    const val = (input && input.value) ? input.value : todayISO();
-    const parts = val.split("-");
-    if (parts.length === 3) {
-        dpCurrentYear = parseInt(parts[0], 10);
-        dpCurrentMonth = parseInt(parts[1], 10) - 1;
-    }
-
-    renderDatePickerDays();
-
-    container.classList.add("open");
-    trigger.setAttribute("aria-expanded", "true");
-}
-
-function closeDatePicker() {
-    const container = $("#customDatePicker");
-    const trigger = $("#datePickerTrigger");
-    if (!container) return;
-
-    container.classList.remove("open");
-    if (trigger) trigger.setAttribute("aria-expanded", "false");
 }
 
 function setupDatePicker() {
-    const container = $("#customDatePicker");
-    const trigger = $("#datePickerTrigger");
-    const input = $("#transactionDate");
-    const backdrop = $("#datePickerBackdrop");
-    const closeBtn = $("#dpCloseBtn");
-    const prevBtn = $("#dpPrevBtn");
-    const nextBtn = $("#dpNextBtn");
-    const viewBtn = $("#dpViewBtn");
-    const todayBtn = $("#dpTodayBtn");
-    const yesterdayBtn = $("#dpYesterdayBtn");
-    const prevYearBtn = $("#dpPrevYearBtn");
-    const nextYearBtn = $("#dpNextYearBtn");
+    const containers = document.querySelectorAll(".custom-datepicker");
+    containers.forEach((container) => {
+        initSingleDatePicker(container);
+    });
+}
 
-    if (!container || !trigger || !input) return;
+function setupMonthPicker() {
+    setupDatePicker();
+}
+
+function initSingleDatePicker(container) {
+    if (container._dpInitialized) {
+        if (container._syncDatePicker) container._syncDatePicker();
+        return;
+    }
+    container._dpInitialized = true;
+
+    const input = container.querySelector(".datepicker-native-input") || container.querySelector("input[type='date'], input[type='month']");
+    const trigger = container.querySelector(".datepicker-trigger") || container.querySelector("button");
+    const label = container.querySelector(".datepicker-text");
+    const backdrop = container.querySelector(".datepicker-backdrop");
+    const closeBtn = container.querySelector(".dp-close-btn");
+    const prevBtn = container.querySelector(".dp-prev-btn");
+    const nextBtn = container.querySelector(".dp-next-btn");
+    const viewBtn = container.querySelector(".dp-btn-view");
+    const todayBtn = container.querySelector(".dp-today-btn");
+    const yesterdayBtn = container.querySelector(".dp-yesterday-btn");
+    const prevYearBtn = container.querySelector(".dp-prev-year-btn");
+    const nextYearBtn = container.querySelector(".dp-next-year-btn");
+    const daysGrid = container.querySelector(".dp-grid");
+    const monthsGrid = container.querySelector(".dp-months-grid");
+    const headerTitle = container.querySelector("#dpCurrentMonthYear, .dp-current-month-year, .dp-btn-view span:first-child");
+    const yearDisplay = container.querySelector("#dpSelectedYear, .dp-year-display");
+    const daysView = container.querySelector(".dp-days-view");
+    const monthsView = container.querySelector(".dp-months-view");
+    const viewBtnChevron = container.querySelector(".dp-view-chevron");
+
+    if (!input || !trigger) return;
+
+    let localYear = new Date().getFullYear();
+    let localMonth = new Date().getMonth();
+    let viewMode = "days";
+
+    function parseInputValue() {
+        let val = input.value;
+        if (!val) {
+            if (input.id === "dashboardMonth") {
+                val = sessionStorage.getItem("meuFinanceiro.date") || todayISO();
+                input.value = val;
+            } else {
+                val = todayISO();
+                input.value = val;
+            }
+        }
+        const parts = val.split("-");
+        if (parts.length === 3) {
+            localYear = parseInt(parts[0], 10);
+            localMonth = parseInt(parts[1], 10) - 1;
+            return { year: localYear, month: localMonth, day: parseInt(parts[2], 10), val };
+        } else if (parts.length === 2) {
+            localYear = parseInt(parts[0], 10);
+            localMonth = parseInt(parts[1], 10) - 1;
+            return { year: localYear, month: localMonth, day: 1, val };
+        }
+        return { year: localYear, month: localMonth, day: 1, val: todayISO() };
+    }
+
+    function sync() {
+        const info = parseInputValue();
+        if (!label) return;
+
+        const todayStr = todayISO();
+        const d = new Date();
+        d.setDate(d.getDate() - 1);
+        const yesterdayStr = d.toISOString().split("T")[0];
+
+        let suffix = "";
+        if (info.val === todayStr) suffix = " (Hoje)";
+        else if (info.val === yesterdayStr) suffix = " (Ontem)";
+
+        label.textContent = `${info.day} de ${DP_MONTH_NAMES[info.month]} de ${info.year}${suffix}`;
+        renderDays();
+    }
+    container._syncDatePicker = sync;
+
+    function renderDays() {
+        if (!daysGrid) return;
+        if (headerTitle) {
+            headerTitle.textContent = `${DP_MONTH_NAMES[localMonth]} de ${localYear}`;
+        }
+
+        const selectedVal = input.value || todayISO();
+        const todayStr = todayISO();
+
+        const firstDayIndex = new Date(localYear, localMonth, 1).getDay();
+        const daysInMonth = new Date(localYear, localMonth + 1, 0).getDate();
+        const daysInPrevMonth = new Date(localYear, localMonth, 0).getDate();
+
+        daysGrid.innerHTML = "";
+
+        // Dias do mês anterior
+        for (let i = firstDayIndex - 1; i >= 0; i--) {
+            const dayNum = daysInPrevMonth - i;
+            const prevM = localMonth === 0 ? 11 : localMonth - 1;
+            const prevY = localMonth === 0 ? localYear - 1 : localYear;
+            const iso = `${prevY}-${String(prevM + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
+
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "dp-day other-month";
+            btn.textContent = String(dayNum);
+            btn.addEventListener("click", () => selectDate(iso));
+            daysGrid.appendChild(btn);
+        }
+
+        // Dias do mês atual
+        for (let dayNum = 1; dayNum <= daysInMonth; dayNum++) {
+            const iso = `${localYear}-${String(localMonth + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
+
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "dp-day";
+            btn.textContent = String(dayNum);
+
+            if (iso === todayStr) btn.classList.add("today");
+            if (iso === selectedVal) btn.classList.add("selected");
+
+            btn.addEventListener("click", () => selectDate(iso));
+            daysGrid.appendChild(btn);
+        }
+
+        // Dias do próximo mês
+        const currentSlots = firstDayIndex + daysInMonth;
+        const totalSlots = currentSlots > 35 ? 42 : 35;
+        const remainingSlots = totalSlots - currentSlots;
+        for (let dayNum = 1; dayNum <= remainingSlots; dayNum++) {
+            const nextM = localMonth === 11 ? 0 : localMonth + 1;
+            const nextY = localMonth === 11 ? localYear + 1 : localYear;
+            const iso = `${nextY}-${String(nextM + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
+
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "dp-day other-month";
+            btn.textContent = String(dayNum);
+            btn.addEventListener("click", () => selectDate(iso));
+            daysGrid.appendChild(btn);
+        }
+    }
+
+    function renderMonths() {
+        if (!monthsGrid) return;
+        if (yearDisplay) yearDisplay.textContent = String(localYear);
+        monthsGrid.innerHTML = "";
+
+        DP_MONTH_NAMES_SHORT.forEach((name, idx) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "dp-month-btn";
+            if (idx === localMonth) btn.classList.add("selected");
+            btn.textContent = name;
+            btn.addEventListener("click", () => {
+                localMonth = idx;
+                switchView("days");
+                renderDays();
+            });
+            monthsGrid.appendChild(btn);
+        });
+    }
+
+    function switchView(mode) {
+        viewMode = mode;
+        if (mode === "months") {
+            if (daysView) daysView.classList.add("hidden");
+            if (monthsView) monthsView.classList.remove("hidden");
+            if (viewBtnChevron) viewBtnChevron.textContent = "▴";
+            renderMonths();
+        } else {
+            if (monthsView) monthsView.classList.add("hidden");
+            if (daysView) daysView.classList.remove("hidden");
+            if (viewBtnChevron) viewBtnChevron.textContent = "▾";
+            renderDays();
+        }
+    }
+
+    function selectDate(isoString) {
+        input.value = isoString;
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        sync();
+        close();
+    }
+
+    function open() {
+        switchView("days");
+        parseInputValue();
+        renderDays();
+        container.classList.add("open");
+        trigger.setAttribute("aria-expanded", "true");
+    }
+
+    function close() {
+        container.classList.remove("open");
+        trigger.setAttribute("aria-expanded", "false");
+    }
 
     trigger.addEventListener("click", (e) => {
         e.stopPropagation();
-        if (container.classList.contains("open")) {
-            closeDatePicker();
-        } else {
-            openDatePicker();
-        }
+        if (container.classList.contains("open")) close();
+        else open();
     });
 
-    if (backdrop) {
-        backdrop.addEventListener("click", closeDatePicker);
-    }
-
-    if (closeBtn) {
-        closeBtn.addEventListener("click", closeDatePicker);
-    }
+    if (backdrop) backdrop.addEventListener("click", close);
+    if (closeBtn) closeBtn.addEventListener("click", close);
 
     if (prevBtn) {
         prevBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-            if (dpCurrentMonth === 0) {
-                dpCurrentMonth = 11;
-                dpCurrentYear--;
+            if (localMonth === 0) {
+                localMonth = 11;
+                localYear--;
             } else {
-                dpCurrentMonth--;
+                localMonth--;
             }
-            renderDatePickerDays();
+            renderDays();
         });
     }
 
     if (nextBtn) {
         nextBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-            if (dpCurrentMonth === 11) {
-                dpCurrentMonth = 0;
-                dpCurrentYear++;
+            if (localMonth === 11) {
+                localMonth = 0;
+                localYear++;
             } else {
-                dpCurrentMonth++;
+                localMonth++;
             }
-            renderDatePickerDays();
+            renderDays();
         });
     }
 
     if (viewBtn) {
         viewBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-            switchDatePickerView(dpViewMode === "days" ? "months" : "days");
+            switchView(viewMode === "days" ? "months" : "days");
         });
     }
 
     if (prevYearBtn) {
         prevYearBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-            dpCurrentYear--;
-            renderDatePickerMonths();
+            localYear--;
+            renderMonths();
         });
     }
 
     if (nextYearBtn) {
         nextYearBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-            dpCurrentYear++;
-            renderDatePickerMonths();
+            localYear++;
+            renderMonths();
         });
     }
 
@@ -1180,223 +1240,433 @@ function setupDatePicker() {
     }
 
     document.addEventListener("click", (e) => {
-        if (!container.contains(e.target)) {
-            closeDatePicker();
-        }
+        if (!container.contains(e.target)) close();
     });
 
     document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && container.classList.contains("open")) {
-            closeDatePicker();
+        if (e.key === "Escape" && container.classList.contains("open")) close();
+    });
+
+    input.addEventListener("change", (e) => {
+        sync();
+        if (input.id === "dashboardMonth") {
+            sessionStorage.setItem("meuFinanceiro.date", input.value);
+            sessionStorage.setItem("meuFinanceiro.month", input.value.slice(0, 7));
+            renderAll();
         }
     });
 
-    input.addEventListener("change", syncDatePicker);
-
-    // Initial sync
-    syncDatePicker();
+    sync();
 }
 
 /* =========================================
-   SELETOR DE MÊS E ANO MODERNO (DASHBOARD/RELATÓRIOS/ETC)
+   AGENDA FINANCEIRA (CALENDÁRIO INTERATIVO)
 ========================================= */
 
-let mpCurrentYear = new Date().getFullYear();
+let agendaSelectedDate = todayISO();
 
-function syncMonthPicker() {
-    const input = $("#dashboardMonth");
-    const label = $("#monthPickerText");
-    if (!input || !label) return;
+function setupAgenda() {
+    const agendaLayout = $("#agendaLayout");
+    if (!agendaLayout) return;
 
-    const val = input.value || selectedMonth();
-    const parts = val.split("-");
-    if (parts.length !== 2) return;
+    agendaSelectedDate = selectedDate() || todayISO();
 
-    const year = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1;
-
-    label.textContent = `${DP_MONTH_NAMES[month]} de ${year}`;
-    mpCurrentYear = year;
-
-    renderMonthPickerMonths();
-}
-
-function renderMonthPickerMonths() {
-    const grid = $("#mpMonthsGrid");
-    const yearDisplay = $("#mpYearDisplay");
-    const input = $("#dashboardMonth");
-    if (!grid || !yearDisplay) return;
-
-    yearDisplay.textContent = String(mpCurrentYear);
-    grid.innerHTML = "";
-
-    const selectedVal = (input && input.value) ? input.value : selectedMonth();
-    const currentCalMonth = currentMonth();
-
-    DP_MONTH_NAMES.forEach((name, idx) => {
-        const monthStr = String(idx + 1).padStart(2, "0");
-        const iso = `${mpCurrentYear}-${monthStr}`;
-
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "mp-month-btn";
-        btn.textContent = name;
-
-        if (iso === currentCalMonth) {
-            btn.classList.add("current");
-        }
-        if (iso === selectedVal) {
-            btn.classList.add("selected");
-        }
-
-        btn.addEventListener("click", () => {
-            selectMonth(iso);
-        });
-        grid.appendChild(btn);
-    });
-}
-
-function selectMonth(isoString) {
-    const input = $("#dashboardMonth");
-    if (input) {
-        input.value = isoString;
-        sessionStorage.setItem("meuFinanceiro.month", isoString);
-        input.dispatchEvent(new Event("change", { bubbles: true }));
-    }
-    const parts = isoString.split("-");
-    if (parts.length === 2) {
-        mpCurrentYear = parseInt(parts[0], 10);
-    }
-    syncMonthPicker();
-    closeMonthPicker();
-}
-
-function openMonthPicker() {
-    const container = $("#customMonthPicker");
-    const trigger = $("#monthPickerTrigger");
-    if (!container || !trigger) return;
-
-    const input = $("#dashboardMonth");
-    const val = (input && input.value) ? input.value : selectedMonth();
-    const parts = val.split("-");
-    if (parts.length === 2) {
-        mpCurrentYear = parseInt(parts[0], 10);
-    }
-
-    renderMonthPickerMonths();
-
-    container.classList.add("open");
-    trigger.setAttribute("aria-expanded", "true");
-}
-
-function closeMonthPicker() {
-    const container = $("#customMonthPicker");
-    const trigger = $("#monthPickerTrigger");
-    if (!container) return;
-
-    container.classList.remove("open");
-    if (trigger) trigger.setAttribute("aria-expanded", "false");
-}
-
-function setupMonthPicker() {
-    const container = $("#customMonthPicker");
-    const trigger = $("#monthPickerTrigger");
-    const input = $("#dashboardMonth");
-    const backdrop = $("#monthPickerBackdrop");
-    const closeBtn = $("#mpCloseBtn");
-    const prevYearBtn = $("#mpPrevYearBtn");
-    const nextYearBtn = $("#mpNextYearBtn");
-    const currentMonthBtn = $("#mpCurrentMonthBtn");
-    const prevMonthBtn = $("#mpPrevMonthBtn");
-    const nextMonthBtn = $("#mpNextMonthBtn");
-
-    if (!container || !trigger || !input) return;
-
-    trigger.addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (container.classList.contains("open")) {
-            closeMonthPicker();
-        } else {
-            openMonthPicker();
-        }
-    });
-
-    if (backdrop) {
-        backdrop.addEventListener("click", closeMonthPicker);
-    }
-
-    if (closeBtn) {
-        closeBtn.addEventListener("click", closeMonthPicker);
-    }
-
-    if (prevYearBtn) {
-        prevYearBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            mpCurrentYear--;
-            renderMonthPickerMonths();
-        });
-    }
-
-    if (nextYearBtn) {
-        nextYearBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            mpCurrentYear++;
-            renderMonthPickerMonths();
-        });
-    }
-
-    if (currentMonthBtn) {
-        currentMonthBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            selectMonth(currentMonth());
-        });
-    }
+    const prevMonthBtn = $("#agendaPrevMonthBtn");
+    const nextMonthBtn = $("#agendaNextMonthBtn");
+    const todayBtn = $("#agendaTodayBtn");
 
     if (prevMonthBtn) {
-        prevMonthBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            const curr = input.value || selectedMonth();
-            const parts = curr.split("-");
-            let y = parseInt(parts[0], 10);
-            let m = parseInt(parts[1], 10) - 1;
-            if (m === 0) {
-                m = 12;
-                y--;
-            }
-            selectMonth(`${y}-${String(m).padStart(2, "0")}`);
+        prevMonthBtn.addEventListener("click", () => {
+            const [y, m] = selectedMonth().split("-").map(Number);
+            const prevD = new Date(y, m - 2, 1);
+            const isoMonth = `${prevD.getFullYear()}-${String(prevD.getMonth() + 1).padStart(2, "0")}`;
+            const isoDate = `${isoMonth}-01`;
+            sessionStorage.setItem("meuFinanceiro.date", isoDate);
+            sessionStorage.setItem("meuFinanceiro.month", isoMonth);
+            const dashInput = $("#dashboardMonth");
+            if (dashInput) dashInput.value = isoDate;
+            syncDatePicker();
+            renderAll();
         });
     }
 
     if (nextMonthBtn) {
-        nextMonthBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            const curr = input.value || selectedMonth();
-            const parts = curr.split("-");
-            let y = parseInt(parts[0], 10);
-            let m = parseInt(parts[1], 10) + 1;
-            if (m === 13) {
-                m = 1;
-                y++;
-            }
-            selectMonth(`${y}-${String(m).padStart(2, "0")}`);
+        nextMonthBtn.addEventListener("click", () => {
+            const [y, m] = selectedMonth().split("-").map(Number);
+            const nextD = new Date(y, m, 1);
+            const isoMonth = `${nextD.getFullYear()}-${String(nextD.getMonth() + 1).padStart(2, "0")}`;
+            const isoDate = `${isoMonth}-01`;
+            sessionStorage.setItem("meuFinanceiro.date", isoDate);
+            sessionStorage.setItem("meuFinanceiro.month", isoMonth);
+            const dashInput = $("#dashboardMonth");
+            if (dashInput) dashInput.value = isoDate;
+            syncDatePicker();
+            renderAll();
         });
     }
 
-    document.addEventListener("click", (e) => {
-        if (!container.contains(e.target)) {
-            closeMonthPicker();
+    if (todayBtn) {
+        todayBtn.addEventListener("click", () => {
+            const isoDate = todayISO();
+            const isoMonth = currentMonth();
+            sessionStorage.setItem("meuFinanceiro.date", isoDate);
+            sessionStorage.setItem("meuFinanceiro.month", isoMonth);
+            const dashInput = $("#dashboardMonth");
+            if (dashInput) dashInput.value = isoDate;
+            agendaSelectedDate = isoDate;
+            syncDatePicker();
+            renderAll();
+        });
+    }
+}
+
+function renderAgenda() {
+    const agendaLayout = $("#agendaLayout");
+    if (!agendaLayout) return;
+
+    const currentM = selectedMonth();
+    const [y, m] = currentM.split("-").map(Number);
+    const monthYearTitle = $("#agendaMonthYearTitle");
+    if (monthYearTitle) {
+        monthYearTitle.textContent = `${DP_MONTH_NAMES[m - 1]} de ${y}`;
+    }
+
+    const monthSummary = getMonthlySummary(currentM);
+    const monthIncomeEl = $("#agendaMonthIncome");
+    const monthExpensesEl = $("#agendaMonthExpenses");
+    const monthBalanceEl = $("#agendaMonthBalance");
+    const monthCountEl = $("#agendaMonthCount");
+
+    if (monthIncomeEl) monthIncomeEl.textContent = money(monthSummary.income);
+    if (monthExpensesEl) monthExpensesEl.textContent = money(monthSummary.expenses);
+    if (monthBalanceEl) {
+        monthBalanceEl.textContent = money(monthSummary.balance);
+        monthBalanceEl.style.color = monthSummary.balance >= 0 ? "var(--green)" : "var(--red)";
+    }
+    if (monthCountEl) {
+        const count = monthSummary.transactions.length;
+        monthCountEl.textContent = `${count} ${count === 1 ? "movimentação" : "movimentações"}`;
+    }
+
+    const grid = $("#agendaCalendarGrid");
+    if (grid) {
+        grid.innerHTML = "";
+        const firstDayIdx = new Date(y, m - 1, 1).getDay();
+        const daysInMonth = new Date(y, m, 0).getDate();
+        const daysInPrevMonth = new Date(y, m - 1, 0).getDate();
+        const todayStr = todayISO();
+
+        // Prev month days
+        for (let i = firstDayIdx - 1; i >= 0; i--) {
+            const dayNum = daysInPrevMonth - i;
+            const prevM = m === 1 ? 12 : m - 1;
+            const prevY = m === 1 ? y - 1 : y;
+            const iso = `${prevY}-${String(prevM).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
+
+            const cell = document.createElement("div");
+            cell.className = "agenda-day other-month";
+            cell.innerHTML = `<span class="agenda-day-num">${dayNum}</span>`;
+            cell.addEventListener("click", () => {
+                agendaSelectedDate = iso;
+                sessionStorage.setItem("meuFinanceiro.date", iso);
+                sessionStorage.setItem("meuFinanceiro.month", `${prevY}-${String(prevM).padStart(2, "0")}`);
+                const dashInput = $("#dashboardMonth");
+                if (dashInput) dashInput.value = iso;
+                syncDatePicker();
+                renderAll();
+            });
+            grid.appendChild(cell);
         }
+
+        // Current month days
+        for (let d = 1; d <= daysInMonth; d++) {
+            const iso = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+            const dayTxs = data.transactions.filter((t) => t.date === iso);
+            const dayIncome = dayTxs.filter((t) => t.type === "receita").reduce((sum, t) => sum + t.amount, 0);
+            const dayExpenses = dayTxs.filter((t) => t.type === "despesa").reduce((sum, t) => sum + t.amount, 0);
+
+            const cell = document.createElement("div");
+            cell.className = "agenda-day";
+            if (iso === todayStr) cell.classList.add("today");
+            if (iso === agendaSelectedDate) cell.classList.add("selected");
+
+            let badgesHtml = "";
+            if (dayIncome > 0) {
+                badgesHtml += `<span class="agenda-badge-item income">+${money(dayIncome)}</span>`;
+            }
+            if (dayExpenses > 0) {
+                badgesHtml += `<span class="agenda-badge-item expense">−${money(dayExpenses)}</span>`;
+            }
+
+            cell.innerHTML = `
+                <span class="agenda-day-num">${d}</span>
+                <div class="agenda-day-badges">${badgesHtml}</div>
+            `;
+
+            cell.addEventListener("click", () => {
+                agendaSelectedDate = iso;
+                sessionStorage.setItem("meuFinanceiro.date", iso);
+                const dashInput = $("#dashboardMonth");
+                if (dashInput) dashInput.value = iso;
+                syncDatePicker();
+                renderAgenda();
+            });
+
+            grid.appendChild(cell);
+        }
+
+        // Next month days
+        const currentSlots = firstDayIdx + daysInMonth;
+        const totalSlots = currentSlots > 35 ? 42 : 35;
+        const remainingSlots = totalSlots - currentSlots;
+        for (let d = 1; d <= remainingSlots; d++) {
+            const nextM = m === 12 ? 1 : m + 1;
+            const nextY = m === 12 ? y + 1 : y;
+            const iso = `${nextY}-${String(nextM).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+
+            const cell = document.createElement("div");
+            cell.className = "agenda-day other-month";
+            cell.innerHTML = `<span class="agenda-day-num">${d}</span>`;
+            cell.addEventListener("click", () => {
+                agendaSelectedDate = iso;
+                sessionStorage.setItem("meuFinanceiro.date", iso);
+                sessionStorage.setItem("meuFinanceiro.month", `${nextY}-${String(nextM).padStart(2, "0")}`);
+                const dashInput = $("#dashboardMonth");
+                if (dashInput) dashInput.value = iso;
+                syncDatePicker();
+                renderAll();
+            });
+            grid.appendChild(cell);
+        }
+    }
+
+    renderAgendaDayDetails();
+}
+
+function renderAgendaDayDetails() {
+    const detailsContainer = $("#agendaDayDetails");
+    if (!detailsContainer) return;
+
+    const iso = agendaSelectedDate || todayISO();
+    const parts = iso.split("-");
+    const day = parseInt(parts[2], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const year = parseInt(parts[0], 10);
+
+    const titleEl = $("#agendaSelectedDayTitle");
+    if (titleEl) {
+        titleEl.textContent = `${day} de ${DP_MONTH_NAMES[month]} de ${year}`;
+    }
+
+    const dayTxs = data.transactions.filter((t) => t.date === iso);
+    const dayIncome = dayTxs.filter((t) => t.type === "receita").reduce((sum, t) => sum + t.amount, 0);
+    const dayExpenses = dayTxs.filter((t) => t.type === "despesa").reduce((sum, t) => sum + t.amount, 0);
+    const dayBalance = dayIncome - dayExpenses;
+
+    const dayIncomeEl = $("#agendaDayIncome");
+    const dayExpensesEl = $("#agendaDayExpenses");
+    const dayBalanceEl = $("#agendaDayBalance");
+
+    if (dayIncomeEl) dayIncomeEl.textContent = money(dayIncome);
+    if (dayExpensesEl) dayExpensesEl.textContent = money(dayExpenses);
+    if (dayBalanceEl) dayBalanceEl.textContent = money(dayBalance);
+
+    const listEl = $("#agendaDayList");
+    if (!listEl) return;
+
+    if (!dayTxs.length) {
+        listEl.innerHTML = `
+            <div class="empty-state" style="padding: 24px 10px;">
+                <p>Nenhuma movimentação para este dia.</p>
+                <p><a href="lancamentos.html" class="text-button">+ Fazer lançamento neste dia</a></p>
+            </div>
+        `;
+    } else {
+        listEl.innerHTML = dayTxs.map((t) => {
+            const isIncome = t.type === "receita";
+            const icon = CATEGORY_ICONS[t.category] || "📦";
+            return `
+                <div class="transaction-item">
+                    <div class="transaction-icon">${icon}</div>
+                    <div class="transaction-info">
+                        <h3>${escapeHTML(t.description)}</h3>
+                        <p>${escapeHTML(t.category)} · ${formatDate(t.date)}</p>
+                    </div>
+                    <div class="transaction-right">
+                        <div class="transaction-amount ${isIncome ? "income-text" : "expense-text"}">
+                            ${isIncome ? "+" : "−"}${money(t.amount)}
+                        </div>
+                        <div class="transaction-actions">
+                            <button type="button" class="btn-action edit" data-action="edit" data-id="${t.id}" title="Editar">✎</button>
+                            <button type="button" class="btn-action delete" data-action="delete" data-id="${t.id}" title="Excluir">🗑</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join("");
+    }
+}
+
+/* =========================================
+   HISTÓRICO & RELATÓRIOS POR DIA, MÊS E ANO
+========================================= */
+
+let historyFilterMode = "day"; // 'day', 'month', 'year', 'all'
+
+function setupHistoricalReports() {
+    const tabs = document.querySelectorAll(".period-tab-btn");
+    if (!tabs.length) return;
+
+    tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+            tabs.forEach((t) => t.classList.remove("active"));
+            tab.classList.add("active");
+            historyFilterMode = tab.dataset.mode || "day";
+            renderHistoricalReports();
+        });
+    });
+}
+
+function renderHistoricalReports() {
+    const container = $("#historicalReportsContainer");
+    if (!container) return;
+
+    const currentD = selectedDate() || todayISO();
+    const currentM = selectedMonth() || currentMonth();
+    const currentY = currentD.slice(0, 4);
+
+    let periodLabel = "";
+    let filteredTxs = [];
+    let summary = {};
+
+    if (historyFilterMode === "day") {
+        const parts = currentD.split("-");
+        const day = parseInt(parts[2], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const year = parseInt(parts[0], 10);
+        periodLabel = `${day} de ${DP_MONTH_NAMES[month]} de ${year}`;
+        filteredTxs = data.transactions.filter((t) => t.date === currentD);
+        summary = getPeriodSummary("day", currentD);
+    } else if (historyFilterMode === "month") {
+        const parts = currentM.split("-");
+        const month = parseInt(parts[1], 10) - 1;
+        const year = parseInt(parts[0], 10);
+        periodLabel = `${DP_MONTH_NAMES[month]} de ${year}`;
+        filteredTxs = data.transactions.filter((t) => t.date.startsWith(currentM));
+        summary = getMonthlySummary(currentM);
+    } else if (historyFilterMode === "year") {
+        periodLabel = `Ano de ${currentY}`;
+        filteredTxs = data.transactions.filter((t) => t.date.startsWith(currentY));
+        summary = getPeriodSummary("year", currentY);
+    } else {
+        periodLabel = "Todos os lançamentos";
+        filteredTxs = [...data.transactions];
+        summary = getPeriodSummary("all");
+    }
+
+    const titleEl = $("#historyCurrentPeriodLabel");
+    if (titleEl) titleEl.textContent = periodLabel;
+
+    const balEl = $("#historyPeriodBalance");
+    const incEl = $("#historyPeriodIncome");
+    const expEl = $("#historyPeriodExpenses");
+    const savEl = $("#historyPeriodSavings");
+
+    if (balEl) {
+        balEl.textContent = money(summary.balance);
+        balEl.style.color = summary.balance >= 0 ? "var(--green)" : "var(--red)";
+    }
+    if (incEl) incEl.textContent = money(summary.income);
+    if (expEl) expEl.textContent = money(summary.expenses);
+    if (savEl) savEl.textContent = `${summary.savingsRate.toFixed(1)}%`;
+
+    // Category Breakdown Report
+    const breakdownContainer = $("#historyCategoryBreakdown");
+    if (breakdownContainer) {
+        const expensesTxs = filteredTxs.filter((t) => t.type === "despesa");
+        const catTotals = {};
+        expensesTxs.forEach((t) => {
+            catTotals[t.category] = (catTotals[t.category] || 0) + t.amount;
+        });
+
+        const totalExp = Object.values(catTotals).reduce((sum, v) => sum + v, 0);
+        const entries = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
+
+        if (!entries.length) {
+            breakdownContainer.innerHTML = `<p style="font-size: 13px; color: var(--muted); margin: 0;">Nenhuma despesa registrada para ${periodLabel}.</p>`;
+        } else {
+            breakdownContainer.innerHTML = entries.map(([cat, amt], idx) => {
+                const icon = CATEGORY_ICONS[cat] || "📦";
+                const pct = totalExp > 0 ? (amt / totalExp) * 100 : 0;
+                const color = COLORS[idx % COLORS.length];
+                return `
+                    <div class="breakdown-item">
+                        <div class="breakdown-info">
+                            <span>${icon} <strong>${escapeHTML(cat)}</strong></span>
+                            <span>${money(amt)} <small style="color: var(--muted);">(${pct.toFixed(1)}%)</small></span>
+                        </div>
+                        <div class="breakdown-bar-bg">
+                            <div class="breakdown-bar-fill" style="width: ${pct}%; background: ${color};"></div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+    }
+
+    // Filter transactions list with search and type
+    const searchInput = $("#searchTransactions");
+    const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
+    const typeFilter = $("#typeFilter");
+    const type = typeFilter ? typeFilter.value : "todos";
+
+    let visible = filteredTxs.filter((t) => {
+        const matchesQuery = !query || t.description.toLowerCase().includes(query) || t.category.toLowerCase().includes(query);
+        const matchesType = type === "todos" || t.type === type;
+        return matchesQuery && matchesType;
     });
 
-    document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && container.classList.contains("open")) {
-            closeMonthPicker();
+    visible.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const countEl = $("#transactionCount");
+    if (countEl) {
+        countEl.textContent = `${visible.length} ${visible.length === 1 ? "lançamento encontrado" : "lançamentos encontrados"}`;
+    }
+
+    const listEl = $("#transactionList");
+    if (listEl) {
+        if (!visible.length) {
+            listEl.innerHTML = `
+                <div class="empty-state">
+                    <p>Nenhuma movimentação encontrada para o período selecionado (${periodLabel}).</p>
+                    <p><a href="lancamentos.html" class="text-button">+ Fazer lançamento</a></p>
+                </div>
+            `;
+        } else {
+            listEl.innerHTML = visible.map((t) => {
+                const isIncome = t.type === "receita";
+                const icon = CATEGORY_ICONS[t.category] || "📦";
+                return `
+                    <div class="transaction-item">
+                        <div class="transaction-icon">${icon}</div>
+                        <div class="transaction-info">
+                            <h3>${escapeHTML(t.description)}</h3>
+                            <p>${escapeHTML(t.category)} · ${formatDate(t.date)}</p>
+                        </div>
+                        <div class="transaction-right">
+                            <div class="transaction-amount ${isIncome ? "income-text" : "expense-text"}">
+                                ${isIncome ? "+" : "−"}${money(t.amount)}
+                            </div>
+                            <div class="transaction-actions">
+                                <button type="button" class="btn-action edit" data-action="edit" data-id="${t.id}" title="Editar">✎</button>
+                                <button type="button" class="btn-action delete" data-action="delete" data-id="${t.id}" title="Excluir">🗑</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
         }
-    });
-
-    input.addEventListener("change", syncMonthPicker);
-
-    syncMonthPicker();
+    }
 }
 
 /* ==============================
@@ -2344,6 +2614,17 @@ function init() {
         });
     }
 
+    const agendaDayList = $("#agendaDayList");
+    if (agendaDayList) {
+        agendaDayList.addEventListener("click", (event) => {
+            const button = event.target.closest("button[data-action]");
+            if (!button) return;
+            const { action, id } = button.dataset;
+            if (action === "edit") editTransaction(id);
+            if (action === "delete") deleteTransaction(id);
+        });
+    }
+
     const cancelEditBtn = $("#cancelEditBtn");
     if (cancelEditBtn) {
         cancelEditBtn.addEventListener("click", () => {
@@ -2391,7 +2672,8 @@ function init() {
     setupPrivacyMode();
     setupCategoryPicker();
     setupDatePicker();
-    setupMonthPicker();
+    setupAgenda();
+    setupHistoricalReports();
     setupWelcomeTutorial();
     renderAll();
 

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#101827">
+    <meta name="description" content="Agenda financeira e calendário de movimentações e vencimentos.">
+    <title>Agenda Financeira | Meu Financeiro</title>
+
+    <link rel="stylesheet" href="style1.css">
+    <link rel="manifest" href="manifest.json">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="index.html" class="brand">
+                    <span class="brand-icon">₿</span>
+                    <span>Meu<span class="brand-accent">Financeiro</span></span>
+                </a>
+                <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="mobileMenuDrawer">
+                    <span class="hamburger-icon" aria-hidden="true">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                    <span class="mobile-menu-text">Menu</span>
+                </button>
+            </div>
+
+            <p class="menu-label">MENU PRINCIPAL</p>
+
+            <nav class="navigation desktop-navigation">
+                <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
+                <a href="lancamentos.html" class="nav-link">＋ <span>Novo lançamento</span></a>
+                <a href="agenda.html" class="nav-link active">📅 <span>Agenda</span></a>
+                <a href="relatorios.html" class="nav-link">▥ <span>Relatórios</span></a>
+                <a href="historico.html" class="nav-link">◷ <span>Histórico</span></a>
+                <a href="planejamento.html" class="nav-link">◎ <span>Planejamento</span></a>
+                <a href="configuracoes.html" class="nav-link">⚙ <span>Configurações</span></a>
+                <a href="index.html?tutorial=true" class="nav-link nav-link-tutorial">📖 <span>Como usar</span></a>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <div class="tip-card">
+                    <span class="tip-icon">💡</span>
+                    <h3>Dica da agenda</h3>
+                    <p>Clique em qualquer dia do calendário para ver detalhadamente as movimentações e vencimentos daquela data.</p>
+                </div>
+                <p class="sidebar-footer">SEU DINHEIRO, SUAS REGRAS.</p>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow">CALENDÁRIO E COMPROMISSOS</p>
+                    <h1>Agenda financeira</h1>
+                    <p class="subtitle" id="todayText">Acompanhe seus vencimentos, receitas e despesas distribuídos pelos dias do mês.</p>
+                </div>
+                <div class="topbar-actions">
+                    <a href="lancamentos.html" class="button button-primary btn-new-transaction">
+                        + Novo lançamento
+                    </a>
+                </div>
+            </header>
+
+            <section class="month-toolbar">
+                <div>
+                    <label for="datePickerTrigger">Data de referência</label>
+                    <div class="custom-datepicker" id="customDatePicker">
+                        <input type="date" id="dashboardMonth" class="datepicker-native-input" tabindex="-1" aria-hidden="true">
+                        <button type="button" class="datepicker-trigger" id="datePickerTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="datePickerDropdown">
+                            <span class="datepicker-trigger-left">
+                                <span class="datepicker-icon" aria-hidden="true">📅</span>
+                                <span class="datepicker-text" id="datePickerText">Selecione uma data</span>
+                            </span>
+                            <span class="datepicker-chevron" aria-hidden="true">⌄</span>
+                        </button>
+
+                        <div class="datepicker-backdrop" id="datePickerBackdrop" aria-hidden="true"></div>
+
+                        <div class="datepicker-dropdown" id="datePickerDropdown" role="dialog" aria-modal="true" aria-label="Seletor de data" aria-hidden="true">
+                            <div class="dp-header">
+                                <button type="button" class="dp-btn-view" id="dpViewBtn" title="Alternar para seleção de mês e ano">
+                                    <span id="dpCurrentMonthYear">Outubro de 2026</span>
+                                    <span class="dp-view-chevron" aria-hidden="true">▾</span>
+                                </button>
+                                <div class="dp-nav-group">
+                                    <button type="button" class="dp-nav-btn dp-prev-btn" id="dpPrevBtn" aria-label="Mês anterior">‹</button>
+                                    <button type="button" class="dp-nav-btn dp-next-btn" id="dpNextBtn" aria-label="Próximo mês">›</button>
+                                    <button type="button" class="dp-close-btn" id="dpCloseBtn" aria-label="Fechar calendário">✕</button>
+                                </div>
+                            </div>
+
+                            <div class="dp-shortcuts">
+                                <button type="button" class="dp-shortcut-btn dp-today-btn" id="dpTodayBtn">Hoje</button>
+                                <button type="button" class="dp-shortcut-btn dp-yesterday-btn" id="dpYesterdayBtn">Ontem</button>
+                            </div>
+
+                            <div class="dp-days-view" id="dpDaysView">
+                                <div class="dp-weekdays">
+                                    <span>Dom</span>
+                                    <span>Seg</span>
+                                    <span>Ter</span>
+                                    <span>Qua</span>
+                                    <span>Qui</span>
+                                    <span>Sex</span>
+                                    <span>Sáb</span>
+                                </div>
+                                <div class="dp-grid" id="dpGrid"></div>
+                            </div>
+
+                            <div class="dp-months-view hidden" id="dpMonthsView">
+                                <div class="dp-year-selector">
+                                    <button type="button" class="dp-nav-btn dp-prev-year-btn" id="dpPrevYearBtn" aria-label="Ano anterior">‹</button>
+                                    <span id="dpSelectedYear" class="dp-year-display">2026</span>
+                                    <button type="button" class="dp-nav-btn dp-next-year-btn" id="dpNextYearBtn" aria-label="Próximo ano">›</button>
+                                </div>
+                                <div class="dp-months-grid" id="dpMonthsGrid"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <span class="status-pill">● Calendário ativo</span>
+            </section>
+
+            <section class="summary-grid" aria-label="Resumo do mês na agenda">
+                <article class="summary-card">
+                    <div class="summary-top">
+                        <h2 class="summary-title">Saldo do mês</h2>
+                        <span class="summary-icon purple">◈</span>
+                    </div>
+                    <p class="summary-amount" id="agendaMonthBalance">R$ 0,00</p>
+                    <p class="summary-description">Receitas menos despesas</p>
+                </article>
+
+                <article class="summary-card">
+                    <div class="summary-top">
+                        <h2 class="summary-title">Receitas do mês</h2>
+                        <span class="summary-icon green">↗</span>
+                    </div>
+                    <p class="summary-amount" id="agendaMonthIncome">R$ 0,00</p>
+                    <p class="summary-description">Salário e entradas</p>
+                </article>
+
+                <article class="summary-card">
+                    <div class="summary-top">
+                        <h2 class="summary-title">Despesas do mês</h2>
+                        <span class="summary-icon red">↘</span>
+                    </div>
+                    <p class="summary-amount" id="agendaMonthExpenses">R$ 0,00</p>
+                    <p class="summary-description">Total de saídas</p>
+                </article>
+
+                <article class="summary-card">
+                    <div class="summary-top">
+                        <h2 class="summary-title">Movimentações</h2>
+                        <span class="summary-icon yellow">📅</span>
+                    </div>
+                    <p class="summary-amount" id="agendaMonthCount">0 lançamentos</p>
+                    <p class="summary-description">Distribuídos no calendário</p>
+                </article>
+            </section>
+
+            <div class="agenda-layout" id="agendaLayout">
+                <!-- Coluna Esquerda: Calendário -->
+                <div class="agenda-calendar-panel">
+                    <div class="agenda-header">
+                        <h2 id="agendaMonthYearTitle">Outubro de 2026</h2>
+                        <div class="agenda-nav-group">
+                            <button type="button" class="agenda-nav-btn" id="agendaPrevMonthBtn" aria-label="Mês anterior" title="Mês anterior">‹</button>
+                            <button type="button" class="agenda-today-btn" id="agendaTodayBtn">Hoje</button>
+                            <button type="button" class="agenda-nav-btn" id="agendaNextMonthBtn" aria-label="Próximo mês" title="Próximo mês">›</button>
+                        </div>
+                    </div>
+
+                    <div class="agenda-weekdays">
+                        <span>Dom</span>
+                        <span>Seg</span>
+                        <span>Ter</span>
+                        <span>Qua</span>
+                        <span>Qui</span>
+                        <span>Sex</span>
+                        <span>Sáb</span>
+                    </div>
+
+                    <div class="agenda-grid" id="agendaCalendarGrid"></div>
+                </div>
+
+                <!-- Coluna Direita: Detalhes do Dia Selecionado -->
+                <div class="agenda-day-details-panel" id="agendaDayDetails">
+                    <div class="day-details-header">
+                        <p class="eyebrow" style="margin-bottom: 2px;">DETALHES DO DIA</p>
+                        <h3 id="agendaSelectedDayTitle">25 de Outubro de 2026</h3>
+                    </div>
+
+                    <div class="day-summary-row">
+                        <div class="day-summary-box income">
+                            <span>Entradas</span>
+                            <strong id="agendaDayIncome">R$ 0,00</strong>
+                        </div>
+                        <div class="day-summary-box expense">
+                            <span>Saídas</span>
+                            <strong id="agendaDayExpenses">R$ 0,00</strong>
+                        </div>
+                        <div class="day-summary-box balance">
+                            <span>Saldo</span>
+                            <strong id="agendaDayBalance">R$ 0,00</strong>
+                        </div>
+                    </div>
+
+                    <div id="agendaDayList" class="transaction-list"></div>
+                </div>
+            </div>
+
+            <footer class="main-footer">
+                <p>Meu Financeiro © <span id="currentYear"></span></p>
+                <p>Organize hoje. Conquiste amanhã. ✨</p>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Diálogo de confirmação de exclusão -->
+    <div id="confirmDialog" class="confirm-dialog" role="dialog" aria-modal="true"
+        aria-labelledby="confirmDialogTitle" aria-describedby="confirmDialogMessage" aria-hidden="true">
+        <div class="confirm-dialog-card">
+            <button type="button" id="confirmDialogClose" class="confirm-dialog-close" aria-label="Fechar janela">×</button>
+            <div class="confirm-dialog-icon" aria-hidden="true">🗑️</div>
+            <p class="confirm-dialog-eyebrow">CONFIRMAÇÃO</p>
+            <h2 id="confirmDialogTitle">Excluir lançamento?</h2>
+            <p id="confirmDialogMessage" class="confirm-dialog-message">Tem certeza de que deseja excluir este lançamento?</p>
+            <div class="confirm-dialog-actions">
+                <button type="button" id="confirmDialogCancel" class="button button-secondary">Manter lançamento</button>
+                <button type="button" id="confirmDialogConfirm" class="button button-danger">Excluir lançamento</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <!-- Mobile Menu Drawer & Backdrop -->
+    <div class="mobile-menu-backdrop" id="mobileMenuBackdrop" aria-hidden="true"></div>
+
+    <div class="mobile-menu-drawer" id="mobileMenuDrawer" role="dialog" aria-modal="true" aria-label="Menu de navegação">
+        <div class="mobile-drawer-header">
+            <div class="mobile-drawer-title">
+                <span class="brand-icon">₿</span>
+                <span>Meu<span class="brand-accent">Financeiro</span></span>
+            </div>
+            <button type="button" class="mobile-drawer-close" id="mobileMenuCloseBtn" aria-label="Fechar menu">✕</button>
+        </div>
+
+        <p class="menu-label">MENU PRINCIPAL</p>
+
+        <nav class="navigation mobile-navigation">
+            <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
+            <a href="lancamentos.html" class="nav-link">＋ <span>Novo lançamento</span></a>
+            <a href="agenda.html" class="nav-link active">📅 <span>Agenda</span></a>
+            <a href="relatorios.html" class="nav-link">▥ <span>Relatórios</span></a>
+            <a href="historico.html" class="nav-link">◷ <span>Histórico</span></a>
+            <a href="planejamento.html" class="nav-link">◎ <span>Planejamento</span></a>
+            <a href="configuracoes.html" class="nav-link">⚙ <span>Configurações</span></a>
+            <a href="index.html?tutorial=true" class="nav-link nav-link-tutorial">📖 <span>Como usar</span></a>
+        </nav>
+
+        <div class="mobile-drawer-bottom">
+            <div class="tip-card">
+                <span class="tip-icon">💡</span>
+                <h3>Dica da agenda</h3>
+                <p>Acompanhe datas de vencimentos e compromissos pelo calendário financeiro.</p>
+            </div>
+            <p class="sidebar-footer">SEU DINHEIRO, SUAS REGRAS.</p>
+        </div>
+    </div>
+</body>
+</html>
