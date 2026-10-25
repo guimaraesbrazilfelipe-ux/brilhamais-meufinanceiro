@@ -767,6 +767,333 @@ function setupCategoryPicker() {
     syncCategoryPicker(select.value);
 }
 
+/* =========================================
+   SELETOR DE DATAS MODERNO (DIA, MÊS E ANO)
+========================================= */
+
+const DP_MONTH_NAMES = [
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+];
+
+const DP_MONTH_NAMES_SHORT = [
+    "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+    "Jul", "Ago", "Set", "Out", "Nov", "Dez"
+];
+
+let dpCurrentYear = new Date().getFullYear();
+let dpCurrentMonth = new Date().getMonth();
+let dpViewMode = "days";
+
+function syncDatePicker() {
+    const input = $("#transactionDate");
+    const label = $("#datePickerText");
+    if (!input || !label) return;
+
+    const val = input.value || todayISO();
+    const parts = val.split("-");
+    if (parts.length !== 3) return;
+
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+
+    const todayStr = todayISO();
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    const yesterdayStr = d.toISOString().split("T")[0];
+
+    let suffix = "";
+    if (val === todayStr) suffix = " (Hoje)";
+    else if (val === yesterdayStr) suffix = " (Ontem)";
+
+    label.textContent = `${day} de ${DP_MONTH_NAMES[month]} de ${year}${suffix}`;
+
+    renderDatePickerDays();
+}
+
+function renderDatePickerDays() {
+    const grid = $("#dpGrid");
+    const headerTitle = $("#dpCurrentMonthYear");
+    const input = $("#transactionDate");
+    if (!grid || !headerTitle) return;
+
+    headerTitle.textContent = `${DP_MONTH_NAMES[dpCurrentMonth]} de ${dpCurrentYear}`;
+
+    const selectedVal = (input && input.value) ? input.value : todayISO();
+    const todayStr = todayISO();
+
+    const firstDayIndex = new Date(dpCurrentYear, dpCurrentMonth, 1).getDay();
+    const daysInMonth = new Date(dpCurrentYear, dpCurrentMonth + 1, 0).getDate();
+    const daysInPrevMonth = new Date(dpCurrentYear, dpCurrentMonth, 0).getDate();
+
+    grid.innerHTML = "";
+
+    // Dias do mês anterior
+    for (let i = firstDayIndex - 1; i >= 0; i--) {
+        const dayNum = daysInPrevMonth - i;
+        const prevMonth = dpCurrentMonth === 0 ? 11 : dpCurrentMonth - 1;
+        const prevYear = dpCurrentMonth === 0 ? dpCurrentYear - 1 : dpCurrentYear;
+        const iso = `${prevYear}-${String(prevMonth + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "dp-day other-month";
+        btn.textContent = String(dayNum);
+        btn.addEventListener("click", () => {
+            selectDate(iso);
+        });
+        grid.appendChild(btn);
+    }
+
+    // Dias do mês atual
+    for (let dayNum = 1; dayNum <= daysInMonth; dayNum++) {
+        const iso = `${dpCurrentYear}-${String(dpCurrentMonth + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "dp-day";
+        btn.textContent = String(dayNum);
+
+        if (iso === todayStr) {
+            btn.classList.add("today");
+        }
+        if (iso === selectedVal) {
+            btn.classList.add("selected");
+        }
+
+        btn.addEventListener("click", () => {
+            selectDate(iso);
+        });
+        grid.appendChild(btn);
+    }
+
+    // Dias do próximo mês para completar a grade
+    const currentSlots = firstDayIndex + daysInMonth;
+    const totalSlots = currentSlots > 35 ? 42 : 35;
+    const remainingSlots = totalSlots - currentSlots;
+    for (let dayNum = 1; dayNum <= remainingSlots; dayNum++) {
+        const nextMonth = dpCurrentMonth === 11 ? 0 : dpCurrentMonth + 1;
+        const nextYear = dpCurrentMonth === 11 ? dpCurrentYear + 1 : dpCurrentYear;
+        const iso = `${nextYear}-${String(nextMonth + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "dp-day other-month";
+        btn.textContent = String(dayNum);
+        btn.addEventListener("click", () => {
+            selectDate(iso);
+        });
+        grid.appendChild(btn);
+    }
+}
+
+function renderDatePickerMonths() {
+    const grid = $("#dpMonthsGrid");
+    const yearDisplay = $("#dpSelectedYear");
+    if (!grid || !yearDisplay) return;
+
+    yearDisplay.textContent = String(dpCurrentYear);
+    grid.innerHTML = "";
+
+    DP_MONTH_NAMES_SHORT.forEach((name, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "dp-month-btn";
+        if (idx === dpCurrentMonth) {
+            btn.classList.add("selected");
+        }
+        btn.textContent = name;
+        btn.addEventListener("click", () => {
+            dpCurrentMonth = idx;
+            switchDatePickerView("days");
+            renderDatePickerDays();
+        });
+        grid.appendChild(btn);
+    });
+}
+
+function switchDatePickerView(mode) {
+    dpViewMode = mode;
+    const daysView = $("#dpDaysView");
+    const monthsView = $("#dpMonthsView");
+    const viewBtnChevron = $(".dp-view-chevron");
+
+    if (mode === "months") {
+        if (daysView) daysView.classList.add("hidden");
+        if (monthsView) monthsView.classList.remove("hidden");
+        if (viewBtnChevron) viewBtnChevron.textContent = "▴";
+        renderDatePickerMonths();
+    } else {
+        if (monthsView) monthsView.classList.add("hidden");
+        if (daysView) daysView.classList.remove("hidden");
+        if (viewBtnChevron) viewBtnChevron.textContent = "▾";
+        renderDatePickerDays();
+    }
+}
+
+function selectDate(isoString) {
+    const input = $("#transactionDate");
+    if (input) {
+        input.value = isoString;
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    const parts = isoString.split("-");
+    if (parts.length === 3) {
+        dpCurrentYear = parseInt(parts[0], 10);
+        dpCurrentMonth = parseInt(parts[1], 10) - 1;
+    }
+
+    syncDatePicker();
+    closeDatePicker();
+}
+
+function openDatePicker() {
+    const container = $("#customDatePicker");
+    const trigger = $("#datePickerTrigger");
+    if (!container || !trigger) return;
+
+    switchDatePickerView("days");
+
+    const input = $("#transactionDate");
+    const val = (input && input.value) ? input.value : todayISO();
+    const parts = val.split("-");
+    if (parts.length === 3) {
+        dpCurrentYear = parseInt(parts[0], 10);
+        dpCurrentMonth = parseInt(parts[1], 10) - 1;
+    }
+
+    renderDatePickerDays();
+
+    container.classList.add("open");
+    trigger.setAttribute("aria-expanded", "true");
+}
+
+function closeDatePicker() {
+    const container = $("#customDatePicker");
+    const trigger = $("#datePickerTrigger");
+    if (!container) return;
+
+    container.classList.remove("open");
+    if (trigger) trigger.setAttribute("aria-expanded", "false");
+}
+
+function setupDatePicker() {
+    const container = $("#customDatePicker");
+    const trigger = $("#datePickerTrigger");
+    const input = $("#transactionDate");
+    const backdrop = $("#datePickerBackdrop");
+    const closeBtn = $("#dpCloseBtn");
+    const prevBtn = $("#dpPrevBtn");
+    const nextBtn = $("#dpNextBtn");
+    const viewBtn = $("#dpViewBtn");
+    const todayBtn = $("#dpTodayBtn");
+    const yesterdayBtn = $("#dpYesterdayBtn");
+    const prevYearBtn = $("#dpPrevYearBtn");
+    const nextYearBtn = $("#dpNextYearBtn");
+
+    if (!container || !trigger || !input) return;
+
+    trigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (container.classList.contains("open")) {
+            closeDatePicker();
+        } else {
+            openDatePicker();
+        }
+    });
+
+    if (backdrop) {
+        backdrop.addEventListener("click", closeDatePicker);
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeDatePicker);
+    }
+
+    if (prevBtn) {
+        prevBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (dpCurrentMonth === 0) {
+                dpCurrentMonth = 11;
+                dpCurrentYear--;
+            } else {
+                dpCurrentMonth--;
+            }
+            renderDatePickerDays();
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (dpCurrentMonth === 11) {
+                dpCurrentMonth = 0;
+                dpCurrentYear++;
+            } else {
+                dpCurrentMonth++;
+            }
+            renderDatePickerDays();
+        });
+    }
+
+    if (viewBtn) {
+        viewBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            switchDatePickerView(dpViewMode === "days" ? "months" : "days");
+        });
+    }
+
+    if (prevYearBtn) {
+        prevYearBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            dpCurrentYear--;
+            renderDatePickerMonths();
+        });
+    }
+
+    if (nextYearBtn) {
+        nextYearBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            dpCurrentYear++;
+            renderDatePickerMonths();
+        });
+    }
+
+    if (todayBtn) {
+        todayBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            selectDate(todayISO());
+        });
+    }
+
+    if (yesterdayBtn) {
+        yesterdayBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const d = new Date();
+            d.setDate(d.getDate() - 1);
+            selectDate(d.toISOString().split("T")[0]);
+        });
+    }
+
+    document.addEventListener("click", (e) => {
+        if (!container.contains(e.target)) {
+            closeDatePicker();
+        }
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && container.classList.contains("open")) {
+            closeDatePicker();
+        }
+    });
+
+    input.addEventListener("change", syncDatePicker);
+
+    // Initial sync
+    syncDatePicker();
+}
+
 /* ==============================
    FORMULÁRIO DE LANÇAMENTOS
 ================================ */
@@ -793,6 +1120,7 @@ function resetTransactionForm() {
 
     syncCategoryPicker("Alimentação");
     closeCategoryDrawer();
+    syncDatePicker();
 
     const title = $("#formTitle");
     if (title) title.textContent = "Novo lançamento";
@@ -846,6 +1174,7 @@ function editTransaction(id) {
     closeCategoryDrawer();
 
     $("#transactionDate").value = transaction.date;
+    syncDatePicker();
     $("#notes").value = transaction.notes || "";
 
     const formTitle = $("#formTitle");
@@ -1755,6 +2084,7 @@ function init() {
     setupMobileMenu();
     setupPrivacyMode();
     setupCategoryPicker();
+    setupDatePicker();
     renderAll();
 
     // Se a página de lançamentos recebeu um ID para edição via query string (?edit=...)

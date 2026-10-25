@@ -174,8 +174,60 @@
                     </div>
 
                     <div class="field">
-                        <label for="transactionDate">Data do lançamento</label>
-                        <input id="transactionDate" type="date" required>
+                        <label for="datePickerTrigger">Data do lançamento</label>
+                        <div class="custom-datepicker" id="customDatePicker">
+                            <input id="transactionDate" type="date" required class="datepicker-native-input" tabindex="-1" aria-hidden="true">
+                            <button type="button" class="datepicker-trigger" id="datePickerTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="datePickerDropdown">
+                                <span class="datepicker-trigger-left">
+                                    <span class="datepicker-icon" aria-hidden="true">📅</span>
+                                    <span class="datepicker-text" id="datePickerText">Selecione uma data</span>
+                                </span>
+                                <span class="datepicker-chevron" aria-hidden="true">⌄</span>
+                            </button>
+
+                            <div class="datepicker-backdrop" id="datePickerBackdrop" aria-hidden="true"></div>
+
+                            <div class="datepicker-dropdown" id="datePickerDropdown" role="dialog" aria-modal="true" aria-label="Seletor de data" aria-hidden="true">
+                                <div class="dp-header">
+                                    <button type="button" class="dp-btn-view" id="dpViewBtn" title="Alternar para seleção de mês e ano">
+                                        <span id="dpCurrentMonthYear">Outubro de 2026</span>
+                                        <span class="dp-view-chevron" aria-hidden="true">▾</span>
+                                    </button>
+                                    <div class="dp-nav-group">
+                                        <button type="button" class="dp-nav-btn" id="dpPrevBtn" aria-label="Mês anterior">‹</button>
+                                        <button type="button" class="dp-nav-btn" id="dpNextBtn" aria-label="Próximo mês">›</button>
+                                        <button type="button" class="dp-close-btn" id="dpCloseBtn" aria-label="Fechar calendário">✕</button>
+                                    </div>
+                                </div>
+
+                                <div class="dp-shortcuts">
+                                    <button type="button" class="dp-shortcut-btn" id="dpTodayBtn">Hoje</button>
+                                    <button type="button" class="dp-shortcut-btn" id="dpYesterdayBtn">Ontem</button>
+                                </div>
+
+                                <div class="dp-days-view" id="dpDaysView">
+                                    <div class="dp-weekdays">
+                                        <span>Dom</span>
+                                        <span>Seg</span>
+                                        <span>Ter</span>
+                                        <span>Qua</span>
+                                        <span>Qui</span>
+                                        <span>Sex</span>
+                                        <span>Sáb</span>
+                                    </div>
+                                    <div class="dp-grid" id="dpGrid"></div>
+                                </div>
+
+                                <div class="dp-months-view hidden" id="dpMonthsView">
+                                    <div class="dp-year-selector">
+                                        <button type="button" class="dp-nav-btn" id="dpPrevYearBtn" aria-label="Ano anterior">‹</button>
+                                        <span id="dpSelectedYear" class="dp-year-display">2026</span>
+                                        <button type="button" class="dp-nav-btn" id="dpNextYearBtn" aria-label="Próximo ano">›</button>
+                                    </div>
+                                    <div class="dp-months-grid" id="dpMonthsGrid"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="field">
