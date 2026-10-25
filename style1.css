@@ -967,10 +967,16 @@ textarea:focus {
         align-items: flex-start;
     }
 
-    .topbar > .button {
+    .topbar > .button,
+    .topbar .button {
         font-size: 10px;
         padding: 9px;
-        max-width: 130px;
+    }
+
+    .privacy-btn {
+        min-height: 36px;
+        padding: 6px 10px;
+        font-size: 11px;
     }
 
     .summary-grid {
@@ -981,7 +987,8 @@ textarea:focus {
         padding: 15px 12px;
     }
 
-    .summary-card h2 {
+    .summary-card h2,
+    .summary-card .summary-amount {
         font-size: 20px;
     }
 

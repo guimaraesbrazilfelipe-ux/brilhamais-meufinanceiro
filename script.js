@@ -939,7 +939,11 @@ function handleTransactionSubmit(event) {
     const id = $("#editId").value;
     const type = $("#type").value;
     const description = $("#description").value.trim();
-    const amount = Number($("#amount").value);
+    const rawAmount = String($("#amount").value || "").trim().replace("R$", "").trim();
+    const normalizedAmount = rawAmount.includes(",")
+        ? rawAmount.replace(/\./g, "").replace(",", ".")
+        : rawAmount;
+    const amount = Number(normalizedAmount);
     const customCategory = $("#customCategory").value.trim();
     const category = customCategory || $("#category").value;
     const date = $("#transactionDate").value;
@@ -1053,7 +1057,9 @@ function handleTransactionSubmit(event) {
 function handleSalarySubmit(event) {
     event.preventDefault();
 
-    const salary = Number($("#salary").value);
+    const raw = String($("#salary").value || "").trim().replace("R$", "").trim();
+    const normalized = raw.includes(",") ? raw.replace(/\./g, "").replace(",", ".") : raw;
+    const salary = Number(normalized);
     const month = selectedMonth();
 
     if (
@@ -1086,7 +1092,9 @@ function handleSalarySubmit(event) {
 function handleBudgetSubmit(event) {
     event.preventDefault();
 
-    const budget = Number($("#budget").value);
+    const raw = String($("#budget").value || "").trim().replace("R$", "").trim();
+    const normalized = raw.includes(",") ? raw.replace(/\./g, "").replace(",", ".") : raw;
+    const budget = Number(normalized);
     const month = selectedMonth();
 
     if (
@@ -1119,7 +1127,9 @@ function handleBudgetSubmit(event) {
 function handleGoalSubmit(event) {
     event.preventDefault();
 
-    const goal = Number($("#goal").value);
+    const raw = String($("#goal").value || "").trim().replace("R$", "").trim();
+    const normalized = raw.includes(",") ? raw.replace(/\./g, "").replace(",", ".") : raw;
+    const goal = Number(normalized);
     const month = selectedMonth();
 
     if (
