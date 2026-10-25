@@ -14,29 +14,51 @@
 <body>
     <div class="app">
         <aside class="sidebar">
-            <a href="index.html" class="brand">
-                <span class="brand-icon">₿</span>
-                <span>Meu<span class="brand-accent">Financeiro</span></span>
-            </a>
+            <div class="sidebar-header">
+                <a href="index.html" class="brand">
+                    <span class="brand-icon">₿</span>
+                    <span>Meu<span class="brand-accent">Financeiro</span></span>
+                </a>
+                <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="mobileMenuDrawer">
+                    <span class="hamburger-icon" aria-hidden="true">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                    <span class="mobile-menu-text">Menu</span>
+                </button>
+            </div>
 
-            <p class="menu-label">MENU PRINCIPAL</p>
+            <div class="mobile-menu-backdrop" id="mobileMenuBackdrop" aria-hidden="true"></div>
 
-            <nav class="navigation">
-                <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
-                <a href="lancamentos.html" class="nav-link">＋ <span>Novo lançamento</span></a>
-                <a href="relatorios.html" class="nav-link">▥ <span>Relatórios</span></a>
-                <a href="historico.html" class="nav-link">◷ <span>Histórico</span></a>
-                <a href="planejamento.html" class="nav-link">◎ <span>Planejamento</span></a>
-                <a href="configuracoes.html" class="nav-link active">⚙ <span>Configurações</span></a>
-            </nav>
-
-            <div class="sidebar-bottom">
-                <div class="tip-card">
-                    <span class="tip-icon">💡</span>
-                    <h3>Dica de segurança</h3>
-                    <p>Faça backup dos seus dados regularmente exportando o arquivo JSON para seu dispositivo.</p>
+            <div class="mobile-menu-drawer" id="mobileMenuDrawer">
+                <div class="mobile-drawer-header">
+                    <div class="mobile-drawer-title">
+                        <span class="brand-icon">₿</span>
+                        <span>Menu de Navegação</span>
+                    </div>
+                    <button type="button" class="mobile-drawer-close" id="mobileMenuCloseBtn" aria-label="Fechar menu">✕</button>
                 </div>
-                <p class="sidebar-footer">SEU DINHEIRO, SUAS REGRAS.</p>
+
+                <p class="menu-label">MENU PRINCIPAL</p>
+
+                <nav class="navigation">
+                    <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
+                    <a href="lancamentos.html" class="nav-link">＋ <span>Novo lançamento</span></a>
+                    <a href="relatorios.html" class="nav-link">▥ <span>Relatórios</span></a>
+                    <a href="historico.html" class="nav-link">◷ <span>Histórico</span></a>
+                    <a href="planejamento.html" class="nav-link">◎ <span>Planejamento</span></a>
+                    <a href="configuracoes.html" class="nav-link active">⚙ <span>Configurações</span></a>
+                </nav>
+
+                <div class="sidebar-bottom">
+                    <div class="tip-card">
+                        <span class="tip-icon">💡</span>
+                        <h3>Dica de segurança</h3>
+                        <p>Faça backup dos seus dados regularmente exportando o arquivo JSON para seu dispositivo.</p>
+                    </div>
+                    <p class="sidebar-footer">SEU DINHEIRO, SUAS REGRAS.</p>
+                </div>
             </div>
         </aside>
 

@@ -1375,13 +1375,61 @@ function setupNavigation() {
             activeLink = link;
         }
     });
+}
 
-    // No mobile, rola a barra horizontal automaticamente para manter a aba ativa visível
-    if (activeLink) {
-        setTimeout(() => {
-            activeLink.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
-        }, 60);
+function setupMobileMenu() {
+    const menuBtn = document.getElementById("mobileMenuBtn");
+    const closeBtn = document.getElementById("mobileMenuCloseBtn");
+    const backdrop = document.getElementById("mobileMenuBackdrop");
+    const drawer = document.getElementById("mobileMenuDrawer");
+
+    if (!menuBtn || !drawer) return;
+
+    function openMenu() {
+        document.body.classList.add("mobile-nav-open");
+        menuBtn.setAttribute("aria-expanded", "true");
+        if (closeBtn) {
+            closeBtn.focus();
+        }
     }
+
+    function closeMenu() {
+        document.body.classList.remove("mobile-nav-open");
+        menuBtn.setAttribute("aria-expanded", "false");
+    }
+
+    menuBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isOpen = document.body.classList.contains("mobile-nav-open");
+        if (isOpen) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
+    });
+
+    if (closeBtn) {
+        closeBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            closeMenu();
+        });
+    }
+
+    if (backdrop) {
+        backdrop.addEventListener("click", closeMenu);
+    }
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && document.body.classList.contains("mobile-nav-open")) {
+            closeMenu();
+        }
+    });
+
+    drawer.querySelectorAll(".nav-link").forEach((link) => {
+        link.addEventListener("click", () => {
+            closeMenu();
+        });
+    });
 }
 
 function setupModernValidation() {
@@ -1681,6 +1729,7 @@ function init() {
     }
 
     setupNavigation();
+    setupMobileMenu();
     setupPrivacyMode();
     setupCategoryPicker();
     renderAll();
