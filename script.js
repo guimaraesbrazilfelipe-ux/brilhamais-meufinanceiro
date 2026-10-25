@@ -1383,30 +1383,37 @@ function setupMobileMenu() {
     const backdrop = document.getElementById("mobileMenuBackdrop");
     const drawer = document.getElementById("mobileMenuDrawer");
 
-    if (!menuBtn || !drawer) return;
+    function closeMenu() {
+        document.body.classList.remove("mobile-nav-open");
+        if (menuBtn) {
+            menuBtn.setAttribute("aria-expanded", "false");
+        }
+    }
 
     function openMenu() {
         document.body.classList.add("mobile-nav-open");
-        menuBtn.setAttribute("aria-expanded", "true");
+        if (menuBtn) {
+            menuBtn.setAttribute("aria-expanded", "true");
+        }
         if (closeBtn) {
             closeBtn.focus();
         }
     }
 
-    function closeMenu() {
-        document.body.classList.remove("mobile-nav-open");
-        menuBtn.setAttribute("aria-expanded", "false");
-    }
+    // Garante que comece sempre fechado
+    closeMenu();
 
-    menuBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const isOpen = document.body.classList.contains("mobile-nav-open");
-        if (isOpen) {
-            closeMenu();
-        } else {
-            openMenu();
-        }
-    });
+    if (menuBtn) {
+        menuBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const isOpen = document.body.classList.contains("mobile-nav-open");
+            if (isOpen) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
+        });
+    }
 
     if (closeBtn) {
         closeBtn.addEventListener("click", (e) => {
@@ -1416,7 +1423,10 @@ function setupMobileMenu() {
     }
 
     if (backdrop) {
-        backdrop.addEventListener("click", closeMenu);
+        backdrop.addEventListener("click", (e) => {
+            e.stopPropagation();
+            closeMenu();
+        });
     }
 
     document.addEventListener("keydown", (e) => {
@@ -1431,11 +1441,18 @@ function setupMobileMenu() {
         }
     });
 
-    drawer.querySelectorAll(".nav-link").forEach((link) => {
-        link.addEventListener("click", () => {
-            closeMenu();
+    // BFCache e navegao: se voltar a pgina com o boto voltar do navegador, nunca deixar preso aberto
+    window.addEventListener("pageshow", closeMenu);
+    window.addEventListener("pagehide", closeMenu);
+    window.addEventListener("popstate", closeMenu);
+
+    if (drawer) {
+        drawer.querySelectorAll(".nav-link").forEach((link) => {
+            link.addEventListener("click", () => {
+                closeMenu();
+            });
         });
-    });
+    }
 }
 
 function setupModernValidation() {

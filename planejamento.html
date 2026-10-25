@@ -29,36 +29,24 @@
                 </button>
             </div>
 
-            <div class="mobile-menu-backdrop" id="mobileMenuBackdrop" aria-hidden="true"></div>
+            <p class="menu-label">MENU PRINCIPAL</p>
 
-            <div class="mobile-menu-drawer" id="mobileMenuDrawer">
-                <div class="mobile-drawer-header">
-                    <div class="mobile-drawer-title">
-                        <span class="brand-icon">₿</span>
-                        <span>Menu de Navegação</span>
-                    </div>
-                    <button type="button" class="mobile-drawer-close" id="mobileMenuCloseBtn" aria-label="Fechar menu">✕</button>
+            <nav class="navigation desktop-navigation">
+                <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
+                <a href="lancamentos.html" class="nav-link">＋ <span>Novo lançamento</span></a>
+                <a href="relatorios.html" class="nav-link">▥ <span>Relatórios</span></a>
+                <a href="historico.html" class="nav-link">◷ <span>Histórico</span></a>
+                <a href="planejamento.html" class="nav-link active">◎ <span>Planejamento</span></a>
+                <a href="configuracoes.html" class="nav-link">⚙ <span>Configurações</span></a>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <div class="tip-card">
+                    <span class="tip-icon">💡</span>
+                    <h3>Dica financeira</h3>
+                    <p>Definir uma meta de economia no começo do mês incentiva a guardar antes de gastar com supérfluos.</p>
                 </div>
-
-                <p class="menu-label">MENU PRINCIPAL</p>
-
-                <nav class="navigation">
-                    <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
-                    <a href="lancamentos.html" class="nav-link">＋ <span>Novo lançamento</span></a>
-                    <a href="relatorios.html" class="nav-link">▥ <span>Relatórios</span></a>
-                    <a href="historico.html" class="nav-link">◷ <span>Histórico</span></a>
-                    <a href="planejamento.html" class="nav-link active">◎ <span>Planejamento</span></a>
-                    <a href="configuracoes.html" class="nav-link">⚙ <span>Configurações</span></a>
-                </nav>
-
-                <div class="sidebar-bottom">
-                    <div class="tip-card">
-                        <span class="tip-icon">💡</span>
-                        <h3>Dica financeira</h3>
-                        <p>Definir uma meta de economia no começo do mês incentiva a guardar antes de gastar com supérfluos.</p>
-                    </div>
-                    <p class="sidebar-footer">SEU DINHEIRO, SUAS REGRAS.</p>
-                </div>
+                <p class="sidebar-footer">SEU DINHEIRO, SUAS REGRAS.</p>
             </div>
         </aside>
 
@@ -179,5 +167,38 @@
     </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <!-- Mobile Menu Drawer & Backdrop (diretos no body para evitar qualquer bug de posicionamento ou stacking context) -->
+    <div class="mobile-menu-backdrop" id="mobileMenuBackdrop" aria-hidden="true"></div>
+
+    <div class="mobile-menu-drawer" id="mobileMenuDrawer" role="dialog" aria-modal="true" aria-label="Menu de navegação">
+        <div class="mobile-drawer-header">
+            <div class="mobile-drawer-title">
+                <span class="brand-icon">₿</span>
+                <span>Meu<span class="brand-accent">Financeiro</span></span>
+            </div>
+            <button type="button" class="mobile-drawer-close" id="mobileMenuCloseBtn" aria-label="Fechar menu">✕</button>
+        </div>
+
+        <p class="menu-label">MENU PRINCIPAL</p>
+
+        <nav class="navigation mobile-navigation">
+            <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
+            <a href="lancamentos.html" class="nav-link">＋ <span>Novo lançamento</span></a>
+            <a href="relatorios.html" class="nav-link">▥ <span>Relatórios</span></a>
+            <a href="historico.html" class="nav-link">◷ <span>Histórico</span></a>
+            <a href="planejamento.html" class="nav-link active">◎ <span>Planejamento</span></a>
+            <a href="configuracoes.html" class="nav-link">⚙ <span>Configurações</span></a>
+        </nav>
+
+        <div class="mobile-drawer-bottom">
+            <div class="tip-card">
+                <span class="tip-icon">💡</span>
+                <h3>Dica financeira</h3>
+                <p>Definir uma meta de economia no começo do mês incentiva a guardar antes de gastar com supérfluos.</p>
+            </div>
+            <p class="sidebar-footer">SEU DINHEIRO, SUAS REGRAS.</p>
+        </div>
+    </div>
 </body>
 </html>
