@@ -1425,6 +1425,12 @@ function setupMobileMenu() {
         }
     });
 
+    window.addEventListener("resize", () => {
+        if (window.innerWidth > 650 && document.body.classList.contains("mobile-nav-open")) {
+            closeMenu();
+        }
+    });
+
     drawer.querySelectorAll(".nav-link").forEach((link) => {
         link.addEventListener("click", () => {
             closeMenu();
