@@ -459,7 +459,10 @@ function renderCategoryChart() {
 }
 
 function formatDate(dateString) {
-    const [year, month, day] = dateString.split("-").map(Number);
+    if (!dateString || typeof dateString !== "string") return "";
+    const parts = dateString.split("-").map(Number);
+    if (parts.length < 3) return dateString;
+    const [year, month, day] = parts;
 
     return new Date(year, month - 1, day, 12)
         .toLocaleDateString("pt-BR");
@@ -660,21 +663,25 @@ function renderAll() {
 function closeCategoryDrawer() {
     const picker = $("#categoryPicker");
     const button = $("#categoryPickerButton");
+    const form = $("#transactionForm");
 
     if (!picker || !button) return;
 
     picker.classList.remove("open");
     button.setAttribute("aria-expanded", "false");
+    if (form) form.classList.remove("category-drawer-open");
 }
 
 function openCategoryDrawer() {
     const picker = $("#categoryPicker");
     const button = $("#categoryPickerButton");
+    const form = $("#transactionForm");
 
     if (!picker || !button) return;
 
     picker.classList.add("open");
     button.setAttribute("aria-expanded", "true");
+    if (form) form.classList.add("category-drawer-open");
 }
 
 function syncCategoryPicker(value) {

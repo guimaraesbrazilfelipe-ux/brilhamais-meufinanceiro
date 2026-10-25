@@ -1556,16 +1556,20 @@ body.dialog-open { overflow: hidden; }
 }
 
 /* Garante que ao abrir a gaveta de categorias no mobile ela sobreponha perfeitamente o tipo de lançamento visualmente e nos cliques */
-#transactionForm:has(.category-picker.open) .transaction-basic-row {
+#transactionForm:has(.category-picker.open) .transaction-basic-row,
+#transactionForm.category-drawer-open .transaction-basic-row {
     z-index: 1 !important;
 }
 
-#transactionForm:has(.category-picker.open) .transaction-basic-row * {
+#transactionForm:has(.category-picker.open) .transaction-basic-row *,
+#transactionForm.category-drawer-open .transaction-basic-row * {
     pointer-events: none !important;
 }
 
 #transactionForm:has(.category-picker.open) .amount-category-row,
-#transactionForm:has(.category-picker.open) .category-field {
+#transactionForm.category-drawer-open .amount-category-row,
+#transactionForm:has(.category-picker.open) .category-field,
+#transactionForm.category-drawer-open .category-field {
     z-index: 20000 !important;
 }
 
