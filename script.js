@@ -20,7 +20,6 @@ const CATEGORY_ICONS = {
     "Lazer": "🎮",
     "Compras": "🛍️",
     "Assinaturas": "📱",
-    "Salário": "💼",
     "Investimentos": "📈",
     "Outros": "📦"
 };
@@ -28,7 +27,7 @@ const CATEGORY_ICONS = {
 const CATEGORY_OPTIONS = [
     "Alimentação", "Moradia", "Água e luz", "Transporte",
     "Saúde", "Educação", "Lazer", "Compras",
-    "Assinaturas", "Salário", "Investimentos", "Outros"
+    "Assinaturas", "Investimentos", "Outros"
 ];
 
 function todayISO() {
@@ -1356,6 +1355,7 @@ function setupNavigation() {
     // Detecta a página atual pela URL e marca a classe active no link correto
     const currentPath = window.location.pathname.split("/").pop() || "index.html";
 
+    let activeLink = null;
     document.querySelectorAll(".nav-link").forEach((link) => {
         const href = link.getAttribute("href");
         if (!href) return;
@@ -1364,7 +1364,17 @@ function setupNavigation() {
             (href === "index.html" && (currentPath === "" || currentPath === "index1.html"));
 
         link.classList.toggle("active", isCurrent);
+        if (isCurrent) {
+            activeLink = link;
+        }
     });
+
+    // No mobile, rola a barra horizontal automaticamente para manter a aba ativa visível
+    if (activeLink) {
+        setTimeout(() => {
+            activeLink.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+        }, 60);
+    }
 }
 
 function setupModernValidation() {

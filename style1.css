@@ -229,6 +229,35 @@ h1 {
     border-color: var(--border);
 }
 
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-new-transaction {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 10px 24px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .2px;
+    border-radius: 11px;
+    white-space: nowrap;
+    background: var(--purple);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(148, 117, 255, .28);
+    transition: all .2s ease;
+}
+
+.btn-new-transaction:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+    box-shadow: 0 6px 20px rgba(148, 117, 255, .42);
+}
+
 .month-toolbar {
     margin: 28px 0 18px;
     padding: 13px 17px;
@@ -946,16 +975,19 @@ textarea:focus {
 
     .navigation {
         display: flex;
-        gap: 7px;
+        gap: 8px;
         overflow-x: auto;
-        padding-bottom: 4px;
+        padding-bottom: 6px;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
     }
 
     .nav-link {
         flex-shrink: 0;
-        min-height: 38px;
-        padding: 9px 12px;
-        font-size: 12px;
+        min-height: 40px;
+        padding: 9px 14px;
+        font-size: 13px;
+        white-space: nowrap;
     }
 
     .main-content {
@@ -965,18 +997,38 @@ textarea:focus {
 
     .topbar {
         align-items: flex-start;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .topbar-actions {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .topbar-actions .privacy-btn {
+        flex: 0 0 auto;
+        min-height: 42px;
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    .btn-new-transaction {
+        flex: 1;
+        min-height: 42px;
+        padding: 10px 20px;
+        font-size: 13px;
+        text-align: center;
     }
 
     .topbar > .button,
-    .topbar .button {
-        font-size: 10px;
-        padding: 9px;
-    }
-
-    .privacy-btn {
-        min-height: 36px;
-        padding: 6px 10px;
-        font-size: 11px;
+    .topbar .button:not(.btn-new-transaction) {
+        min-height: 40px;
+        padding: 9px 15px;
+        font-size: 12px;
     }
 
     .summary-grid {
@@ -1501,6 +1553,31 @@ body.dialog-open { overflow: hidden; }
 }
 #transactionForm .transaction-basic-row:has(.transaction-type-select.open) {
     z-index: 100;
+}
+
+/* Garante que ao abrir a gaveta de categorias no mobile ela sobreponha perfeitamente o tipo de lançamento visualmente e nos cliques */
+#transactionForm:has(.category-picker.open) .transaction-basic-row {
+    z-index: 1 !important;
+}
+
+#transactionForm:has(.category-picker.open) .transaction-basic-row * {
+    pointer-events: none !important;
+}
+
+#transactionForm:has(.category-picker.open) .amount-category-row,
+#transactionForm:has(.category-picker.open) .category-field {
+    z-index: 20000 !important;
+}
+
+.category-picker.open {
+    z-index: 20001 !important;
+}
+
+.category-picker.open .category-drawer {
+    z-index: 20002 !important;
+    pointer-events: auto !important;
+    background: #17243a !important;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(148, 117, 255, 0.35) !important;
 }
 #typeControl.open {
     z-index: 1000;
