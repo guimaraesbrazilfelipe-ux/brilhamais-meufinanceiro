@@ -213,11 +213,101 @@
                 </div>
             </section>
 
+            <!-- Painel de Contas Fixas e Assinaturas Recorrentes -->
+            <section class="panel recurring-panel" style="margin-top: 24px;">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Contas Fixas e Assinaturas</h2>
+                        <p>Acompanhe compromissos mensais (Aluguel, Internet, Netflix, Luz) com alerta de vencimento e pagamento em 1 clique.</p>
+                    </div>
+                    <button type="button" class="button button-primary" id="btnToggleNewRecurring">+ Nova conta fixa</button>
+                </div>
+
+                <!-- Formulário de Nova Conta Fixa -->
+                <form id="recurringForm" class="recurring-form hidden" novalidate>
+                    <div class="recurring-form-header">
+                        <h3>Cadastrar conta fixa ou assinatura</h3>
+                        <p>Defina o nome, valor mensal estimado e o dia de vencimento.</p>
+                    </div>
+                    <div class="recurring-form-grid">
+                        <div class="field">
+                            <label for="recurringName">Nome da conta / assinatura</label>
+                            <input type="text" id="recurringName" placeholder="Ex.: Internet Fibra, Netflix, Luz" required maxlength="60">
+                        </div>
+                        <div class="field">
+                            <label for="recurringAmount">Valor mensal estimado (R$)</label>
+                            <input type="number" id="recurringAmount" step="0.01" min="0.01" max="100000000" placeholder="Ex.: 120,00" required>
+                        </div>
+                        <div class="field">
+                            <label for="recurringDueDay">Dia de vencimento (1 a 31)</label>
+                            <input type="number" id="recurringDueDay" min="1" max="31" placeholder="Ex.: 10" required>
+                        </div>
+                        <div class="field">
+                            <label for="recurringCategory">Categoria</label>
+                            <select id="recurringCategory" class="field-select" required>
+                                <option value="Moradia">Moradia</option>
+                                <option value="Água e luz">Água e luz</option>
+                                <option value="Assinaturas">Assinaturas</option>
+                                <option value="Alimentação">Alimentação</option>
+                                <option value="Transporte">Transporte</option>
+                                <option value="Saúde">Saúde</option>
+                                <option value="Educação">Educação</option>
+                                <option value="Lazer">Lazer</option>
+                                <option value="Investimentos">Investimentos</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="recurring-form-actions">
+                        <button type="submit" class="button button-primary" id="btnSaveRecurring">Salvar conta fixa</button>
+                        <button type="button" class="button button-secondary" id="btnCancelRecurring">Cancelar</button>
+                    </div>
+                </form>
+
+                <!-- Resumo dos Custos Fixos do Mês -->
+                <div class="recurring-kpis-grid">
+                    <div class="recurring-kpi-card">
+                        <span class="recurring-kpi-label">Total fixo mensal</span>
+                        <strong class="recurring-kpi-value" id="recurringKpiTotal">R$ 0,00</strong>
+                        <span class="recurring-kpi-sub" id="recurringKpiCount">0 cadastradas</span>
+                    </div>
+                    <div class="recurring-kpi-card">
+                        <span class="recurring-kpi-label">Já pago no mês</span>
+                        <strong class="recurring-kpi-value income-text" id="recurringKpiPaid">R$ 0,00</strong>
+                        <span class="recurring-kpi-sub" id="recurringKpiPaidCount">0 pagas</span>
+                    </div>
+                    <div class="recurring-kpi-card">
+                        <span class="recurring-kpi-label">Pendente a pagar</span>
+                        <strong class="recurring-kpi-value expense-text" id="recurringKpiPending">R$ 0,00</strong>
+                        <span class="recurring-kpi-sub" id="recurringKpiPendingCount">0 pendentes</span>
+                    </div>
+                </div>
+
+                <!-- Lista de Contas Recorrentes -->
+                <div id="recurringBillsList" class="recurring-cards-container"></div>
+            </section>
+
             <footer class="main-footer">
                 <p>Meu Financeiro © <span id="currentYear"></span></p>
                 <p>Organize hoje. Conquiste amanhã. ✨</p>
             </footer>
         </main>
+    </div>
+
+    <!-- Diálogo de confirmação de exclusão -->
+    <div id="confirmDialog" class="confirm-dialog" role="dialog" aria-modal="true"
+        aria-labelledby="confirmDialogTitle" aria-describedby="confirmDialogMessage" aria-hidden="true">
+        <div class="confirm-dialog-card">
+            <button type="button" id="confirmDialogClose" class="confirm-dialog-close" aria-label="Fechar janela">×</button>
+            <div class="confirm-dialog-icon" aria-hidden="true">🗑️</div>
+            <p class="confirm-dialog-eyebrow">CONFIRMAÇÃO</p>
+            <h2 id="confirmDialogTitle">Excluir conta fixa?</h2>
+            <p id="confirmDialogMessage" class="confirm-dialog-message">Tem certeza de que deseja excluir esta conta fixa?</p>
+            <div class="confirm-dialog-actions">
+                <button type="button" id="confirmDialogCancel" class="button button-secondary">Manter conta</button>
+                <button type="button" id="confirmDialogConfirm" class="button button-danger">Excluir conta</button>
+            </div>
+        </div>
     </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>

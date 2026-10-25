@@ -126,7 +126,8 @@ function defaultData() {
         transactions: [],
         salaries: {},
         budgets: {},
-        goals: {}
+        goals: {},
+        recurringBills: []
     };
 }
 
@@ -148,7 +149,8 @@ function loadData() {
             transactions: data.transactions,
             salaries: data.salaries || {},
             budgets: data.budgets || {},
-            goals: data.goals || {}
+            goals: data.goals || {},
+            recurringBills: Array.isArray(data.recurringBills) ? data.recurringBills : []
         };
     } catch (error) {
         console.error("Não foi possível carregar os dados:", error);
@@ -753,6 +755,346 @@ function renderSettings() {
     }
 }
 
+/* =========================================
+   CONTAS FIXAS E ASSINATURAS RECORRENTES
+========================================= */
+
+function getRecurringBillStatus(bill, month) {
+    const isPaid = Array.isArray(bill.paidMonths) && bill.paidMonths.includes(month);
+    if (isPaid) {
+        return {
+            status: "paid",
+            label: "Paga",
+            className: "status-paid",
+            icon: "✓",
+            isPaid: true
+        };
+    }
+
+    const today = todayISO();
+    const [todayY, todayM, todayD] = today.split("-").map(Number);
+    const [targetY, targetM] = month.split("-").map(Number);
+
+    if (targetY < todayY || (targetY === todayY && targetM < todayM)) {
+        return {
+            status: "overdue",
+            label: "Não paga (mês anterior)",
+            className: "status-overdue",
+            icon: "⚠️",
+            isPaid: false
+        };
+    }
+
+    if (targetY > todayY || (targetY === todayY && targetM > todayM)) {
+        return {
+            status: "pending",
+            label: `Vence dia ${bill.dueDay}`,
+            className: "status-pending",
+            icon: "🕒",
+            isPaid: false
+        };
+    }
+
+    // Mês atual
+    if (todayD > bill.dueDay) {
+        return {
+            status: "overdue",
+            label: `Venceu dia ${bill.dueDay}`,
+            className: "status-overdue",
+            icon: "⚠️",
+            isPaid: false
+        };
+    } else if (todayD === bill.dueDay) {
+        return {
+            status: "today",
+            label: "Vence Hoje!",
+            className: "status-today",
+            icon: "🚨",
+            isPaid: false
+        };
+    } else if (bill.dueDay - todayD <= 3) {
+        const diff = bill.dueDay - todayD;
+        return {
+            status: "soon",
+            label: `Vence em ${diff} ${diff === 1 ? "dia" : "dias"}`,
+            className: "status-soon",
+            icon: "⏳",
+            isPaid: false
+        };
+    } else {
+        return {
+            status: "pending",
+            label: `Vence dia ${bill.dueDay}`,
+            className: "status-pending",
+            icon: "📅",
+            isPaid: false
+        };
+    }
+}
+
+function payRecurringBill(billId, month) {
+    const bill = (data.recurringBills || []).find((b) => b.id === billId);
+    if (!bill) return;
+
+    if (!Array.isArray(bill.paidMonths)) {
+        bill.paidMonths = [];
+    }
+
+    if (bill.paidMonths.includes(month)) {
+        showToast(`A conta "${bill.name}" já está marcada como paga.`);
+        return;
+    }
+
+    bill.paidMonths.push(month);
+
+    // Cria lançamento correspondente no mês selecionado
+    const [y, m] = month.split("-").map(Number);
+    const maxDayInMonth = new Date(y, m, 0).getDate();
+    const effectiveDay = Math.min(Math.max(1, bill.dueDay), maxDayInMonth);
+    const dateStr = `${month}-${String(effectiveDay).padStart(2, "0")}`;
+
+    const tx = {
+        id: createId(),
+        type: "despesa",
+        description: bill.name,
+        category: bill.category || "Outros",
+        amount: Number(bill.amount),
+        date: dateStr,
+        notes: "Lançamento automático de conta recorrente",
+        recurringBillId: bill.id
+    };
+
+    data.transactions.unshift(tx);
+    saveData();
+    showToast(`Conta "${bill.name}" lançada e marcada como paga!`);
+    renderAll();
+}
+
+function unpayRecurringBill(billId, month) {
+    const bill = (data.recurringBills || []).find((b) => b.id === billId);
+    if (!bill) return;
+
+    if (Array.isArray(bill.paidMonths)) {
+        bill.paidMonths = bill.paidMonths.filter((m) => m !== month);
+    }
+
+    // Remove também o lançamento automático se houver
+    const idx = data.transactions.findIndex(
+        (t) => t.recurringBillId === bill.id && t.date.startsWith(month)
+    );
+    if (idx !== -1) {
+        data.transactions.splice(idx, 1);
+    }
+
+    saveData();
+    showToast(`Pagamento de "${bill.name}" desmarcado.`);
+    renderAll();
+}
+
+function deleteRecurringBill(billId) {
+    const bill = (data.recurringBills || []).find((b) => b.id === billId);
+    if (!bill) return;
+
+    const dialog = $("#confirmDialog");
+    if (dialog) {
+        const title = $("#confirmDialogTitle");
+        const msg = $("#confirmDialogMessage");
+        const confirmBtn = $("#confirmDialogConfirm");
+        const cancelBtn = $("#confirmDialogCancel");
+        const closeBtn = $("#confirmDialogClose");
+
+        if (title) title.textContent = "Excluir conta fixa?";
+        if (msg) msg.textContent = `Tem certeza de que deseja remover "${bill.name}" das suas contas fixas?`;
+
+        dialog.classList.add("open");
+        dialog.setAttribute("aria-hidden", "false");
+
+        const cleanup = () => {
+            dialog.classList.remove("open");
+            dialog.setAttribute("aria-hidden", "true");
+            confirmBtn.removeEventListener("click", onConfirm);
+            if (cancelBtn) cancelBtn.removeEventListener("click", onCancel);
+            if (closeBtn) closeBtn.removeEventListener("click", onCancel);
+        };
+
+        const onConfirm = () => {
+            cleanup();
+            data.recurringBills = (data.recurringBills || []).filter((b) => b.id !== billId);
+            saveData();
+            showToast("Conta fixa excluída com sucesso.");
+            renderAll();
+        };
+
+        const onCancel = () => cleanup();
+
+        confirmBtn.addEventListener("click", onConfirm);
+        if (cancelBtn) cancelBtn.addEventListener("click", onCancel);
+        if (closeBtn) closeBtn.addEventListener("click", onCancel);
+    } else {
+        if (confirm(`Excluir conta fixa "${bill.name}"?`)) {
+            data.recurringBills = (data.recurringBills || []).filter((b) => b.id !== billId);
+            saveData();
+            showToast("Conta fixa excluída.");
+            renderAll();
+        }
+    }
+}
+
+function renderRecurringBills() {
+    const listEl = $("#recurringBillsList");
+    if (!listEl) return;
+
+    const month = selectedMonth();
+    const bills = data.recurringBills || [];
+
+    let totalAmount = 0;
+    let paidAmount = 0;
+    let paidCount = 0;
+
+    bills.forEach((b) => {
+        const amt = Number(b.amount) || 0;
+        totalAmount += amt;
+        const isPaid = Array.isArray(b.paidMonths) && b.paidMonths.includes(month);
+        if (isPaid) {
+            paidAmount += amt;
+            paidCount++;
+        }
+    });
+
+    const pendingAmount = Math.max(0, totalAmount - paidAmount);
+    const pendingCount = bills.length - paidCount;
+
+    // Atualiza KPIs
+    const kpiTotal = $("#recurringKpiTotal");
+    const kpiPaid = $("#recurringKpiPaid");
+    const kpiPending = $("#recurringKpiPending");
+    const kpiCount = $("#recurringKpiCount");
+    const kpiPaidCount = $("#recurringKpiPaidCount");
+    const kpiPendingCount = $("#recurringKpiPendingCount");
+
+    if (kpiTotal) kpiTotal.textContent = money(totalAmount);
+    if (kpiPaid) kpiPaid.textContent = money(paidAmount);
+    if (kpiPending) kpiPending.textContent = money(pendingAmount);
+    if (kpiCount) kpiCount.textContent = `${bills.length} ${bills.length === 1 ? "cadastrada" : "cadastradas"}`;
+    if (kpiPaidCount) kpiPaidCount.textContent = `${paidCount} ${paidCount === 1 ? "paga" : "pagas"}`;
+    if (kpiPendingCount) kpiPendingCount.textContent = `${pendingCount} ${pendingCount === 1 ? "pendente" : "pendentes"}`;
+
+    if (!bills.length) {
+        listEl.innerHTML = `
+            <div class="empty-state" style="grid-column: 1 / -1; padding: 32px 16px;">
+                <p>Nenhuma conta fixa ou assinatura cadastrada ainda.</p>
+                <p style="font-size: 13px; color: var(--muted); margin-top: 4px;">Cadastre seu aluguel, internet, contas de consumo e assinaturas para controlar o vencimento e pagar em 1 clique!</p>
+                <button type="button" class="button button-primary" id="btnEmptyAddRecurring" style="margin-top: 14px;">
+                    + Cadastrar primeira conta fixa
+                </button>
+            </div>
+        `;
+        const btnEmpty = $("#btnEmptyAddRecurring");
+        if (btnEmpty) {
+            btnEmpty.addEventListener("click", () => {
+                const form = $("#recurringForm");
+                if (form) {
+                    form.classList.remove("hidden");
+                    const nameInput = $("#recurringName");
+                    if (nameInput) nameInput.focus();
+                }
+            });
+        }
+        return;
+    }
+
+    // Ordenar contas por dia de vencimento
+    const sorted = [...bills].sort((a, b) => a.dueDay - b.dueDay);
+
+    listEl.innerHTML = sorted.map((bill) => {
+        const statusInfo = getRecurringBillStatus(bill, month);
+        const icon = CATEGORY_ICONS[bill.category] || "📦";
+
+        return `
+            <article class="recurring-card ${statusInfo.isPaid ? "paid" : ""}">
+                <div class="recurring-card-top">
+                    <div class="recurring-card-identity">
+                        <div class="recurring-card-icon">${icon}</div>
+                        <div class="recurring-card-title">
+                            <h4>${escapeHTML(bill.name)}</h4>
+                            <span>${escapeHTML(bill.category)}</span>
+                        </div>
+                    </div>
+                    <div class="recurring-card-amount">
+                        <strong>${money(bill.amount)}</strong>
+                        <span class="recurring-due-tag">Vence dia ${bill.dueDay}</span>
+                    </div>
+                </div>
+
+                <div>
+                    <span class="recurring-status-badge ${statusInfo.className}">
+                        <span>${statusInfo.icon}</span>
+                        <span>${statusInfo.label}</span>
+                    </span>
+                </div>
+
+                <div class="recurring-card-footer">
+                    <div>
+                        ${statusInfo.isPaid ? `
+                            <button type="button" class="btn-unpay-recurring" data-action="unpay-recurring" data-id="${bill.id}" title="Desmarcar pagamento desta conta no mês">
+                                Desmarcar pagamento
+                            </button>
+                        ` : `
+                            <button type="button" class="btn-pay-recurring" data-action="pay-recurring" data-id="${bill.id}">
+                                ✓ Pagar / Lançar
+                            </button>
+                        `}
+                    </div>
+                    <button type="button" class="btn-delete-recurring" data-action="delete-recurring" data-id="${bill.id}" title="Excluir conta fixa">
+                        🗑️
+                    </button>
+                </div>
+            </article>
+        `;
+    }).join("");
+}
+
+function renderRecurringAlertBanner() {
+    const banner = $("#recurringAlertBanner");
+    if (!banner) return;
+
+    const bills = data.recurringBills || [];
+    if (!bills.length) {
+        banner.classList.add("hidden");
+        return;
+    }
+
+    const month = selectedMonth();
+    const pendingBills = bills.filter((b) => !Array.isArray(b.paidMonths) || !b.paidMonths.includes(month));
+
+    banner.classList.remove("hidden");
+
+    if (pendingBills.length > 0) {
+        const pendingTotal = pendingBills.reduce((sum, b) => sum + Number(b.amount || 0), 0);
+        banner.classList.remove("all-paid");
+        banner.innerHTML = `
+            <div class="recurring-alert-content">
+                <span class="recurring-alert-icon">🔔</span>
+                <div>
+                    <strong>Contas do mês a pagar:</strong> Você tem ${pendingBills.length} ${pendingBills.length === 1 ? "conta fixa pendente" : "contas fixas pendentes"} somando ${money(pendingTotal)}.
+                </div>
+            </div>
+            <a href="planejamento.html" class="recurring-alert-btn">Ver contas no Planejamento →</a>
+        `;
+    } else {
+        banner.classList.add("all-paid");
+        banner.innerHTML = `
+            <div class="recurring-alert-content">
+                <span class="recurring-alert-icon">🎉</span>
+                <div>
+                    <strong>Tudo em dia!</strong> Todas as suas contas fixas deste mês (${bills.length}) estão pagas.
+                </div>
+            </div>
+            <a href="planejamento.html" class="recurring-alert-btn">Gerenciar contas →</a>
+        `;
+    }
+}
+
 function renderAll() {
     renderSummary();
     renderMonthlyChart();
@@ -762,6 +1104,8 @@ function renderAll() {
     renderSettings();
     renderAgenda();
     renderHistoricalReports();
+    renderRecurringBills();
+    renderRecurringAlertBanner();
 }
 
 /* ==============================
@@ -1398,6 +1742,15 @@ function renderAgenda() {
                 badgesHtml += `<span class="agenda-badge-item expense">−${money(dayExpenses)}</span>`;
             }
 
+            // Contas fixas com vencimento neste dia
+            const dueBills = (data.recurringBills || []).filter((b) => b.dueDay === d);
+            if (dueBills.length > 0) {
+                const pendingBills = dueBills.filter((b) => !Array.isArray(b.paidMonths) || !b.paidMonths.includes(currentM));
+                if (pendingBills.length > 0) {
+                    badgesHtml += `<span class="agenda-badge-item recurring-badge" title="${pendingBills.length} conta(s) a vencer">🔔 ${pendingBills.length}</span>`;
+                }
+            }
+
             cell.innerHTML = `
                 <span class="agenda-day-num">${d}</span>
                 <div class="agenda-day-badges">${badgesHtml}</div>
@@ -1504,6 +1857,46 @@ function renderAgendaDayDetails() {
                 </div>
             `;
         }).join("");
+    }
+
+    // Contas fixas / recorrentes que vencem neste dia
+    const recurringEl = $("#agendaDayRecurring");
+    if (recurringEl) {
+        const dayBills = (data.recurringBills || []).filter((b) => b.dueDay === day);
+        if (!dayBills.length) {
+            recurringEl.innerHTML = "";
+        } else {
+            const mStr = `${year}-${String(month + 1).padStart(2, "0")}`;
+            recurringEl.innerHTML = `
+                <div class="agenda-recurring-header">
+                    <h4>🔔 Contas com vencimento neste dia (${dayBills.length})</h4>
+                </div>
+                ${dayBills.map((b) => {
+                    const statusInfo = getRecurringBillStatus(b, mStr);
+                    const icon = CATEGORY_ICONS[b.category] || "📄";
+                    return `
+                        <div class="agenda-recurring-item">
+                            <div class="agenda-recurring-info">
+                                <span style="font-size: 20px;">${icon}</span>
+                                <div>
+                                    <div class="agenda-recurring-title">${escapeHTML(b.name)}</div>
+                                    <div class="agenda-recurring-sub">${escapeHTML(b.category)} · <strong>${money(b.amount)}</strong></div>
+                                </div>
+                            </div>
+                            <div>
+                                ${statusInfo.isPaid ? `
+                                    <span class="recurring-status-badge status-paid">✓ Paga</span>
+                                ` : `
+                                    <button type="button" class="btn-pay-recurring" data-action="pay-recurring" data-id="${b.id}" data-month="${mStr}">
+                                        ✓ Pagar
+                                    </button>
+                                `}
+                            </div>
+                        </div>
+                    `;
+                }).join("")}
+            `;
+        }
     }
 }
 
@@ -2237,7 +2630,8 @@ async function importBackup(file) {
             transactions: importedData.transactions,
             salaries: importedData.salaries,
             budgets: importedData.budgets,
-            goals: importedData.goals
+            goals: importedData.goals,
+            recurringBills: Array.isArray(importedData.recurringBills) ? importedData.recurringBills : []
         };
 
         if (!saveData()) {
@@ -2674,6 +3068,7 @@ function init() {
     setupDatePicker();
     setupAgenda();
     setupHistoricalReports();
+    setupRecurringBills();
     setupWelcomeTutorial();
     renderAll();
 
@@ -2682,6 +3077,113 @@ function init() {
     const editId = urlParams.get("edit");
     if (editId) {
         editTransaction(editId);
+    }
+}
+
+/* =========================================
+   CONFIGURAÇÃO DAS CONTAS RECORRENTES
+========================================= */
+
+function setupRecurringBills() {
+    const btnToggle = $("#btnToggleNewRecurring");
+    const form = $("#recurringForm");
+    const btnCancel = $("#btnCancelRecurring");
+
+    if (btnToggle && form) {
+        btnToggle.addEventListener("click", () => {
+            const isHidden = form.classList.toggle("hidden");
+            if (!isHidden) {
+                const nameInput = $("#recurringName");
+                if (nameInput) nameInput.focus();
+            }
+        });
+    }
+
+    if (btnCancel && form) {
+        btnCancel.addEventListener("click", () => {
+            form.reset();
+            form.classList.add("hidden");
+        });
+    }
+
+    if (form) {
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const name = String($("#recurringName").value || "").trim();
+            const rawAmount = String($("#recurringAmount").value || "").trim().replace("R$", "").trim();
+            const normalized = rawAmount.includes(",") ? rawAmount.replace(/\./g, "").replace(",", ".") : rawAmount;
+            const amount = Number(normalized);
+            const dueDay = parseInt($("#recurringDueDay").value, 10);
+            const category = $("#recurringCategory").value || "Outros";
+
+            if (!name) {
+                showToast("Informe o nome da conta.");
+                return;
+            }
+            if (!Number.isFinite(amount) || amount <= 0) {
+                showToast("Informe um valor válido.");
+                return;
+            }
+            if (!Number.isInteger(dueDay) || dueDay < 1 || dueDay > 31) {
+                showToast("Informe um dia de vencimento entre 1 e 31.");
+                return;
+            }
+
+            if (!Array.isArray(data.recurringBills)) {
+                data.recurringBills = [];
+            }
+
+            const newBill = {
+                id: createId(),
+                name,
+                amount,
+                dueDay,
+                category,
+                paidMonths: []
+            };
+
+            data.recurringBills.push(newBill);
+            saveData();
+
+            form.reset();
+            form.classList.add("hidden");
+            showToast(`Conta fixa "${name}" cadastrada com sucesso!`);
+            renderAll();
+        });
+    }
+
+    const listEl = $("#recurringBillsList");
+    if (listEl) {
+        listEl.addEventListener("click", (e) => {
+            const btn = e.target.closest("button[data-action]");
+            if (!btn) return;
+            const action = btn.dataset.action;
+            const id = btn.dataset.id;
+            const month = selectedMonth();
+
+            if (action === "pay-recurring") {
+                payRecurringBill(id, month);
+            } else if (action === "unpay-recurring") {
+                unpayRecurringBill(id, month);
+            } else if (action === "delete-recurring") {
+                deleteRecurringBill(id);
+            }
+        });
+    }
+
+    const agendaDayRecurring = $("#agendaDayRecurring");
+    if (agendaDayRecurring) {
+        agendaDayRecurring.addEventListener("click", (e) => {
+            const btn = e.target.closest("button[data-action]");
+            if (!btn) return;
+            const action = btn.dataset.action;
+            const id = btn.dataset.id;
+            const month = btn.dataset.month || selectedMonth();
+
+            if (action === "pay-recurring") {
+                payRecurringBill(id, month);
+            }
+        });
     }
 }
 
