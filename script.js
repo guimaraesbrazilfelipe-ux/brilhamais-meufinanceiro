@@ -3191,16 +3191,19 @@ function setupWelcomeTutorial() {
     if (!shouldShow) {
         overlay.classList.add("hidden");
         overlay.style.display = "none";
-        if (app) app.classList.remove("app-hidden-for-tutorial");
-        return;
+        if (app) {
+            app.classList.remove("app-hidden-for-tutorial");
+            app.style.display = "";
+        }
+    } else {
+        // Esconde o app para mostrar o tutorial separado antes do site abrir
+        if (app) {
+            app.classList.add("app-hidden-for-tutorial");
+            app.style.display = "none";
+        }
+        overlay.classList.remove("hidden");
+        overlay.style.display = "flex";
     }
-
-    // Esconde o app para mostrar o tutorial separado antes do site abrir
-    if (app) {
-        app.classList.add("app-hidden-for-tutorial");
-    }
-    overlay.classList.remove("hidden");
-    overlay.style.display = "flex";
 
     let currentStep = 0;
     const slides = overlay.querySelectorAll(".tutorial-slide");
@@ -3248,6 +3251,17 @@ function setupWelcomeTutorial() {
         }
     }
 
+    function openTutorial() {
+        if (app) {
+            app.classList.add("app-hidden-for-tutorial");
+            app.style.display = "none";
+        }
+        overlay.classList.remove("hidden");
+        overlay.style.display = "flex";
+        goToStep(0);
+        window.scrollTo(0, 0);
+    }
+
     function closeAndEnterApp() {
         if (!dontShowAgainCheck || dontShowAgainCheck.checked) {
             localStorage.setItem("meuFinanceiro.tutorialCompleted", "true");
@@ -3262,17 +3276,13 @@ function setupWelcomeTutorial() {
 
             if (app) {
                 app.classList.remove("app-hidden-for-tutorial");
-                app.style.display = "flex";
+                app.style.display = ""; // NUNCA flex: herda display de bloco nativo
                 if (window.history && window.history.replaceState) {
                     const cleanUrl = window.location.pathname;
                     window.history.replaceState({}, document.title, cleanUrl);
                 }
                 renderAll();
-                app.querySelectorAll(".panel, .summary-card, .planning-card, .tip-card").forEach((el) => {
-                    el.style.animation = "none";
-                    el.offsetHeight;
-                    el.style.animation = "";
-                });
+                window.scrollTo(0, 0);
             }
         }, 350);
     }
@@ -3296,6 +3306,17 @@ function setupWelcomeTutorial() {
         });
     });
 
+    // Abrir tutorial suavemente quando o usuário estiver no index e clicar em "Como usar"
+    document.querySelectorAll(".nav-link-tutorial").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            document.body.classList.remove("mobile-nav-open");
+            const menuBtn = document.getElementById("mobileMenuBtn");
+            if (menuBtn) menuBtn.setAttribute("aria-expanded", "false");
+            openTutorial();
+        });
+    });
+
     document.addEventListener("keydown", (e) => {
         if (overlay.classList.contains("hidden") || overlay.style.display === "none") return;
         if (e.key === "ArrowRight") goToStep(currentStep + 1);
@@ -3303,7 +3324,9 @@ function setupWelcomeTutorial() {
         if (e.key === "Escape") closeAndEnterApp();
     });
 
-    goToStep(0);
+    if (shouldShow) {
+        goToStep(0);
+    }
 }
 
 document.addEventListener("DOMContentLoaded", init);

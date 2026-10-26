@@ -1656,6 +1656,16 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 @media (max-width: 650px) {
+    .app {
+        display: block !important;
+        width: 100%;
+        max-width: 100vw;
+    }
+
+    .app.app-hidden-for-tutorial {
+        display: none !important;
+    }
+
     /* Oculta elementos internos da barra lateral desktop quando no topo do mobile */
     .sidebar .desktop-navigation,
     .sidebar > .menu-label,
