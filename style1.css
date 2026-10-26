@@ -535,6 +535,13 @@ textarea:focus {
     font-size: 11px;
 }
 
+@media (max-width: 480px) {
+    .filter-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+}
+
 .transaction-list {
     display: grid;
 }
@@ -598,6 +605,32 @@ textarea:focus {
     justify-content: flex-end;
     gap: 7px;
     margin-top: 6px;
+}
+
+.btn-action {
+    display: inline-grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-action.edit:hover {
+    background: rgba(148, 117, 255, 0.2);
+    color: var(--purple-light);
+    border-color: rgba(148, 117, 255, 0.4);
+}
+
+.btn-action.delete:hover {
+    background: rgba(255, 116, 133, 0.2);
+    color: var(--red);
+    border-color: rgba(255, 116, 133, 0.4);
 }
 
 .mini-button {
@@ -1921,16 +1954,72 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
     .month-toolbar {
         align-items: flex-start;
-        flex-wrap: wrap;
+        flex-direction: column;
+        gap: 10px;
+        padding: 14px;
+        margin: 18px 0 16px;
     }
 
     .month-toolbar > div {
         width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .month-toolbar .custom-datepicker {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .month-toolbar .datepicker-trigger {
+        width: 100%;
         justify-content: space-between;
     }
 
-    .month-toolbar input {
-        max-width: 165px;
+    .month-toolbar .status-pill {
+        display: none;
+    }
+
+    .panel-heading {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .panel-heading .button {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+
+    .period-tabs {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        margin: 14px 0 18px;
+    }
+
+    .period-tab-btn {
+        justify-content: center;
+        padding: 10px 8px;
+        font-size: 12px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .recurring-cards-container {
+        grid-template-columns: 1fr;
+    }
+
+    .recurring-card {
+        padding: 16px;
     }
 
     .panel {
@@ -3312,9 +3401,41 @@ body.privacy-mode #goalStatus {
 }
 
 @media (max-width: 650px) {
+    .agenda-layout {
+        margin: 16px 0 24px;
+        gap: 16px;
+    }
+    .agenda-calendar-panel {
+        padding: 14px 10px;
+        border-radius: 14px;
+    }
+    .agenda-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    .agenda-header h2 {
+        font-size: 16px;
+        text-align: center;
+    }
+    .agenda-nav-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .agenda-grid {
+        gap: 3px;
+    }
+    .agenda-weekdays {
+        gap: 3px;
+        margin-bottom: 6px;
+    }
+    .agenda-weekdays span {
+        font-size: 11px;
+    }
     .agenda-day {
         min-height: 52px;
-        padding: 4px;
+        padding: 4px 3px;
+        border-radius: 8px;
     }
     .agenda-day-num {
         font-size: 11px;
@@ -3322,6 +3443,23 @@ body.privacy-mode #goalStatus {
     .agenda-badge-item {
         font-size: 8px;
         padding: 1px 2px;
+        border-radius: 3px;
+    }
+    .agenda-day-details-panel {
+        padding: 16px 14px;
+        border-radius: 14px;
+    }
+    .day-summary-row {
+        gap: 6px;
+    }
+    .day-summary-box {
+        padding: 8px 6px;
+    }
+    .day-summary-box span {
+        font-size: 10px;
+    }
+    .day-summary-box strong {
+        font-size: 13px;
     }
 }
 
@@ -3615,7 +3753,7 @@ body.privacy-mode #goalStatus {
 /* Lista de Cards de Contas Recorrentes */
 .recurring-cards-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
     gap: 16px;
 }
 
