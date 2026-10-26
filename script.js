@@ -3179,6 +3179,29 @@ function setupRecurringBills() {
 function setupWelcomeTutorial() {
     const overlay = $("#welcomeTutorial");
     const app = $(".app");
+
+    // Registra clique no "Como usar" em qualquer página para guardar a página de origem
+    document.querySelectorAll(".nav-link-tutorial").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+            const currentPath = window.location.pathname.split("/").pop() || "index.html";
+            const currentPage = (currentPath === "index.html" || currentPath === "index1.html")
+                ? "index.html"
+                : (currentPath + window.location.search);
+
+            sessionStorage.setItem("meuFinanceiro.tutorialReturnUrl", currentPage);
+
+            if (overlay) {
+                // Se já estiver na página que tem o tutorial (index.html), abre in-place sem recarregar
+                e.preventDefault();
+                document.body.classList.remove("mobile-nav-open");
+                const menuBtn = document.getElementById("mobileMenuBtn");
+                if (menuBtn) menuBtn.setAttribute("aria-expanded", "false");
+                openTutorial();
+            }
+            // Se estiver em outra página (agenda.html, etc.), deixa o link padrão navegar com returnUrl
+        });
+    });
+
     if (!overlay) return;
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -3267,6 +3290,20 @@ function setupWelcomeTutorial() {
             localStorage.setItem("meuFinanceiro.tutorialCompleted", "true");
         }
 
+        const rawReturn = urlParams.get("returnUrl") || sessionStorage.getItem("meuFinanceiro.tutorialReturnUrl");
+        sessionStorage.removeItem("meuFinanceiro.tutorialReturnUrl");
+
+        const isAnotherPage = rawReturn &&
+            rawReturn !== "index.html" &&
+            rawReturn !== "index1.html" &&
+            !rawReturn.endsWith("/index.html") &&
+            rawReturn !== "/";
+
+        if (isAnotherPage) {
+            window.location.href = rawReturn;
+            return;
+        }
+
         overlay.classList.add("tutorial-exiting");
 
         setTimeout(() => {
@@ -3303,17 +3340,6 @@ function setupWelcomeTutorial() {
         dot.addEventListener("click", () => {
             const step = parseInt(dot.dataset.step, 10);
             if (!isNaN(step)) goToStep(step);
-        });
-    });
-
-    // Abrir tutorial suavemente quando o usuário estiver no index e clicar em "Como usar"
-    document.querySelectorAll(".nav-link-tutorial").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-            e.preventDefault();
-            document.body.classList.remove("mobile-nav-open");
-            const menuBtn = document.getElementById("mobileMenuBtn");
-            if (menuBtn) menuBtn.setAttribute("aria-expanded", "false");
-            openTutorial();
         });
     });
 
