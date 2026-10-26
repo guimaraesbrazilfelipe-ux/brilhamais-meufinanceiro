@@ -3208,8 +3208,22 @@ function setupWelcomeTutorial() {
     const forceTutorial = urlParams.get("tutorial") === "true" || urlParams.get("tutorial") === "1";
     const tutorialCompleted = localStorage.getItem("meuFinanceiro.tutorialCompleted") === "true";
 
-    // Se ainda não concluiu ou foi requisitado pela URL/botão:
+    // O tutorial aparece automaticamente APENAS no primeiríssimo acesso
+    // Nas próximas visitas, só abre se for requisitado explicitamente pelo menu "Como usar"
     const shouldShow = forceTutorial || !tutorialCompleted;
+
+    // Se for o primeiríssimo acesso, já grava para nunca mais reabrir sozinho no futuro
+    if (!tutorialCompleted) {
+        localStorage.setItem("meuFinanceiro.tutorialCompleted", "true");
+    }
+
+    // Se abriu via parâmetro na URL, limpa a URL do navegador para que atualizar a página não reabra o tutorial
+    if (forceTutorial && window.history && window.history.replaceState) {
+        const cleanParams = new URLSearchParams(window.location.search);
+        cleanParams.delete("tutorial");
+        const remainingQuery = cleanParams.toString() ? `?${cleanParams.toString()}` : "";
+        window.history.replaceState({}, document.title, window.location.pathname + remainingQuery);
+    }
 
     if (!shouldShow) {
         overlay.classList.add("hidden");
@@ -3236,7 +3250,6 @@ function setupWelcomeTutorial() {
     const nextBtn = $("#tutorialNextBtn");
     const finishBtn = $("#tutorialFinishBtn");
     const skipBtn = $("#tutorialSkipBtn");
-    const dontShowAgainCheck = $("#tutorialDontShowAgain");
 
     function goToStep(index) {
         if (index < 0) index = 0;
@@ -3286,9 +3299,7 @@ function setupWelcomeTutorial() {
     }
 
     function closeAndEnterApp() {
-        if (!dontShowAgainCheck || dontShowAgainCheck.checked) {
-            localStorage.setItem("meuFinanceiro.tutorialCompleted", "true");
-        }
+        localStorage.setItem("meuFinanceiro.tutorialCompleted", "true");
 
         const rawReturn = urlParams.get("returnUrl") || sessionStorage.getItem("meuFinanceiro.tutorialReturnUrl");
         sessionStorage.removeItem("meuFinanceiro.tutorialReturnUrl");
