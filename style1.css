@@ -1851,12 +1851,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         border-top: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    .mobile-drawer-bottom .tip-card {
-        padding: 14px;
-    }
-
     .mobile-drawer-bottom .sidebar-footer {
-        margin-top: 14px;
+        margin: 0;
+        text-align: center;
     }
 
     .main-content {
