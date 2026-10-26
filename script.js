@@ -2088,8 +2088,8 @@ function editTransaction(id) {
         return;
     }
 
-    $("#editId").value = transaction.id;
-    $("#type").value = transaction.type;
+    if ($("#editId")) $("#editId").value = transaction.id;
+    if ($("#type")) $("#type").value = transaction.type;
 
     const typeLabel = $("#typeLabel");
     if (typeLabel) {
@@ -2101,14 +2101,16 @@ function editTransaction(id) {
         opt.setAttribute("aria-selected", String(match));
     });
 
-    $("#description").value = transaction.description;
-    $("#amount").value = transaction.amount;
+    if ($("#description")) $("#description").value = transaction.description;
+    if ($("#amount")) $("#amount").value = transaction.amount;
 
     const isBuiltInCategory =
         CATEGORY_OPTIONS.includes(transaction.category);
 
-    $("#customCategory").value =
-        isBuiltInCategory ? "" : transaction.category;
+    if ($("#customCategory")) {
+        $("#customCategory").value =
+            isBuiltInCategory ? "" : transaction.category;
+    }
 
     renderCategoryOptions(
         transaction.type,
@@ -2117,9 +2119,9 @@ function editTransaction(id) {
 
     closeCategoryDrawer();
 
-    $("#transactionDate").value = transaction.date;
+    if ($("#transactionDate")) $("#transactionDate").value = transaction.date;
     syncDatePicker();
-    $("#notes").value = transaction.notes || "";
+    if ($("#notes")) $("#notes").value = transaction.notes || "";
 
     const formTitle = $("#formTitle");
     if (formTitle) formTitle.textContent = "Editar lançamento";
@@ -2153,14 +2155,17 @@ function showConfirmDialog({ title, message, confirmLabel = "Excluir", danger = 
     document.body.classList.add("dialog-open");
     confirmButton.focus();
 
+    const cancelBtn = $("#confirmDialogCancel");
+    const closeBtn = $("#confirmDialogClose");
+
     return new Promise((resolve) => {
         const finish = (result) => {
             dialog.classList.remove("is-open");
             dialog.setAttribute("aria-hidden", "true");
             document.body.classList.remove("dialog-open");
             confirmButton.removeEventListener("click", onConfirm);
-            $("#confirmDialogCancel").removeEventListener("click", onCancel);
-            $("#confirmDialogClose").removeEventListener("click", onCancel);
+            if (cancelBtn) cancelBtn.removeEventListener("click", onCancel);
+            if (closeBtn) closeBtn.removeEventListener("click", onCancel);
             dialog.removeEventListener("click", onBackdrop);
             document.removeEventListener("keydown", onEscape);
             resolve(result);
@@ -2171,8 +2176,8 @@ function showConfirmDialog({ title, message, confirmLabel = "Excluir", danger = 
         const onEscape = (event) => { if (event.key === "Escape") onCancel(); };
 
         confirmButton.addEventListener("click", onConfirm);
-        $("#confirmDialogCancel").addEventListener("click", onCancel);
-        $("#confirmDialogClose").addEventListener("click", onCancel);
+        if (cancelBtn) cancelBtn.addEventListener("click", onCancel);
+        if (closeBtn) closeBtn.addEventListener("click", onCancel);
         dialog.addEventListener("click", onBackdrop);
         document.addEventListener("keydown", onEscape);
     });
@@ -3089,12 +3094,12 @@ function setupRecurringBills() {
     if (form) {
         form.addEventListener("submit", (e) => {
             e.preventDefault();
-            const name = String($("#recurringName").value || "").trim();
-            const rawAmount = String($("#recurringAmount").value || "").trim().replace("R$", "").trim();
+            const name = String($("#recurringName")?.value || "").trim();
+            const rawAmount = String($("#recurringAmount")?.value || "").trim().replace("R$", "").trim();
             const normalized = rawAmount.includes(",") ? rawAmount.replace(/\./g, "").replace(",", ".") : rawAmount;
             const amount = Number(normalized);
-            const dueDay = parseInt($("#recurringDueDay").value, 10);
-            const category = $("#recurringCategory").value || "Outros";
+            const dueDay = parseInt($("#recurringDueDay")?.value || "0", 10);
+            const category = $("#recurringCategory")?.value || "Outros";
 
             if (!name) {
                 showToast("Informe o nome da conta.");
