@@ -196,20 +196,131 @@
                             <input type="number" id="recurringAmount" step="0.01" min="0.01" max="100000000" placeholder="Ex.: 120,00" required>
                         </div>
                         <div class="field">
-                            <label for="recurringDate">Data de vencimento</label>
-                            <input type="date" id="recurringDate" required>
+                            <label for="recurringDatePickerTrigger">Data de vencimento</label>
+                            <div class="custom-datepicker" id="recurringDatePickerContainer">
+                                <input id="recurringDate" type="date" required class="datepicker-native-input" tabindex="-1" aria-hidden="true">
+                                <button type="button" class="datepicker-trigger" id="recurringDatePickerTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="recurringDatePickerDropdown">
+                                    <span class="datepicker-trigger-left">
+                                        <span class="datepicker-icon" aria-hidden="true">📅</span>
+                                        <span class="datepicker-text" id="recurringDatePickerText">Selecione uma data</span>
+                                    </span>
+                                    <span class="datepicker-chevron" aria-hidden="true">⌄</span>
+                                </button>
+
+                                <div class="datepicker-backdrop" aria-hidden="true"></div>
+
+                                <div class="datepicker-dropdown" id="recurringDatePickerDropdown" role="dialog" aria-modal="true" aria-label="Seletor de data de vencimento" aria-hidden="true">
+                                    <div class="dp-header">
+                                        <button type="button" class="dp-btn-view" title="Alternar para seleção de mês e ano">
+                                            <span class="dp-current-month-year">Outubro de 2026</span>
+                                            <span class="dp-view-chevron" aria-hidden="true">▾</span>
+                                        </button>
+                                        <div class="dp-nav-group">
+                                            <button type="button" class="dp-nav-btn dp-prev-btn" aria-label="Mês anterior">‹</button>
+                                            <button type="button" class="dp-nav-btn dp-next-btn" aria-label="Próximo mês">›</button>
+                                            <button type="button" class="dp-close-btn" aria-label="Fechar calendário">✕</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="dp-shortcuts">
+                                        <button type="button" class="dp-shortcut-btn dp-today-btn">Hoje</button>
+                                        <button type="button" class="dp-shortcut-btn dp-yesterday-btn">Ontem</button>
+                                    </div>
+
+                                    <div class="dp-days-view">
+                                        <div class="dp-weekdays">
+                                            <span>Dom</span>
+                                            <span>Seg</span>
+                                            <span>Ter</span>
+                                            <span>Qua</span>
+                                            <span>Qui</span>
+                                            <span>Sex</span>
+                                            <span>Sáb</span>
+                                        </div>
+                                        <div class="dp-grid"></div>
+                                    </div>
+
+                                    <div class="dp-months-view hidden">
+                                        <div class="dp-year-selector">
+                                            <button type="button" class="dp-nav-btn dp-prev-year-btn" aria-label="Ano anterior">‹</button>
+                                            <span class="dp-year-display">2026</span>
+                                            <button type="button" class="dp-nav-btn dp-next-year-btn" aria-label="Próximo ano">›</button>
+                                        </div>
+                                        <div class="dp-months-grid"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="field">
-                            <label for="recurringFrequency">Frequência</label>
-                            <select id="recurringFrequency" class="field-select">
-                                <option value="monthly" selected>Mensal (a cada 1 mês)</option>
-                                <option value="weekly">Semanal (a cada 1 semana)</option>
-                                <option value="biweekly">Quinzenal (a cada 2 semanas)</option>
-                                <option value="bimonthly">Bimestral (a cada 2 meses)</option>
-                                <option value="quarterly">Trimestral (a cada 3 meses)</option>
-                                <option value="semiannual">Semestral (a cada 6 meses)</option>
-                                <option value="annual">Anual (a cada 1 ano)</option>
-                            </select>
+                            <label for="recurringFrequencyPickerButton">Frequência</label>
+                            <div class="category-picker frequency-picker" id="recurringFrequencyPicker">
+                                <select id="recurringFrequency" class="category-native-select" aria-hidden="true" tabindex="-1">
+                                    <option value="monthly" selected>🔄 Mensal (a cada 1 mês)</option>
+                                    <option value="weekly">📅 Semanal (a cada 1 semana)</option>
+                                    <option value="biweekly">🗓️ Quinzenal (a cada 2 semanas)</option>
+                                    <option value="bimonthly">⏳ Bimestral (a cada 2 meses)</option>
+                                    <option value="quarterly">📈 Trimestral (a cada 3 meses)</option>
+                                    <option value="semiannual">📆 Semestral (a cada 6 meses)</option>
+                                    <option value="annual">🎯 Anual (a cada 1 ano)</option>
+                                </select>
+
+                                <button type="button" id="recurringFrequencyPickerButton" class="category-picker-button" aria-haspopup="listbox" aria-expanded="false" aria-controls="recurringFrequencyOptions">
+                                    <span id="recurringFrequencyPickerLabel">🔄 Mensal (a cada 1 mês)</span>
+                                    <span class="category-chevron" aria-hidden="true">▾</span>
+                                </button>
+
+                                <div class="category-drawer frequency-drawer" id="recurringFrequencyOptions" role="listbox" aria-label="Escolha a frequência">
+                                    <button type="button" class="category-option selected" role="option" aria-selected="true" data-value="monthly">
+                                        <span class="freq-opt-icon">🔄</span>
+                                        <div class="freq-opt-text">
+                                            <strong>Mensal</strong>
+                                            <span>A cada 1 mês (padrão)</span>
+                                        </div>
+                                    </button>
+                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="weekly">
+                                        <span class="freq-opt-icon">📅</span>
+                                        <div class="freq-opt-text">
+                                            <strong>Semanal</strong>
+                                            <span>A cada 7 dias</span>
+                                        </div>
+                                    </button>
+                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="biweekly">
+                                        <span class="freq-opt-icon">🗓️</span>
+                                        <div class="freq-opt-text">
+                                            <strong>Quinzenal</strong>
+                                            <span>A cada 14 dias (2 semanas)</span>
+                                        </div>
+                                    </button>
+                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="bimonthly">
+                                        <span class="freq-opt-icon">⏳</span>
+                                        <div class="freq-opt-text">
+                                            <strong>Bimestral</strong>
+                                            <span>A cada 2 meses</span>
+                                        </div>
+                                    </button>
+                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="quarterly">
+                                        <span class="freq-opt-icon">📈</span>
+                                        <div class="freq-opt-text">
+                                            <strong>Trimestral</strong>
+                                            <span>A cada 3 meses</span>
+                                        </div>
+                                    </button>
+                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="semiannual">
+                                        <span class="freq-opt-icon">📆</span>
+                                        <div class="freq-opt-text">
+                                            <strong>Semestral</strong>
+                                            <span>A cada 6 meses</span>
+                                        </div>
+                                    </button>
+                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="annual">
+                                        <span class="freq-opt-icon">🎯</span>
+                                        <div class="freq-opt-text">
+                                            <strong>Anual</strong>
+                                            <span>A cada 1 ano (12 meses)</span>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -285,8 +396,25 @@
                     </div>
                 </div>
 
-                <!-- Lista de Contas Recorrentes -->
+                <!-- Lista de Contas Recorrentes em Cards -->
                 <div id="recurringBillsList" class="recurring-cards-container"></div>
+            </section>
+
+            <!-- Outra lista que nem as dos lançamentos somente para contas fixas/assinaturas -->
+            <section class="panel" style="margin-top: 24px;">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Lista de Contas Fixas e Assinaturas</h2>
+                        <p>Visualização detalhada em formato de lista das suas contas fixas e assinaturas.</p>
+                    </div>
+                    <div class="panel-actions">
+                        <input type="search" id="searchRecurringRows" placeholder="Buscar conta fixa..." class="search-input" style="max-width: 250px; font-size: 13px; padding: 7px 12px;">
+                    </div>
+                </div>
+
+                <div id="recurringBillsRowsList" class="transaction-list">
+                    <!-- Renderizado via script.js -->
+                </div>
             </section>
 
             <footer class="main-footer">

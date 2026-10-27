@@ -1117,6 +1117,7 @@ function renderRecurringBills() {
                 </button>
             </div>
         `;
+        renderRecurringRowsList();
         const btnEmpty = $("#btnEmptyAddRecurring");
         if (btnEmpty) {
             btnEmpty.addEventListener("click", () => {
@@ -1127,6 +1128,7 @@ function renderRecurringBills() {
                     if (nameInput) nameInput.focus();
                     const dateInput = $("#recurringDate");
                     if (dateInput && !dateInput.value) dateInput.value = todayISO();
+                    syncDatePicker();
                 }
             });
         }
@@ -1184,6 +1186,113 @@ function renderRecurringBills() {
                     </button>
                 </div>
             </article>
+        `;
+    }).join("");
+
+    renderRecurringRowsList();
+}
+
+function renderRecurringRowsList() {
+    const rowsListEl = $("#recurringBillsRowsList");
+    if (!rowsListEl) return;
+
+    const month = selectedMonth();
+    const bills = data.recurringBills || [];
+    const searchInput = $("#searchRecurringRows");
+    const query = searchInput ? searchInput.value.trim().toLocaleLowerCase("pt-BR") : "";
+
+    const filtered = bills.filter((b) => {
+        if (!query) return true;
+        const text = [
+            b.name || "",
+            b.category || "",
+            getFrequencyLabel(b.frequency) || ""
+        ].join(" ").toLocaleLowerCase("pt-BR");
+        return text.includes(query);
+    });
+
+    if (!filtered.length) {
+        rowsListEl.innerHTML = `
+            <div class="empty-state" style="padding: 28px 16px;">
+                <div style="font-size: 28px; margin-bottom: 8px;">📋</div>
+                <p>Nenhuma conta fixa ou assinatura encontrada.</p>
+                <p style="font-size: 13px; color: var(--muted); margin-top: 4px;">
+                    ${bills.length === 0 ? "Cadastre seu aluguel, plano de celular, internet ou assinaturas no formulário acima." : "Nenhum resultado corresponde à sua pesquisa."}
+                </p>
+            </div>
+        `;
+        return;
+    }
+
+    const sorted = [...filtered].sort((a, b) => (a.dueDay || 1) - (b.dueDay || 1));
+
+    rowsListEl.innerHTML = sorted.map((bill) => {
+        const statusInfo = getRecurringBillStatus(bill, month);
+        const icon = CATEGORY_ICONS[bill.category] || "📄";
+        const freqName = getFrequencyLabel(bill.frequency);
+        const targetDueFormatted = statusInfo.nextDueDate ? formatDate(statusInfo.nextDueDate) : `Dia ${bill.dueDay}`;
+
+        return `
+            <div class="transaction-item recurring-row-item ${statusInfo.isPaid ? "paid" : ""}">
+                <div class="transaction-icon">${icon}</div>
+
+                <div class="transaction-info">
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <h3 style="margin: 0; font-size: 13px; font-weight: 600;">${escapeHTML(bill.name)}</h3>
+                        <span class="recurring-status-badge ${statusInfo.className}" style="font-size: 11px; padding: 2px 7px;">
+                            <span>${statusInfo.icon}</span>
+                            <span>${statusInfo.label}</span>
+                        </span>
+                    </div>
+
+                    <p style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 4px; font-size: 11px; color: var(--muted);">
+                        <span>${escapeHTML(bill.category)}</span>
+                        <span>·</span>
+                        <span class="recurring-frequency-badge" style="font-size: 10px; padding: 1px 6px;">${freqName}</span>
+                        <span>·</span>
+                        <span>Vence: <strong style="color: var(--text);">${targetDueFormatted}</strong></span>
+                    </p>
+                </div>
+
+                <div class="transaction-right">
+                    <div class="transaction-amount expense-text" style="font-size: 13px; font-weight: 700;">
+                        −${money(bill.amount)}
+                    </div>
+
+                    <div class="transaction-actions" style="margin-top: 5px;">
+                        ${statusInfo.isPaid ? `
+                            <button
+                                type="button"
+                                class="mini-button btn-unpay-recurring"
+                                data-action="unpay-recurring"
+                                data-id="${bill.id}"
+                                data-date="${statusInfo.lastPaidDate || ""}"
+                                title="Desmarcar pagamento desta conta">
+                                Desmarcar
+                            </button>
+                        ` : `
+                            <button
+                                type="button"
+                                class="mini-button btn-pay-recurring"
+                                data-action="pay-recurring"
+                                data-id="${bill.id}"
+                                data-date="${statusInfo.nextDueDate || ""}"
+                                title="Pagar conta">
+                                ✓ Pagar
+                            </button>
+                        `}
+
+                        <button
+                            type="button"
+                            class="mini-button btn-delete-recurring"
+                            data-action="delete-recurring"
+                            data-id="${bill.id}"
+                            title="Excluir conta fixa">
+                            Excluir
+                        </button>
+                    </div>
+                </div>
+            </div>
         `;
     }).join("");
 }
@@ -1470,20 +1579,20 @@ function initSingleDatePicker(container) {
     const trigger = container.querySelector(".datepicker-trigger") || container.querySelector("button");
     const label = container.querySelector(".datepicker-text");
     const backdrop = container.querySelector(".datepicker-backdrop");
-    const closeBtn = container.querySelector(".dp-close-btn");
-    const prevBtn = container.querySelector(".dp-prev-btn");
-    const nextBtn = container.querySelector(".dp-next-btn");
-    const viewBtn = container.querySelector(".dp-btn-view");
-    const todayBtn = container.querySelector(".dp-today-btn");
-    const yesterdayBtn = container.querySelector(".dp-yesterday-btn");
-    const prevYearBtn = container.querySelector(".dp-prev-year-btn");
-    const nextYearBtn = container.querySelector(".dp-next-year-btn");
-    const daysGrid = container.querySelector(".dp-grid");
-    const monthsGrid = container.querySelector(".dp-months-grid");
-    const headerTitle = container.querySelector("#dpCurrentMonthYear, .dp-current-month-year, .dp-btn-view span:first-child");
-    const yearDisplay = container.querySelector("#dpSelectedYear, .dp-year-display");
-    const daysView = container.querySelector(".dp-days-view");
-    const monthsView = container.querySelector(".dp-months-view");
+    const closeBtn = container.querySelector(".dp-close-btn") || container.querySelector("#dpCloseBtn");
+    const prevBtn = container.querySelector(".dp-prev-btn") || container.querySelector("#dpPrevBtn");
+    const nextBtn = container.querySelector(".dp-next-btn") || container.querySelector("#dpNextBtn");
+    const viewBtn = container.querySelector(".dp-btn-view") || container.querySelector("#dpViewBtn");
+    const todayBtn = container.querySelector(".dp-today-btn") || container.querySelector("#dpTodayBtn");
+    const yesterdayBtn = container.querySelector(".dp-yesterday-btn") || container.querySelector("#dpYesterdayBtn");
+    const prevYearBtn = container.querySelector(".dp-prev-year-btn") || container.querySelector("#dpPrevYearBtn");
+    const nextYearBtn = container.querySelector(".dp-next-year-btn") || container.querySelector("#dpNextYearBtn");
+    const daysGrid = container.querySelector(".dp-grid") || container.querySelector("#dpGrid");
+    const monthsGrid = container.querySelector(".dp-months-grid") || container.querySelector("#dpMonthsGrid");
+    const headerTitle = container.querySelector(".dp-current-month-year") || container.querySelector("#dpCurrentMonthYear") || container.querySelector(".dp-btn-view span:first-child");
+    const yearDisplay = container.querySelector(".dp-year-display") || container.querySelector("#dpSelectedYear");
+    const daysView = container.querySelector(".dp-days-view") || container.querySelector("#dpDaysView");
+    const monthsView = container.querySelector(".dp-months-view") || container.querySelector("#dpMonthsView");
     const viewBtnChevron = container.querySelector(".dp-view-chevron");
 
     if (!input || !trigger) return;
@@ -3323,12 +3432,83 @@ function setupRecurringCategoryPicker() {
     });
 }
 
+let syncRecurringFrequencyPicker = null;
+
+function setupRecurringFrequencyPicker() {
+    const picker = $("#recurringFrequencyPicker");
+    const button = $("#recurringFrequencyPickerButton");
+    const options = $("#recurringFrequencyOptions");
+    const select = $("#recurringFrequency");
+    const label = $("#recurringFrequencyPickerLabel");
+
+    if (!picker || !button || !options || !select || !label) {
+        return;
+    }
+
+    function closeDrawer() {
+        picker.classList.remove("open");
+        button.setAttribute("aria-expanded", "false");
+    }
+
+    function openDrawer() {
+        picker.classList.add("open");
+        button.setAttribute("aria-expanded", "true");
+    }
+
+    function sync(val) {
+        const targetVal = val || select.value || "monthly";
+        const option = [...select.options].find((item) => item.value === targetVal);
+        if (option) {
+            select.value = targetVal;
+            label.textContent = option.textContent;
+        }
+
+        options.querySelectorAll(".category-option").forEach((btn) => {
+            const isSelected = btn.dataset.value === select.value;
+            btn.classList.toggle("selected", isSelected);
+            btn.setAttribute("aria-selected", String(isSelected));
+        });
+    }
+
+    syncRecurringFrequencyPicker = sync;
+
+    button.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (picker.classList.contains("open")) {
+            closeDrawer();
+        } else {
+            openDrawer();
+        }
+    });
+
+    options.addEventListener("click", (e) => {
+        const optBtn = e.target.closest(".category-option");
+        if (!optBtn) return;
+        select.value = optBtn.dataset.value;
+        sync(select.value);
+        closeDrawer();
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!picker.contains(e.target)) {
+            closeDrawer();
+        }
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeDrawer();
+    });
+
+    sync(select.value || "monthly");
+}
+
 function setupRecurringBills() {
     const btnToggle = $("#btnToggleNewRecurring");
     const form = $("#recurringForm");
     const btnCancel = $("#btnCancelRecurring");
 
     setupRecurringCategoryPicker();
+    setupRecurringFrequencyPicker();
 
     if (btnToggle && form) {
         btnToggle.addEventListener("click", () => {
@@ -3340,6 +3520,7 @@ function setupRecurringBills() {
                 if (dateInput && !dateInput.value) {
                     dateInput.value = todayISO();
                 }
+                syncDatePicker();
             }
         });
     }
@@ -3347,6 +3528,8 @@ function setupRecurringBills() {
     if (btnCancel && form) {
         btnCancel.addEventListener("click", () => {
             form.reset();
+            syncDatePicker();
+            if (syncRecurringFrequencyPicker) syncRecurringFrequencyPicker("monthly");
             form.classList.add("hidden");
         });
     }
@@ -3398,6 +3581,8 @@ function setupRecurringBills() {
             saveData();
 
             form.reset();
+            syncDatePicker();
+            if (syncRecurringFrequencyPicker) syncRecurringFrequencyPicker("monthly");
             form.classList.add("hidden");
             showToast(`Conta "${name}" cadastrada com sucesso!`);
             renderAll();
@@ -3420,6 +3605,32 @@ function setupRecurringBills() {
             } else if (action === "delete-recurring") {
                 deleteRecurringBill(id);
             }
+        });
+    }
+
+    const rowsListEl = $("#recurringBillsRowsList");
+    if (rowsListEl) {
+        rowsListEl.addEventListener("click", (e) => {
+            const btn = e.target.closest("button[data-action]");
+            if (!btn) return;
+            const action = btn.dataset.action;
+            const id = btn.dataset.id;
+            const targetDate = btn.dataset.date;
+
+            if (action === "pay-recurring") {
+                payRecurringBill(id, targetDate);
+            } else if (action === "unpay-recurring") {
+                unpayRecurringBill(id, targetDate);
+            } else if (action === "delete-recurring") {
+                deleteRecurringBill(id);
+            }
+        });
+    }
+
+    const searchRows = $("#searchRecurringRows");
+    if (searchRows) {
+        searchRows.addEventListener("input", () => {
+            renderRecurringRowsList();
         });
     }
 
