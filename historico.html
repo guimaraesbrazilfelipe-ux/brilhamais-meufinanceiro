@@ -34,6 +34,7 @@
             <nav class="navigation desktop-navigation">
                 <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
                 <a href="lancamentos.html" class="nav-link">＋ <span>Novo lançamento</span></a>
+                <a href="contas-fixas.html" class="nav-link">🔄 <span>Contas fixas</span></a>
                 <a href="agenda.html" class="nav-link">📅 <span>Agenda</span></a>
                 <a href="relatorios.html" class="nav-link">▥ <span>Relatórios</span></a>
                 <a href="historico.html" class="nav-link active">◷ <span>Histórico</span></a>
@@ -185,6 +186,22 @@
                 </div>
             </article>
 
+            <!-- Contas Fixas e Assinaturas no Histórico -->
+            <section class="panel" style="margin: 24px 0 30px;">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Contas Fixas e Assinaturas</h2>
+                        <p>Status e histórico de vencimentos das suas despesas recorrentes.</p>
+                    </div>
+                    <div class="panel-actions">
+                        <input type="search" placeholder="Buscar conta fixa..." class="search-input search-recurring-input" style="max-width: 250px; font-size: 13px; padding: 7px 12px;">
+                        <a href="contas-fixas.html" class="button button-primary" style="font-size: 12px; padding: 6px 14px;">+ Nova conta fixa</a>
+                    </div>
+                </div>
+
+                <div id="historyRecurringBillsList" class="transaction-list recurring-rows-list"></div>
+            </section>
+
             <footer class="main-footer">
                 <p>Meu Financeiro © <span id="currentYear"></span></p>
                 <p>Organize hoje. Conquiste amanhã. ✨</p>
@@ -226,6 +243,7 @@
         <nav class="navigation mobile-navigation">
             <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
             <a href="lancamentos.html" class="nav-link">＋ <span>Novo lançamento</span></a>
+            <a href="contas-fixas.html" class="nav-link">🔄 <span>Contas fixas</span></a>
             <a href="agenda.html" class="nav-link">📅 <span>Agenda</span></a>
             <a href="relatorios.html" class="nav-link">▥ <span>Relatórios</span></a>
             <a href="historico.html" class="nav-link active">◷ <span>Histórico</span></a>

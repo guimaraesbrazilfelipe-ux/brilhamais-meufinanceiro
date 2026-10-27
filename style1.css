@@ -3701,31 +3701,145 @@ body.privacy-mode #goalStatus {
 
 .recurring-form-grid {
     display: grid;
-    grid-template-columns: 2fr 1.2fr 1fr 1.5fr;
-    gap: 16px;
-    margin-bottom: 18px;
+    grid-template-columns: 1.6fr 1fr 1.35fr 1.35fr;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 16px;
 }
 
+.recurring-form-grid .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.recurring-form-grid .field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Alinhamento perfeito e altura consistente de 42px para todos os 4 campos */
+.recurring-form-grid input[type="text"],
+.recurring-form-grid input[type="number"],
+.recurring-form-grid .datepicker-trigger,
+.recurring-form-grid .category-picker-button {
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    padding: 0 12px !important;
+    border-radius: 9px !important;
+    font-size: 13px !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    background: #182438 !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
+}
+
+.recurring-form-grid .datepicker-trigger {
+    justify-content: space-between;
+}
+
+.recurring-form-grid .datepicker-trigger-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+}
+
+.recurring-form-grid .datepicker-icon {
+    font-size: 15px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.recurring-form-grid .datepicker-text {
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    font-weight: 500;
+}
+
+.recurring-form-grid .datepicker-chevron {
+    font-size: 11px;
+    flex-shrink: 0;
+    color: var(--muted);
+    margin-left: 4px;
+}
+
+.recurring-form-grid .category-picker-button {
+    justify-content: space-between;
+}
+
+.recurring-form-grid .category-picker-button span:first-child {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Botões elegantes e moderados (não tão grandes) */
 .recurring-form-actions {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
+    margin-top: 18px;
+}
+
+.recurring-form-actions .button {
+    min-height: 38px !important;
+    height: 38px !important;
+    padding: 0 16px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+#btnToggleNewRecurring {
+    min-height: 36px !important;
+    height: 36px !important;
+    padding: 0 14px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
 }
 
 @media (max-width: 900px) {
     .recurring-form-grid {
         grid-template-columns: 1fr 1fr;
+        gap: 12px;
     }
 }
 
 @media (max-width: 580px) {
     .recurring-form-grid {
         grid-template-columns: 1fr;
+        gap: 12px;
     }
     .recurring-form-actions {
         flex-direction: column;
     }
-    .recurring-form-actions button {
+    .recurring-form-actions .button {
         width: 100%;
     }
 }

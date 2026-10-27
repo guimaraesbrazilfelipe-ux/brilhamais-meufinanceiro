@@ -1067,8 +1067,6 @@ async function deleteRecurringBill(billId) {
 
 function renderRecurringBills() {
     const listEl = $("#recurringBillsList");
-    if (!listEl) return;
-
     const month = selectedMonth();
     const bills = data.recurringBills || [];
 
@@ -1107,98 +1105,98 @@ function renderRecurringBills() {
     if (kpiPaidCount) kpiPaidCount.textContent = `${paidCount} ${paidCount === 1 ? "paga" : "pagas"}`;
     if (kpiPendingCount) kpiPendingCount.textContent = `${pendingCount} ${pendingCount === 1 ? "pendente" : "pendentes"}`;
 
-    if (!bills.length) {
-        listEl.innerHTML = `
-            <div class="empty-state" style="grid-column: 1 / -1; padding: 32px 16px;">
-                <p>Nenhuma conta fixa ou assinatura cadastrada ainda.</p>
-                <p style="font-size: 13px; color: var(--muted); margin-top: 4px;">Cadastre seu aluguel, internet, contas de consumo e assinaturas para controlar o vencimento e pagar em 1 clique!</p>
-                <button type="button" class="button button-primary" id="btnEmptyAddRecurring" style="margin-top: 14px;">
-                    + Cadastrar primeira conta fixa
-                </button>
-            </div>
-        `;
-        renderRecurringRowsList();
-        const btnEmpty = $("#btnEmptyAddRecurring");
-        if (btnEmpty) {
-            btnEmpty.addEventListener("click", () => {
-                const form = $("#recurringForm");
-                if (form) {
-                    form.classList.remove("hidden");
-                    const nameInput = $("#recurringName");
-                    if (nameInput) nameInput.focus();
-                    const dateInput = $("#recurringDate");
-                    if (dateInput && !dateInput.value) dateInput.value = todayISO();
-                    syncDatePicker();
-                }
-            });
-        }
-        return;
-    }
-
-    const sorted = [...bills].sort((a, b) => (a.dueDay || 1) - (b.dueDay || 1));
-
-    listEl.innerHTML = sorted.map((bill) => {
-        const statusInfo = getRecurringBillStatus(bill, month);
-        const icon = CATEGORY_ICONS[bill.category] || "📄";
-        const freqName = getFrequencyLabel(bill.frequency);
-        const targetDueFormatted = statusInfo.nextDueDate ? formatDate(statusInfo.nextDueDate) : `Dia ${bill.dueDay}`;
-
-        return `
-            <article class="recurring-card ${statusInfo.isPaid ? "paid" : ""}">
-                <div class="recurring-card-top">
-                    <div class="recurring-card-identity">
-                        <div class="recurring-card-icon">${icon}</div>
-                        <div class="recurring-card-title">
-                            <h4>${escapeHTML(bill.name)}</h4>
-                            <span style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
-                                <span>${icon} ${escapeHTML(bill.category)}</span>
-                                <span class="recurring-frequency-badge">${freqName}</span>
-                            </span>
-                        </div>
-                    </div>
-                    <div class="recurring-card-amount">
-                        <strong>${money(bill.amount)}</strong>
-                        <span class="recurring-due-tag">Vence: ${targetDueFormatted}</span>
-                    </div>
-                </div>
-
-                <div>
-                    <span class="recurring-status-badge ${statusInfo.className}">
-                        <span>${statusInfo.icon}</span>
-                        <span>${statusInfo.label}</span>
-                    </span>
-                </div>
-
-                <div class="recurring-card-footer">
-                    <div>
-                        ${statusInfo.isPaid ? `
-                            <button type="button" class="btn-unpay-recurring" data-action="unpay-recurring" data-id="${bill.id}" data-date="${statusInfo.lastPaidDate || ""}" title="Desmarcar pagamento desta conta">
-                                Desmarcar pagamento
-                            </button>
-                        ` : `
-                            <button type="button" class="btn-pay-recurring" data-action="pay-recurring" data-id="${bill.id}" data-date="${statusInfo.nextDueDate || ""}">
-                                ✓ Pagar (${targetDueFormatted})
-                            </button>
-                        `}
-                    </div>
-                    <button type="button" class="btn-delete-recurring" data-action="delete-recurring" data-id="${bill.id}" title="Excluir conta fixa">
-                        🗑️
+    if (listEl) {
+        if (!bills.length) {
+            listEl.innerHTML = `
+                <div class="empty-state" style="grid-column: 1 / -1; padding: 32px 16px;">
+                    <p>Nenhuma conta fixa ou assinatura cadastrada ainda.</p>
+                    <p style="font-size: 13px; color: var(--muted); margin-top: 4px;">Cadastre seu aluguel, internet, contas de consumo e assinaturas para controlar o vencimento e pagar em 1 clique!</p>
+                    <button type="button" class="button button-primary" id="btnEmptyAddRecurring" style="margin-top: 14px;">
+                        + Cadastrar primeira conta fixa
                     </button>
                 </div>
-            </article>
-        `;
-    }).join("");
+            `;
+            const btnEmpty = $("#btnEmptyAddRecurring");
+            if (btnEmpty) {
+                btnEmpty.addEventListener("click", () => {
+                    const form = $("#recurringForm");
+                    if (form) {
+                        form.classList.remove("hidden");
+                        const nameInput = $("#recurringName");
+                        if (nameInput) nameInput.focus();
+                        const dateInput = $("#recurringDate");
+                        if (dateInput && !dateInput.value) dateInput.value = todayISO();
+                        syncDatePicker();
+                    }
+                });
+            }
+        } else {
+            const sorted = [...bills].sort((a, b) => (a.dueDay || 1) - (b.dueDay || 1));
+
+            listEl.innerHTML = sorted.map((bill) => {
+                const statusInfo = getRecurringBillStatus(bill, month);
+                const icon = CATEGORY_ICONS[bill.category] || "📄";
+                const freqName = getFrequencyLabel(bill.frequency);
+                const targetDueFormatted = statusInfo.nextDueDate ? formatDate(statusInfo.nextDueDate) : `Dia ${bill.dueDay}`;
+
+                return `
+                    <article class="recurring-card ${statusInfo.isPaid ? "paid" : ""}">
+                        <div class="recurring-card-top">
+                            <div class="recurring-card-identity">
+                                <div class="recurring-card-icon">${icon}</div>
+                                <div class="recurring-card-title">
+                                    <h4>${escapeHTML(bill.name)}</h4>
+                                    <span style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                                        <span>${icon} ${escapeHTML(bill.category)}</span>
+                                        <span class="recurring-frequency-badge">${freqName}</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="recurring-card-amount">
+                                <strong>${money(bill.amount)}</strong>
+                                <span class="recurring-due-tag">Vence: ${targetDueFormatted}</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <span class="recurring-status-badge ${statusInfo.className}">
+                                <span>${statusInfo.icon}</span>
+                                <span>${statusInfo.label}</span>
+                            </span>
+                        </div>
+
+                        <div class="recurring-card-footer">
+                            <div>
+                                ${statusInfo.isPaid ? `
+                                    <button type="button" class="btn-unpay-recurring" data-action="unpay-recurring" data-id="${bill.id}" data-date="${statusInfo.lastPaidDate || ""}" title="Desmarcar pagamento desta conta">
+                                        Desmarcar pagamento
+                                    </button>
+                                ` : `
+                                    <button type="button" class="btn-pay-recurring" data-action="pay-recurring" data-id="${bill.id}" data-date="${statusInfo.nextDueDate || ""}">
+                                        ✓ Pagar (${targetDueFormatted})
+                                    </button>
+                                `}
+                            </div>
+                            <button type="button" class="btn-delete-recurring" data-action="delete-recurring" data-id="${bill.id}" title="Excluir conta fixa">
+                                🗑️
+                            </button>
+                        </div>
+                    </article>
+                `;
+            }).join("");
+        }
+    }
 
     renderRecurringRowsList();
 }
 
 function renderRecurringRowsList() {
-    const rowsListEl = $("#recurringBillsRowsList");
-    if (!rowsListEl) return;
+    const containers = document.querySelectorAll("#recurringBillsRowsList, #indexRecurringBillsList, #historyRecurringBillsList, .recurring-rows-list");
+    if (!containers.length) return;
 
     const month = selectedMonth();
     const bills = data.recurringBills || [];
-    const searchInput = $("#searchRecurringRows");
+    const searchInput = document.querySelector("#searchRecurringRows, .search-recurring-input");
     const query = searchInput ? searchInput.value.trim().toLocaleLowerCase("pt-BR") : "";
 
     const filtered = bills.filter((b) => {
@@ -1211,90 +1209,95 @@ function renderRecurringRowsList() {
         return text.includes(query);
     });
 
-    if (!filtered.length) {
-        rowsListEl.innerHTML = `
-            <div class="empty-state" style="padding: 28px 16px;">
-                <div style="font-size: 28px; margin-bottom: 8px;">📋</div>
-                <p>Nenhuma conta fixa ou assinatura encontrada.</p>
-                <p style="font-size: 13px; color: var(--muted); margin-top: 4px;">
-                    ${bills.length === 0 ? "Cadastre seu aluguel, plano de celular, internet ou assinaturas no formulário acima." : "Nenhum resultado corresponde à sua pesquisa."}
-                </p>
-            </div>
-        `;
-        return;
-    }
-
     const sorted = [...filtered].sort((a, b) => (a.dueDay || 1) - (b.dueDay || 1));
 
-    rowsListEl.innerHTML = sorted.map((bill) => {
-        const statusInfo = getRecurringBillStatus(bill, month);
-        const icon = CATEGORY_ICONS[bill.category] || "📄";
-        const freqName = getFrequencyLabel(bill.frequency);
-        const targetDueFormatted = statusInfo.nextDueDate ? formatDate(statusInfo.nextDueDate) : `Dia ${bill.dueDay}`;
+    containers.forEach((container) => {
+        const isDashboard = container.id === "indexRecurringBillsList";
+        const visibleBills = isDashboard ? sorted.slice(0, 4) : sorted;
 
-        return `
-            <div class="transaction-item recurring-row-item ${statusInfo.isPaid ? "paid" : ""}">
-                <div class="transaction-icon">${icon}</div>
-
-                <div class="transaction-info">
-                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <h3 style="margin: 0; font-size: 13px; font-weight: 600;">${escapeHTML(bill.name)}</h3>
-                        <span class="recurring-status-badge ${statusInfo.className}" style="font-size: 11px; padding: 2px 7px;">
-                            <span>${statusInfo.icon}</span>
-                            <span>${statusInfo.label}</span>
-                        </span>
-                    </div>
-
-                    <p style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 4px; font-size: 11px; color: var(--muted);">
-                        <span>${escapeHTML(bill.category)}</span>
-                        <span>·</span>
-                        <span class="recurring-frequency-badge" style="font-size: 10px; padding: 1px 6px;">${freqName}</span>
-                        <span>·</span>
-                        <span>Vence: <strong style="color: var(--text);">${targetDueFormatted}</strong></span>
+        if (!visibleBills.length) {
+            container.innerHTML = `
+                <div class="empty-state" style="padding: 24px 16px;">
+                    <div style="font-size: 26px; margin-bottom: 6px;">📋</div>
+                    <p style="font-size: 13px; margin: 0;">Nenhuma conta fixa ou assinatura ${query ? "encontrada" : "cadastrada para este período"}.</p>
+                    <p style="font-size: 12px; color: var(--muted); margin-top: 4px;">
+                        ${bills.length === 0 ? '<a href="contas-fixas.html" class="text-button">+ Cadastrar conta fixa</a>' : 'Altere sua busca para ver outros itens.'}
                     </p>
                 </div>
+            `;
+            return;
+        }
 
-                <div class="transaction-right">
-                    <div class="transaction-amount expense-text" style="font-size: 13px; font-weight: 700;">
-                        −${money(bill.amount)}
+        container.innerHTML = visibleBills.map((bill) => {
+            const statusInfo = getRecurringBillStatus(bill, month);
+            const icon = CATEGORY_ICONS[bill.category] || "📄";
+            const freqName = getFrequencyLabel(bill.frequency);
+            const targetDueFormatted = statusInfo.nextDueDate ? formatDate(statusInfo.nextDueDate) : `Dia ${bill.dueDay}`;
+
+            return `
+                <div class="transaction-item recurring-row-item ${statusInfo.isPaid ? "paid" : ""}">
+                    <div class="transaction-icon">${icon}</div>
+
+                    <div class="transaction-info">
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <h3 style="margin: 0; font-size: 13px; font-weight: 600;">${escapeHTML(bill.name)}</h3>
+                            <span class="recurring-status-badge ${statusInfo.className}" style="font-size: 10px; padding: 2px 7px;">
+                                <span>${statusInfo.icon}</span>
+                                <span>${statusInfo.label}</span>
+                            </span>
+                        </div>
+
+                        <p style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 4px; font-size: 11px; color: var(--muted);">
+                            <span>${escapeHTML(bill.category)}</span>
+                            <span>·</span>
+                            <span class="recurring-frequency-badge" style="font-size: 10px; padding: 1px 6px;">${freqName}</span>
+                            <span>·</span>
+                            <span>Vence: <strong style="color: var(--text);">${targetDueFormatted}</strong></span>
+                        </p>
                     </div>
 
-                    <div class="transaction-actions" style="margin-top: 5px;">
-                        ${statusInfo.isPaid ? `
-                            <button
-                                type="button"
-                                class="mini-button btn-unpay-recurring"
-                                data-action="unpay-recurring"
-                                data-id="${bill.id}"
-                                data-date="${statusInfo.lastPaidDate || ""}"
-                                title="Desmarcar pagamento desta conta">
-                                Desmarcar
-                            </button>
-                        ` : `
-                            <button
-                                type="button"
-                                class="mini-button btn-pay-recurring"
-                                data-action="pay-recurring"
-                                data-id="${bill.id}"
-                                data-date="${statusInfo.nextDueDate || ""}"
-                                title="Pagar conta">
-                                ✓ Pagar
-                            </button>
-                        `}
+                    <div class="transaction-right">
+                        <div class="transaction-amount expense-text" style="font-size: 13px; font-weight: 700;">
+                            −${money(bill.amount)}
+                        </div>
 
-                        <button
-                            type="button"
-                            class="mini-button btn-delete-recurring"
-                            data-action="delete-recurring"
-                            data-id="${bill.id}"
-                            title="Excluir conta fixa">
-                            Excluir
-                        </button>
+                        <div class="transaction-actions" style="margin-top: 5px;">
+                            ${statusInfo.isPaid ? `
+                                <button
+                                    type="button"
+                                    class="mini-button btn-unpay-recurring"
+                                    data-action="unpay-recurring"
+                                    data-id="${bill.id}"
+                                    data-date="${statusInfo.lastPaidDate || ""}"
+                                    title="Desmarcar pagamento desta conta">
+                                    Desmarcar
+                                </button>
+                            ` : `
+                                <button
+                                    type="button"
+                                    class="mini-button btn-pay-recurring"
+                                    data-action="pay-recurring"
+                                    data-id="${bill.id}"
+                                    data-date="${statusInfo.nextDueDate || ""}"
+                                    title="Pagar conta">
+                                    ✓ Pagar
+                                </button>
+                            `}
+
+                            <button
+                                type="button"
+                                class="mini-button btn-delete-recurring"
+                                data-action="delete-recurring"
+                                data-id="${bill.id}"
+                                title="Excluir conta fixa">
+                                Excluir
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
-    }).join("");
+            `;
+        }).join("");
+    });
 }
 
 function renderRecurringAlertBanner() {
@@ -1636,7 +1639,11 @@ function initSingleDatePicker(container) {
         if (info.val === todayStr) suffix = " (Hoje)";
         else if (info.val === yesterdayStr) suffix = " (Ontem)";
 
-        label.textContent = `${info.day} de ${DP_MONTH_NAMES[info.month]} de ${info.year}${suffix}`;
+        if (container.id === "recurringDatePickerContainer") {
+            label.textContent = `${info.day} de ${DP_MONTH_NAMES_SHORT[info.month]} ${info.year}${suffix}`;
+        } else {
+            label.textContent = `${info.day} de ${DP_MONTH_NAMES[info.month]} de ${info.year}${suffix}`;
+        }
         renderDays();
     }
     container._syncDatePicker = sync;
@@ -3589,65 +3596,27 @@ function setupRecurringBills() {
         });
     }
 
-    const listEl = $("#recurringBillsList");
-    if (listEl) {
-        listEl.addEventListener("click", (e) => {
-            const btn = e.target.closest("button[data-action]");
-            if (!btn) return;
-            const action = btn.dataset.action;
-            const id = btn.dataset.id;
-            const targetDate = btn.dataset.date;
+    document.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-action]");
+        if (!btn) return;
+        const action = btn.dataset.action;
+        const id = btn.dataset.id;
+        const targetDate = btn.dataset.date;
 
-            if (action === "pay-recurring") {
-                payRecurringBill(id, targetDate);
-            } else if (action === "unpay-recurring") {
-                unpayRecurringBill(id, targetDate);
-            } else if (action === "delete-recurring") {
-                deleteRecurringBill(id);
-            }
-        });
-    }
+        if (action === "pay-recurring") {
+            payRecurringBill(id, targetDate);
+        } else if (action === "unpay-recurring") {
+            unpayRecurringBill(id, targetDate);
+        } else if (action === "delete-recurring") {
+            deleteRecurringBill(id);
+        }
+    });
 
-    const rowsListEl = $("#recurringBillsRowsList");
-    if (rowsListEl) {
-        rowsListEl.addEventListener("click", (e) => {
-            const btn = e.target.closest("button[data-action]");
-            if (!btn) return;
-            const action = btn.dataset.action;
-            const id = btn.dataset.id;
-            const targetDate = btn.dataset.date;
-
-            if (action === "pay-recurring") {
-                payRecurringBill(id, targetDate);
-            } else if (action === "unpay-recurring") {
-                unpayRecurringBill(id, targetDate);
-            } else if (action === "delete-recurring") {
-                deleteRecurringBill(id);
-            }
-        });
-    }
-
-    const searchRows = $("#searchRecurringRows");
-    if (searchRows) {
-        searchRows.addEventListener("input", () => {
+    document.addEventListener("input", (e) => {
+        if (e.target && (e.target.id === "searchRecurringRows" || e.target.classList.contains("search-recurring-input"))) {
             renderRecurringRowsList();
-        });
-    }
-
-    const agendaDayRecurring = $("#agendaDayRecurring");
-    if (agendaDayRecurring) {
-        agendaDayRecurring.addEventListener("click", (e) => {
-            const btn = e.target.closest("button[data-action]");
-            if (!btn) return;
-            const action = btn.dataset.action;
-            const id = btn.dataset.id;
-            const targetDate = btn.dataset.date;
-
-            if (action === "pay-recurring") {
-                payRecurringBill(id, targetDate);
-            }
-        });
-    }
+        }
+    });
 }
 
 /* =========================================

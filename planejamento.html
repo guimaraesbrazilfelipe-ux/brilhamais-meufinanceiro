@@ -34,6 +34,7 @@
             <nav class="navigation desktop-navigation">
                 <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
                 <a href="lancamentos.html" class="nav-link">＋ <span>Novo lançamento</span></a>
+                <a href="contas-fixas.html" class="nav-link">🔄 <span>Contas fixas</span></a>
                 <a href="agenda.html" class="nav-link">📅 <span>Agenda</span></a>
                 <a href="relatorios.html" class="nav-link">▥ <span>Relatórios</span></a>
                 <a href="historico.html" class="nav-link">◷ <span>Histórico</span></a>
@@ -170,251 +171,13 @@
                 </div>
             </section>
 
-            <!-- Painel de Contas Fixas e Assinaturas Recorrentes -->
-            <section class="panel recurring-panel" style="margin-top: 24px;">
-                <div class="panel-heading">
-                    <div>
-                        <h2>Contas Fixas e Assinaturas</h2>
-                        <p>Acompanhe compromissos mensais (Aluguel, Internet, Netflix, Luz) com alerta de vencimento e pagamento em 1 clique.</p>
-                    </div>
-                    <button type="button" class="button button-primary" id="btnToggleNewRecurring">+ Nova conta fixa</button>
-                </div>
-
-                <!-- Formulário de Nova Conta Fixa / Assinatura -->
-                <form id="recurringForm" class="recurring-form hidden" novalidate>
-                    <div class="recurring-form-header">
-                        <h3>Cadastrar conta fixa ou assinatura</h3>
-                        <p>Defina o nome, valor, data de vencimento, frequência e categoria.</p>
-                    </div>
-                    <div class="recurring-form-grid">
-                        <div class="field">
-                            <label for="recurringName">Nome da conta / assinatura</label>
-                            <input type="text" id="recurringName" placeholder="Ex.: Internet Fibra, Netflix, Aluguel" required maxlength="60">
-                        </div>
-                        <div class="field">
-                            <label for="recurringAmount">Valor (R$)</label>
-                            <input type="number" id="recurringAmount" step="0.01" min="0.01" max="100000000" placeholder="Ex.: 120,00" required>
-                        </div>
-                        <div class="field">
-                            <label for="recurringDatePickerTrigger">Data de vencimento</label>
-                            <div class="custom-datepicker" id="recurringDatePickerContainer">
-                                <input id="recurringDate" type="date" required class="datepicker-native-input" tabindex="-1" aria-hidden="true">
-                                <button type="button" class="datepicker-trigger" id="recurringDatePickerTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="recurringDatePickerDropdown">
-                                    <span class="datepicker-trigger-left">
-                                        <span class="datepicker-icon" aria-hidden="true">📅</span>
-                                        <span class="datepicker-text" id="recurringDatePickerText">Selecione uma data</span>
-                                    </span>
-                                    <span class="datepicker-chevron" aria-hidden="true">⌄</span>
-                                </button>
-
-                                <div class="datepicker-backdrop" aria-hidden="true"></div>
-
-                                <div class="datepicker-dropdown" id="recurringDatePickerDropdown" role="dialog" aria-modal="true" aria-label="Seletor de data de vencimento" aria-hidden="true">
-                                    <div class="dp-header">
-                                        <button type="button" class="dp-btn-view" title="Alternar para seleção de mês e ano">
-                                            <span class="dp-current-month-year">Outubro de 2026</span>
-                                            <span class="dp-view-chevron" aria-hidden="true">▾</span>
-                                        </button>
-                                        <div class="dp-nav-group">
-                                            <button type="button" class="dp-nav-btn dp-prev-btn" aria-label="Mês anterior">‹</button>
-                                            <button type="button" class="dp-nav-btn dp-next-btn" aria-label="Próximo mês">›</button>
-                                            <button type="button" class="dp-close-btn" aria-label="Fechar calendário">✕</button>
-                                        </div>
-                                    </div>
-
-                                    <div class="dp-shortcuts">
-                                        <button type="button" class="dp-shortcut-btn dp-today-btn">Hoje</button>
-                                        <button type="button" class="dp-shortcut-btn dp-yesterday-btn">Ontem</button>
-                                    </div>
-
-                                    <div class="dp-days-view">
-                                        <div class="dp-weekdays">
-                                            <span>Dom</span>
-                                            <span>Seg</span>
-                                            <span>Ter</span>
-                                            <span>Qua</span>
-                                            <span>Qui</span>
-                                            <span>Sex</span>
-                                            <span>Sáb</span>
-                                        </div>
-                                        <div class="dp-grid"></div>
-                                    </div>
-
-                                    <div class="dp-months-view hidden">
-                                        <div class="dp-year-selector">
-                                            <button type="button" class="dp-nav-btn dp-prev-year-btn" aria-label="Ano anterior">‹</button>
-                                            <span class="dp-year-display">2026</span>
-                                            <button type="button" class="dp-nav-btn dp-next-year-btn" aria-label="Próximo ano">›</button>
-                                        </div>
-                                        <div class="dp-months-grid"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="field">
-                            <label for="recurringFrequencyPickerButton">Frequência</label>
-                            <div class="category-picker frequency-picker" id="recurringFrequencyPicker">
-                                <select id="recurringFrequency" class="category-native-select" aria-hidden="true" tabindex="-1">
-                                    <option value="monthly" selected>🔄 Mensal (a cada 1 mês)</option>
-                                    <option value="weekly">📅 Semanal (a cada 1 semana)</option>
-                                    <option value="biweekly">🗓️ Quinzenal (a cada 2 semanas)</option>
-                                    <option value="bimonthly">⏳ Bimestral (a cada 2 meses)</option>
-                                    <option value="quarterly">📈 Trimestral (a cada 3 meses)</option>
-                                    <option value="semiannual">📆 Semestral (a cada 6 meses)</option>
-                                    <option value="annual">🎯 Anual (a cada 1 ano)</option>
-                                </select>
-
-                                <button type="button" id="recurringFrequencyPickerButton" class="category-picker-button" aria-haspopup="listbox" aria-expanded="false" aria-controls="recurringFrequencyOptions">
-                                    <span id="recurringFrequencyPickerLabel">🔄 Mensal (a cada 1 mês)</span>
-                                    <span class="category-chevron" aria-hidden="true">▾</span>
-                                </button>
-
-                                <div class="category-drawer frequency-drawer" id="recurringFrequencyOptions" role="listbox" aria-label="Escolha a frequência">
-                                    <button type="button" class="category-option selected" role="option" aria-selected="true" data-value="monthly">
-                                        <span class="freq-opt-icon">🔄</span>
-                                        <div class="freq-opt-text">
-                                            <strong>Mensal</strong>
-                                            <span>A cada 1 mês (padrão)</span>
-                                        </div>
-                                    </button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="weekly">
-                                        <span class="freq-opt-icon">📅</span>
-                                        <div class="freq-opt-text">
-                                            <strong>Semanal</strong>
-                                            <span>A cada 7 dias</span>
-                                        </div>
-                                    </button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="biweekly">
-                                        <span class="freq-opt-icon">🗓️</span>
-                                        <div class="freq-opt-text">
-                                            <strong>Quinzenal</strong>
-                                            <span>A cada 14 dias (2 semanas)</span>
-                                        </div>
-                                    </button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="bimonthly">
-                                        <span class="freq-opt-icon">⏳</span>
-                                        <div class="freq-opt-text">
-                                            <strong>Bimestral</strong>
-                                            <span>A cada 2 meses</span>
-                                        </div>
-                                    </button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="quarterly">
-                                        <span class="freq-opt-icon">📈</span>
-                                        <div class="freq-opt-text">
-                                            <strong>Trimestral</strong>
-                                            <span>A cada 3 meses</span>
-                                        </div>
-                                    </button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="semiannual">
-                                        <span class="freq-opt-icon">📆</span>
-                                        <div class="freq-opt-text">
-                                            <strong>Semestral</strong>
-                                            <span>A cada 6 meses</span>
-                                        </div>
-                                    </button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="annual">
-                                        <span class="freq-opt-icon">🎯</span>
-                                        <div class="freq-opt-text">
-                                            <strong>Anual</strong>
-                                            <span>A cada 1 ano (12 meses)</span>
-                                        </div>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Seletor de Categoria idêntico ao de lançamentos -->
-                    <div class="field category-field" style="margin-top: 14px;">
-                        <label for="recurringCategoryPickerButton">Categoria</label>
-                        <div class="category-controls">
-                            <div class="category-picker" id="recurringCategoryPicker">
-                                <select id="recurringCategory" class="category-native-select" aria-hidden="true" tabindex="-1">
-                                    <option value="Assinaturas" selected>🍿 Assinaturas</option>
-                                    <option value="Moradia">🏠 Moradia</option>
-                                    <option value="Água e luz">💡 Água e luz</option>
-                                    <option value="Transporte">🚗 Transporte</option>
-                                    <option value="Saúde">💊 Saúde</option>
-                                    <option value="Educação">📚 Educação</option>
-                                    <option value="Lazer">🎉 Lazer</option>
-                                    <option value="Alimentação">🍔 Alimentação</option>
-                                    <option value="Compras">🛍️ Compras</option>
-                                    <option value="Investimentos">📈 Investimentos</option>
-                                    <option value="Outros">📦 Outros</option>
-                                </select>
-
-                                <button type="button" id="recurringCategoryPickerButton" class="category-picker-button" aria-haspopup="listbox" aria-expanded="false" aria-controls="recurringCategoryOptions">
-                                    <span id="recurringCategoryPickerLabel">🍿 Assinaturas</span>
-                                    <span class="category-chevron" aria-hidden="true">▾</span>
-                                </button>
-
-                                <div class="category-drawer" id="recurringCategoryOptions" role="listbox" aria-label="Escolha uma categoria">
-                                    <button type="button" class="category-option selected" role="option" aria-selected="true" data-value="Assinaturas">🍿 Assinaturas</button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Moradia">🏠 Moradia</button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Água e luz">💡 Água e luz</button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Transporte">🚗 Transporte</button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Saúde">💊 Saúde</button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Educação">📚 Educação</button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Lazer">🎉 Lazer</button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Alimentação">🍔 Alimentação</button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Compras">🛍️ Compras</button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Investimentos">📈 Investimentos</button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Outros">📦 Outros</button>
-                                </div>
-                            </div>
-
-                            <div class="custom-category-field">
-                                <label for="recurringCustomCategory">Ou escreva outra</label>
-                                <input id="recurringCustomCategory" type="text" maxlength="50" placeholder="Ex.: Academia, Streaming, Faculdade..." autocomplete="off">
-                            </div>
-                        </div>
-                        <small class="category-help">Escolha uma categoria ou escreva uma personalizada.</small>
-                    </div>
-
-                    <div class="recurring-form-actions" style="margin-top: 20px;">
-                        <button type="submit" class="button button-primary" id="btnSaveRecurring">Salvar conta fixa</button>
-                        <button type="button" class="button button-secondary" id="btnCancelRecurring">Cancelar</button>
-                    </div>
-                </form>
-
-                <!-- Resumo dos Custos Fixos do Mês -->
-                <div class="recurring-kpis-grid">
-                    <div class="recurring-kpi-card">
-                        <span class="recurring-kpi-label">Total fixo mensal</span>
-                        <strong class="recurring-kpi-value" id="recurringKpiTotal">R$ 0,00</strong>
-                        <span class="recurring-kpi-sub" id="recurringKpiCount">0 cadastradas</span>
-                    </div>
-                    <div class="recurring-kpi-card">
-                        <span class="recurring-kpi-label">Já pago no mês</span>
-                        <strong class="recurring-kpi-value income-text" id="recurringKpiPaid">R$ 0,00</strong>
-                        <span class="recurring-kpi-sub" id="recurringKpiPaidCount">0 pagas</span>
-                    </div>
-                    <div class="recurring-kpi-card">
-                        <span class="recurring-kpi-label">Pendente a pagar</span>
-                        <strong class="recurring-kpi-value expense-text" id="recurringKpiPending">R$ 0,00</strong>
-                        <span class="recurring-kpi-sub" id="recurringKpiPendingCount">0 pendentes</span>
-                    </div>
-                </div>
-
-                <!-- Lista de Contas Recorrentes em Cards -->
-                <div id="recurringBillsList" class="recurring-cards-container"></div>
-            </section>
-
-            <!-- Outra lista que nem as dos lançamentos somente para contas fixas/assinaturas -->
-            <section class="panel" style="margin-top: 24px;">
-                <div class="panel-heading">
-                    <div>
-                        <h2>Lista de Contas Fixas e Assinaturas</h2>
-                        <p>Visualização detalhada em formato de lista das suas contas fixas e assinaturas.</p>
-                    </div>
-                    <div class="panel-actions">
-                        <input type="search" id="searchRecurringRows" placeholder="Buscar conta fixa..." class="search-input" style="max-width: 250px; font-size: 13px; padding: 7px 12px;">
-                    </div>
-                </div>
-
-                <div id="recurringBillsRowsList" class="transaction-list">
-                    <!-- Renderizado via script.js -->
-                </div>
+            <!-- Atalho para Contas Fixas e Assinaturas -->
+            <section class="panel" style="margin-top: 24px; text-align: center; padding: 24px 20px;">
+                <h3 style="margin: 0 0 6px; font-size: 15px; font-weight: 600;">Contas Fixas e Assinaturas agora têm sua própria aba! 🔄</h3>
+                <p style="margin: 0 0 16px; font-size: 13px; color: var(--muted);">Gerencie aluguel, luz, internet, planos e assinaturas com controle de vencimento na aba dedicada.</p>
+                <a href="contas-fixas.html" class="button button-primary" style="font-size: 13px; padding: 8px 18px; display: inline-flex; align-items: center; gap: 6px;">
+                    Ir para Contas Fixas e Assinaturas →
+                </a>
             </section>
 
             <footer class="main-footer">
@@ -459,6 +222,7 @@
         <nav class="navigation mobile-navigation">
             <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
             <a href="lancamentos.html" class="nav-link">＋ <span>Novo lançamento</span></a>
+            <a href="contas-fixas.html" class="nav-link">🔄 <span>Contas fixas</span></a>
             <a href="agenda.html" class="nav-link">📅 <span>Agenda</span></a>
             <a href="relatorios.html" class="nav-link">▥ <span>Relatórios</span></a>
             <a href="historico.html" class="nav-link">◷ <span>Histórico</span></a>
