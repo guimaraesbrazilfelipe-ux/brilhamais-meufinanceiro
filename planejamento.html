@@ -180,42 +180,87 @@
                     <button type="button" class="button button-primary" id="btnToggleNewRecurring">+ Nova conta fixa</button>
                 </div>
 
-                <!-- Formulário de Nova Conta Fixa -->
+                <!-- Formulário de Nova Conta Fixa / Assinatura -->
                 <form id="recurringForm" class="recurring-form hidden" novalidate>
                     <div class="recurring-form-header">
                         <h3>Cadastrar conta fixa ou assinatura</h3>
-                        <p>Defina o nome, valor mensal estimado e o dia de vencimento.</p>
+                        <p>Defina o nome, valor, data de vencimento, frequência e categoria.</p>
                     </div>
                     <div class="recurring-form-grid">
                         <div class="field">
                             <label for="recurringName">Nome da conta / assinatura</label>
-                            <input type="text" id="recurringName" placeholder="Ex.: Internet Fibra, Netflix, Luz" required maxlength="60">
+                            <input type="text" id="recurringName" placeholder="Ex.: Internet Fibra, Netflix, Aluguel" required maxlength="60">
                         </div>
                         <div class="field">
-                            <label for="recurringAmount">Valor mensal estimado (R$)</label>
+                            <label for="recurringAmount">Valor (R$)</label>
                             <input type="number" id="recurringAmount" step="0.01" min="0.01" max="100000000" placeholder="Ex.: 120,00" required>
                         </div>
                         <div class="field">
-                            <label for="recurringDueDay">Dia de vencimento (1 a 31)</label>
-                            <input type="number" id="recurringDueDay" min="1" max="31" placeholder="Ex.: 10" required>
+                            <label for="recurringDate">Data de vencimento</label>
+                            <input type="date" id="recurringDate" required>
                         </div>
                         <div class="field">
-                            <label for="recurringCategory">Categoria</label>
-                            <select id="recurringCategory" class="field-select" required>
-                                <option value="Moradia">Moradia</option>
-                                <option value="Água e luz">Água e luz</option>
-                                <option value="Assinaturas">Assinaturas</option>
-                                <option value="Alimentação">Alimentação</option>
-                                <option value="Transporte">Transporte</option>
-                                <option value="Saúde">Saúde</option>
-                                <option value="Educação">Educação</option>
-                                <option value="Lazer">Lazer</option>
-                                <option value="Investimentos">Investimentos</option>
-                                <option value="Outros">Outros</option>
+                            <label for="recurringFrequency">Frequência</label>
+                            <select id="recurringFrequency" class="field-select">
+                                <option value="monthly" selected>Mensal (a cada 1 mês)</option>
+                                <option value="weekly">Semanal (a cada 1 semana)</option>
+                                <option value="biweekly">Quinzenal (a cada 2 semanas)</option>
+                                <option value="bimonthly">Bimestral (a cada 2 meses)</option>
+                                <option value="quarterly">Trimestral (a cada 3 meses)</option>
+                                <option value="semiannual">Semestral (a cada 6 meses)</option>
+                                <option value="annual">Anual (a cada 1 ano)</option>
                             </select>
                         </div>
                     </div>
-                    <div class="recurring-form-actions">
+
+                    <!-- Seletor de Categoria idêntico ao de lançamentos -->
+                    <div class="field category-field" style="margin-top: 14px;">
+                        <label for="recurringCategoryPickerButton">Categoria</label>
+                        <div class="category-controls">
+                            <div class="category-picker" id="recurringCategoryPicker">
+                                <select id="recurringCategory" class="category-native-select" aria-hidden="true" tabindex="-1">
+                                    <option value="Assinaturas" selected>🍿 Assinaturas</option>
+                                    <option value="Moradia">🏠 Moradia</option>
+                                    <option value="Água e luz">💡 Água e luz</option>
+                                    <option value="Transporte">🚗 Transporte</option>
+                                    <option value="Saúde">💊 Saúde</option>
+                                    <option value="Educação">📚 Educação</option>
+                                    <option value="Lazer">🎉 Lazer</option>
+                                    <option value="Alimentação">🍔 Alimentação</option>
+                                    <option value="Compras">🛍️ Compras</option>
+                                    <option value="Investimentos">📈 Investimentos</option>
+                                    <option value="Outros">📦 Outros</option>
+                                </select>
+
+                                <button type="button" id="recurringCategoryPickerButton" class="category-picker-button" aria-haspopup="listbox" aria-expanded="false" aria-controls="recurringCategoryOptions">
+                                    <span id="recurringCategoryPickerLabel">🍿 Assinaturas</span>
+                                    <span class="category-chevron" aria-hidden="true">▾</span>
+                                </button>
+
+                                <div class="category-drawer" id="recurringCategoryOptions" role="listbox" aria-label="Escolha uma categoria">
+                                    <button type="button" class="category-option selected" role="option" aria-selected="true" data-value="Assinaturas">🍿 Assinaturas</button>
+                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Moradia">🏠 Moradia</button>
+                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Água e luz">💡 Água e luz</button>
+                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Transporte">🚗 Transporte</button>
+                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Saúde">💊 Saúde</button>
+                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Educação">📚 Educação</button>
+                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Lazer">🎉 Lazer</button>
+                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Alimentação">🍔 Alimentação</button>
+                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Compras">🛍️ Compras</button>
+                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Investimentos">📈 Investimentos</button>
+                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Outros">📦 Outros</button>
+                                </div>
+                            </div>
+
+                            <div class="custom-category-field">
+                                <label for="recurringCustomCategory">Ou escreva outra</label>
+                                <input id="recurringCustomCategory" type="text" maxlength="50" placeholder="Ex.: Academia, Streaming, Faculdade..." autocomplete="off">
+                            </div>
+                        </div>
+                        <small class="category-help">Escolha uma categoria ou escreva uma personalizada.</small>
+                    </div>
+
+                    <div class="recurring-form-actions" style="margin-top: 20px;">
                         <button type="submit" class="button button-primary" id="btnSaveRecurring">Salvar conta fixa</button>
                         <button type="button" class="button button-secondary" id="btnCancelRecurring">Cancelar</button>
                     </div>

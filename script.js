@@ -769,99 +769,237 @@ function renderSettings() {
    CONTAS FIXAS E ASSINATURAS RECORRENTES
 ========================================= */
 
-function getRecurringBillStatus(bill, month) {
-    const isPaid = Array.isArray(bill.paidMonths) && bill.paidMonths.includes(month);
-    if (isPaid) {
-        return {
-            status: "paid",
-            label: "Paga",
-            className: "status-paid",
-            icon: "✓",
-            isPaid: true
-        };
+const FREQUENCY_LABELS = {
+    weekly: "Semanal",
+    biweekly: "Quinzenal",
+    monthly: "Mensal",
+    bimonthly: "Bimestral",
+    quarterly: "Trimestral",
+    semiannual: "Semestral",
+    annual: "Anual"
+};
+
+function getFrequencyLabel(freq) {
+    return FREQUENCY_LABELS[freq] || "Mensal";
+}
+
+function addCycleToDate(isoDate, frequency, step = 1) {
+    if (!isoDate) return todayISO();
+    const [y, m, d] = isoDate.split("-").map(Number);
+    if (frequency === "weekly") {
+        const dt = new Date(Date.UTC(y, m - 1, d + 7 * step));
+        return dt.toISOString().slice(0, 10);
+    }
+    if (frequency === "biweekly") {
+        const dt = new Date(Date.UTC(y, m - 1, d + 14 * step));
+        return dt.toISOString().slice(0, 10);
+    }
+    let monthsToAdd = 1;
+    if (frequency === "bimonthly") monthsToAdd = 2;
+    else if (frequency === "quarterly") monthsToAdd = 3;
+    else if (frequency === "semiannual") monthsToAdd = 6;
+    else if (frequency === "annual") monthsToAdd = 12;
+
+    monthsToAdd *= step;
+    let newYear = y;
+    let newMonth = m - 1 + monthsToAdd;
+    newYear += Math.floor(newMonth / 12);
+    newMonth = ((newMonth % 12) + 12) % 12;
+
+    const maxDays = new Date(Date.UTC(newYear, newMonth + 1, 0)).getUTCDate();
+    const newDay = Math.min(d, maxDays);
+    return `${newYear}-${String(newMonth + 1).padStart(2, "0")}-${String(newDay).padStart(2, "0")}`;
+}
+
+function isBillOccurrencePaid(bill, dateStr) {
+    if (!dateStr) return false;
+    if (Array.isArray(bill.paidDates) && bill.paidDates.includes(dateStr)) {
+        return true;
+    }
+    const month = dateStr.slice(0, 7);
+    if ((!bill.frequency || bill.frequency === "monthly") && Array.isArray(bill.paidMonths) && bill.paidMonths.includes(month)) {
+        return true;
+    }
+    return false;
+}
+
+function getBillOccurrencesInMonth(bill, monthStr) {
+    const [targetY, targetM] = monthStr.split("-").map(Number);
+    const startStr = bill.startDate || `${monthStr.slice(0, 4)}-01-${String(bill.dueDay || 1).padStart(2, "0")}`;
+    const frequency = bill.frequency || "monthly";
+    const daysInMonth = new Date(targetY, targetM, 0).getDate();
+    const monthStartStr = `${monthStr}-01`;
+    const monthEndStr = `${monthStr}-${String(daysInMonth).padStart(2, "0")}`;
+
+    if (frequency === "monthly") {
+        if (startStr.slice(0, 7) > monthStr) return [];
+        const rawDay = bill.dueDay || parseInt(startStr.slice(8, 10), 10) || 1;
+        const effectiveDay = Math.min(Math.max(1, rawDay), daysInMonth);
+        return [`${monthStr}-${String(effectiveDay).padStart(2, "0")}`];
     }
 
+    if (frequency === "weekly" || frequency === "biweekly") {
+        const stepDays = frequency === "weekly" ? 7 : 14;
+        const occurrences = [];
+        let [sY, sM, sD] = startStr.split("-").map(Number);
+        let curr = new Date(sY, sM - 1, sD, 12, 0, 0);
+        const monthStart = new Date(targetY, targetM - 1, 1, 0, 0, 0);
+        const monthEnd = new Date(targetY, targetM - 1, daysInMonth, 23, 59, 59);
+
+        if (curr > monthEnd) return [];
+
+        if (curr < monthStart) {
+            const diffMs = monthStart.getTime() - curr.getTime();
+            const diffDays = Math.floor(diffMs / 86400000);
+            const steps = Math.floor(diffDays / stepDays);
+            curr.setDate(curr.getDate() + steps * stepDays);
+            while (curr < monthStart) {
+                curr.setDate(curr.getDate() + stepDays);
+            }
+        }
+
+        while (curr <= monthEnd) {
+            const y = curr.getFullYear();
+            const m = String(curr.getMonth() + 1).padStart(2, "0");
+            const d = String(curr.getDate()).padStart(2, "0");
+            occurrences.push(`${y}-${m}-${d}`);
+            curr.setDate(curr.getDate() + stepDays);
+        }
+
+        return occurrences;
+    }
+
+    let interval = 1;
+    if (frequency === "bimonthly") interval = 2;
+    else if (frequency === "quarterly") interval = 3;
+    else if (frequency === "semiannual") interval = 6;
+    else if (frequency === "annual") interval = 12;
+
+    const [sY, sM, sD] = startStr.split("-").map(Number);
+    const monthsDiff = (targetY - sY) * 12 + (targetM - sM);
+    if (monthsDiff < 0 || monthsDiff % interval !== 0) {
+        return [];
+    }
+
+    const effectiveDay = Math.min(sD, daysInMonth);
+    return [`${monthStr}-${String(effectiveDay).padStart(2, "0")}`];
+}
+
+function getNextUnpaidOccurrence(bill) {
     const today = todayISO();
-    const [todayY, todayM, todayD] = today.split("-").map(Number);
-    const [targetY, targetM] = month.split("-").map(Number);
+    const frequency = bill.frequency || "monthly";
+    let curr = bill.startDate || `${today.slice(0, 4)}-01-${String(bill.dueDay || 1).padStart(2, "0")}`;
 
-    if (targetY < todayY || (targetY === todayY && targetM < todayM)) {
-        return {
-            status: "overdue",
-            label: "Não paga (mês anterior)",
-            className: "status-overdue",
-            icon: "⚠️",
-            isPaid: false
-        };
+    for (let i = 0; i < 300; i++) {
+        if (!isBillOccurrencePaid(bill, curr)) {
+            return curr;
+        }
+        curr = addCycleToDate(curr, frequency, 1);
     }
+    return curr;
+}
 
-    if (targetY > todayY || (targetY === todayY && targetM > todayM)) {
+function getRecurringBillStatus(bill, month) {
+    const occurrences = getBillOccurrencesInMonth(bill, month);
+    const today = todayISO();
+
+    if (occurrences.length === 0) {
+        const nextOcc = getNextUnpaidOccurrence(bill);
         return {
             status: "pending",
-            label: `Vence dia ${bill.dueDay}`,
+            label: `Próximo: ${formatDate(nextOcc)}`,
             className: "status-pending",
-            icon: "🕒",
-            isPaid: false
+            icon: "📅",
+            isPaid: false,
+            nextDueDate: nextOcc
         };
     }
 
-    // Mês atual
-    if (todayD > bill.dueDay) {
+    const unpaid = occurrences.filter((d) => !isBillOccurrencePaid(bill, d));
+    const paid = occurrences.filter((d) => isBillOccurrencePaid(bill, d));
+
+    if (unpaid.length === 0) {
+        const lastPaid = paid[paid.length - 1];
+        const nextAfterMonth = addCycleToDate(lastPaid, bill.frequency || "monthly", 1);
+        return {
+            status: "paid",
+            label: `Paga (${formatDate(lastPaid)})`,
+            className: "status-paid",
+            icon: "✓",
+            isPaid: true,
+            lastPaidDate: lastPaid,
+            nextDueDate: nextAfterMonth
+        };
+    }
+
+    const nextTarget = unpaid[0];
+    const targetDateObj = new Date(nextTarget + "T12:00:00");
+    const todayDateObj = new Date(today + "T12:00:00");
+    const diffDays = Math.round((targetDateObj - todayDateObj) / 86400000);
+
+    if (nextTarget < today) {
         return {
             status: "overdue",
-            label: `Venceu dia ${bill.dueDay}`,
+            label: `Venceu dia ${formatDate(nextTarget)}`,
             className: "status-overdue",
             icon: "⚠️",
-            isPaid: false
+            isPaid: false,
+            nextDueDate: nextTarget
         };
-    } else if (todayD === bill.dueDay) {
+    } else if (nextTarget === today) {
         return {
             status: "today",
-            label: "Vence Hoje!",
+            label: `Vence Hoje! (${formatDate(nextTarget)})`,
             className: "status-today",
             icon: "🚨",
-            isPaid: false
+            isPaid: false,
+            nextDueDate: nextTarget
         };
-    } else if (bill.dueDay - todayD <= 3) {
-        const diff = bill.dueDay - todayD;
+    } else if (diffDays <= 3) {
         return {
             status: "soon",
-            label: `Vence em ${diff} ${diff === 1 ? "dia" : "dias"}`,
+            label: `Vence em ${diffDays} ${diffDays === 1 ? "dia" : "dias"} (${formatDate(nextTarget)})`,
             className: "status-soon",
             icon: "⏳",
-            isPaid: false
+            isPaid: false,
+            nextDueDate: nextTarget
         };
     } else {
         return {
             status: "pending",
-            label: `Vence dia ${bill.dueDay}`,
+            label: `Vence dia ${formatDate(nextTarget)}`,
             className: "status-pending",
             icon: "📅",
-            isPaid: false
+            isPaid: false,
+            nextDueDate: nextTarget
         };
     }
 }
 
-function payRecurringBill(billId, month) {
+function payRecurringBill(billId, targetDate) {
     const bill = (data.recurringBills || []).find((b) => b.id === billId);
     if (!bill) return;
 
+    if (!Array.isArray(bill.paidDates)) {
+        bill.paidDates = [];
+    }
     if (!Array.isArray(bill.paidMonths)) {
         bill.paidMonths = [];
     }
 
-    if (bill.paidMonths.includes(month)) {
-        showToast(`A conta "${bill.name}" já está marcada como paga.`);
+    const dateToPay = targetDate || getNextUnpaidOccurrence(bill);
+    if (!dateToPay) return;
+
+    if (isBillOccurrencePaid(bill, dateToPay)) {
+        showToast(`O vencimento de ${formatDate(dateToPay)} da conta "${bill.name}" já está marcado como pago.`);
         return;
     }
 
-    bill.paidMonths.push(month);
-
-    // Cria lançamento correspondente no mês selecionado
-    const [y, m] = month.split("-").map(Number);
-    const maxDayInMonth = new Date(y, m, 0).getDate();
-    const effectiveDay = Math.min(Math.max(1, bill.dueDay), maxDayInMonth);
-    const dateStr = `${month}-${String(effectiveDay).padStart(2, "0")}`;
+    bill.paidDates.push(dateToPay);
+    const mStr = dateToPay.slice(0, 7);
+    if (!bill.paidMonths.includes(mStr)) {
+        bill.paidMonths.push(mStr);
+    }
 
     const tx = {
         id: createId(),
@@ -869,28 +1007,36 @@ function payRecurringBill(billId, month) {
         description: bill.name,
         category: bill.category || "Outros",
         amount: Number(bill.amount),
-        date: dateStr,
-        notes: "Lançamento automático de conta recorrente",
+        date: dateToPay,
+        notes: `Lançamento de conta fixa (${getFrequencyLabel(bill.frequency)})`,
         recurringBillId: bill.id
     };
 
     data.transactions.unshift(tx);
     saveData();
-    showToast(`Conta "${bill.name}" lançada e marcada como paga!`);
+    showToast(`Conta "${bill.name}" marcada como paga para ${formatDate(dateToPay)}!`);
     renderAll();
 }
 
-function unpayRecurringBill(billId, month) {
+function unpayRecurringBill(billId, targetDate) {
     const bill = (data.recurringBills || []).find((b) => b.id === billId);
     if (!bill) return;
 
+    const dateToUnpay = targetDate || (Array.isArray(bill.paidDates) && bill.paidDates.length ? bill.paidDates[bill.paidDates.length - 1] : null);
+    const mStr = dateToUnpay ? dateToUnpay.slice(0, 7) : selectedMonth();
+
+    if (Array.isArray(bill.paidDates) && dateToUnpay) {
+        bill.paidDates = bill.paidDates.filter((d) => d !== dateToUnpay);
+    }
     if (Array.isArray(bill.paidMonths)) {
-        bill.paidMonths = bill.paidMonths.filter((m) => m !== month);
+        const stillHasPaidInMonth = (bill.paidDates || []).some((d) => d.startsWith(mStr));
+        if (!stillHasPaidInMonth) {
+            bill.paidMonths = bill.paidMonths.filter((m) => m !== mStr);
+        }
     }
 
-    // Remove também o lançamento automático se houver
     const idx = data.transactions.findIndex(
-        (t) => t.recurringBillId === bill.id && t.date.startsWith(month)
+        (t) => t.recurringBillId === bill.id && (dateToUnpay ? t.date === dateToUnpay : t.date.startsWith(mStr))
     );
     if (idx !== -1) {
         data.transactions.splice(idx, 1);
@@ -929,21 +1075,24 @@ function renderRecurringBills() {
     let totalAmount = 0;
     let paidAmount = 0;
     let paidCount = 0;
+    let occurrencesCount = 0;
 
     bills.forEach((b) => {
+        const occs = getBillOccurrencesInMonth(b, month);
         const amt = Number(b.amount) || 0;
-        totalAmount += amt;
-        const isPaid = Array.isArray(b.paidMonths) && b.paidMonths.includes(month);
-        if (isPaid) {
-            paidAmount += amt;
-            paidCount++;
-        }
+        occs.forEach((occDate) => {
+            occurrencesCount++;
+            totalAmount += amt;
+            if (isBillOccurrencePaid(b, occDate)) {
+                paidAmount += amt;
+                paidCount++;
+            }
+        });
     });
 
     const pendingAmount = Math.max(0, totalAmount - paidAmount);
-    const pendingCount = bills.length - paidCount;
+    const pendingCount = Math.max(0, occurrencesCount - paidCount);
 
-    // Atualiza KPIs
     const kpiTotal = $("#recurringKpiTotal");
     const kpiPaid = $("#recurringKpiPaid");
     const kpiPending = $("#recurringKpiPending");
@@ -976,18 +1125,21 @@ function renderRecurringBills() {
                     form.classList.remove("hidden");
                     const nameInput = $("#recurringName");
                     if (nameInput) nameInput.focus();
+                    const dateInput = $("#recurringDate");
+                    if (dateInput && !dateInput.value) dateInput.value = todayISO();
                 }
             });
         }
         return;
     }
 
-    // Ordenar contas por dia de vencimento
-    const sorted = [...bills].sort((a, b) => a.dueDay - b.dueDay);
+    const sorted = [...bills].sort((a, b) => (a.dueDay || 1) - (b.dueDay || 1));
 
     listEl.innerHTML = sorted.map((bill) => {
         const statusInfo = getRecurringBillStatus(bill, month);
-        const icon = CATEGORY_ICONS[bill.category] || "📦";
+        const icon = CATEGORY_ICONS[bill.category] || "📄";
+        const freqName = getFrequencyLabel(bill.frequency);
+        const targetDueFormatted = statusInfo.nextDueDate ? formatDate(statusInfo.nextDueDate) : `Dia ${bill.dueDay}`;
 
         return `
             <article class="recurring-card ${statusInfo.isPaid ? "paid" : ""}">
@@ -996,12 +1148,15 @@ function renderRecurringBills() {
                         <div class="recurring-card-icon">${icon}</div>
                         <div class="recurring-card-title">
                             <h4>${escapeHTML(bill.name)}</h4>
-                            <span>${escapeHTML(bill.category)}</span>
+                            <span style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                                <span>${icon} ${escapeHTML(bill.category)}</span>
+                                <span class="recurring-frequency-badge">${freqName}</span>
+                            </span>
                         </div>
                     </div>
                     <div class="recurring-card-amount">
                         <strong>${money(bill.amount)}</strong>
-                        <span class="recurring-due-tag">Vence dia ${bill.dueDay}</span>
+                        <span class="recurring-due-tag">Vence: ${targetDueFormatted}</span>
                     </div>
                 </div>
 
@@ -1015,12 +1170,12 @@ function renderRecurringBills() {
                 <div class="recurring-card-footer">
                     <div>
                         ${statusInfo.isPaid ? `
-                            <button type="button" class="btn-unpay-recurring" data-action="unpay-recurring" data-id="${bill.id}" title="Desmarcar pagamento desta conta no mês">
+                            <button type="button" class="btn-unpay-recurring" data-action="unpay-recurring" data-id="${bill.id}" data-date="${statusInfo.lastPaidDate || ""}" title="Desmarcar pagamento desta conta">
                                 Desmarcar pagamento
                             </button>
                         ` : `
-                            <button type="button" class="btn-pay-recurring" data-action="pay-recurring" data-id="${bill.id}">
-                                ✓ Pagar / Lançar
+                            <button type="button" class="btn-pay-recurring" data-action="pay-recurring" data-id="${bill.id}" data-date="${statusInfo.nextDueDate || ""}">
+                                ✓ Pagar (${targetDueFormatted})
                             </button>
                         `}
                     </div>
@@ -1044,18 +1199,28 @@ function renderRecurringAlertBanner() {
     }
 
     const month = selectedMonth();
-    const pendingBills = bills.filter((b) => !Array.isArray(b.paidMonths) || !b.paidMonths.includes(month));
+    let pendingCount = 0;
+    let pendingTotal = 0;
+
+    bills.forEach((b) => {
+        const occs = getBillOccurrencesInMonth(b, month);
+        occs.forEach((d) => {
+            if (!isBillOccurrencePaid(b, d)) {
+                pendingCount++;
+                pendingTotal += Number(b.amount || 0);
+            }
+        });
+    });
 
     banner.classList.remove("hidden");
 
-    if (pendingBills.length > 0) {
-        const pendingTotal = pendingBills.reduce((sum, b) => sum + Number(b.amount || 0), 0);
+    if (pendingCount > 0) {
         banner.classList.remove("all-paid");
         banner.innerHTML = `
             <div class="recurring-alert-content">
                 <span class="recurring-alert-icon">🔔</span>
                 <div>
-                    <strong>Contas do mês a pagar:</strong> Você tem ${pendingBills.length} ${pendingBills.length === 1 ? "conta fixa pendente" : "contas fixas pendentes"} somando ${money(pendingTotal)}.
+                    <strong>Contas do mês a pagar:</strong> Você tem ${pendingCount} ${pendingCount === 1 ? "vencimento pendente" : "vencimentos pendentes"} somando ${money(pendingTotal)}.
                 </div>
             </div>
             <a href="planejamento.html" class="recurring-alert-btn">Ver contas no Planejamento →</a>
@@ -1718,9 +1883,11 @@ function renderAgenda() {
             }
 
             // Contas fixas com vencimento neste dia
-            const dueBills = (data.recurringBills || []).filter((b) => b.dueDay === d);
+            const dueBills = (data.recurringBills || []).filter((b) => {
+                return getBillOccurrencesInMonth(b, currentM).includes(iso);
+            });
             if (dueBills.length > 0) {
-                const pendingBills = dueBills.filter((b) => !Array.isArray(b.paidMonths) || !b.paidMonths.includes(currentM));
+                const pendingBills = dueBills.filter((b) => !isBillOccurrencePaid(b, iso));
                 if (pendingBills.length > 0) {
                     badgesHtml += `<span class="agenda-badge-item recurring-badge" title="${pendingBills.length} conta(s) a vencer">🔔 ${pendingBills.length}</span>`;
                 }
@@ -1837,32 +2004,35 @@ function renderAgendaDayDetails() {
     // Contas fixas / recorrentes que vencem neste dia
     const recurringEl = $("#agendaDayRecurring");
     if (recurringEl) {
-        const dayBills = (data.recurringBills || []).filter((b) => b.dueDay === day);
+        const mStr = `${year}-${String(month + 1).padStart(2, "0")}`;
+        const dayBills = (data.recurringBills || []).filter((b) => {
+            return getBillOccurrencesInMonth(b, mStr).includes(iso);
+        });
         if (!dayBills.length) {
             recurringEl.innerHTML = "";
         } else {
-            const mStr = `${year}-${String(month + 1).padStart(2, "0")}`;
             recurringEl.innerHTML = `
                 <div class="agenda-recurring-header">
                     <h4>🔔 Contas com vencimento neste dia (${dayBills.length})</h4>
                 </div>
                 ${dayBills.map((b) => {
-                    const statusInfo = getRecurringBillStatus(b, mStr);
+                    const isPaid = isBillOccurrencePaid(b, iso);
                     const icon = CATEGORY_ICONS[b.category] || "📄";
+                    const freqName = getFrequencyLabel(b.frequency);
                     return `
                         <div class="agenda-recurring-item">
                             <div class="agenda-recurring-info">
                                 <span style="font-size: 20px;">${icon}</span>
                                 <div>
                                     <div class="agenda-recurring-title">${escapeHTML(b.name)}</div>
-                                    <div class="agenda-recurring-sub">${escapeHTML(b.category)} · <strong>${money(b.amount)}</strong></div>
+                                    <div class="agenda-recurring-sub">${escapeHTML(b.category)} · ${freqName} · <strong>${money(b.amount)}</strong></div>
                                 </div>
                             </div>
                             <div>
-                                ${statusInfo.isPaid ? `
+                                ${isPaid ? `
                                     <span class="recurring-status-badge status-paid">✓ Paga</span>
                                 ` : `
-                                    <button type="button" class="btn-pay-recurring" data-action="pay-recurring" data-id="${b.id}" data-month="${mStr}">
+                                    <button type="button" class="btn-pay-recurring" data-action="pay-recurring" data-id="${b.id}" data-date="${iso}">
                                         ✓ Pagar
                                     </button>
                                 `}
@@ -2206,9 +2376,18 @@ async function deleteTransaction(id) {
 
     if (transaction.recurringBillId) {
         const bill = (data.recurringBills || []).find((b) => b.id === transaction.recurringBillId);
-        if (bill && Array.isArray(bill.paidMonths)) {
+        if (bill) {
             const txMonth = transaction.date.slice(0, 7);
-            bill.paidMonths = bill.paidMonths.filter((m) => m !== txMonth);
+            const txDate = transaction.date;
+            if (Array.isArray(bill.paidDates)) {
+                bill.paidDates = bill.paidDates.filter((d) => d !== txDate);
+            }
+            if (Array.isArray(bill.paidMonths)) {
+                const stillPaidInMonth = (bill.paidDates || []).some((d) => d.startsWith(txMonth));
+                if (!stillPaidInMonth) {
+                    bill.paidMonths = bill.paidMonths.filter((m) => m !== txMonth);
+                }
+            }
         }
     }
 
@@ -3069,10 +3248,87 @@ function init() {
    CONFIGURAÇÃO DAS CONTAS RECORRENTES
 ========================================= */
 
+function setupRecurringCategoryPicker() {
+    const picker = $("#recurringCategoryPicker");
+    const button = $("#recurringCategoryPickerButton");
+    const options = $("#recurringCategoryOptions");
+    const select = $("#recurringCategory");
+    const label = $("#recurringCategoryPickerLabel");
+    const customInput = $("#recurringCustomCategory");
+
+    if (!picker || !button || !options || !select || !label || !customInput) {
+        return;
+    }
+
+    function closeDrawer() {
+        picker.classList.remove("open");
+        button.setAttribute("aria-expanded", "false");
+    }
+
+    function openDrawer() {
+        picker.classList.add("open");
+        button.setAttribute("aria-expanded", "true");
+    }
+
+    function sync(val) {
+        const option = [...select.options].find((item) => item.value === val);
+        if (option) {
+            select.value = val;
+            label.textContent = option.textContent;
+        } else {
+            select.value = "Outros";
+            label.textContent = "📦 Outros";
+            customInput.value = val || "";
+        }
+
+        options.querySelectorAll(".category-option").forEach((btn) => {
+            const isSelected = btn.dataset.value === select.value;
+            btn.classList.toggle("selected", isSelected);
+            btn.setAttribute("aria-selected", String(isSelected));
+        });
+    }
+
+    button.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (picker.classList.contains("open")) {
+            closeDrawer();
+        } else {
+            openDrawer();
+        }
+    });
+
+    options.addEventListener("click", (e) => {
+        const optBtn = e.target.closest(".category-option");
+        if (!optBtn) return;
+        select.value = optBtn.dataset.value;
+        customInput.value = "";
+        sync(select.value);
+        closeDrawer();
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!picker.contains(e.target)) {
+            closeDrawer();
+        }
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeDrawer();
+    });
+
+    customInput.addEventListener("input", () => {
+        if (customInput.value.trim()) {
+            closeDrawer();
+        }
+    });
+}
+
 function setupRecurringBills() {
     const btnToggle = $("#btnToggleNewRecurring");
     const form = $("#recurringForm");
     const btnCancel = $("#btnCancelRecurring");
+
+    setupRecurringCategoryPicker();
 
     if (btnToggle && form) {
         btnToggle.addEventListener("click", () => {
@@ -3080,6 +3336,10 @@ function setupRecurringBills() {
             if (!isHidden) {
                 const nameInput = $("#recurringName");
                 if (nameInput) nameInput.focus();
+                const dateInput = $("#recurringDate");
+                if (dateInput && !dateInput.value) {
+                    dateInput.value = todayISO();
+                }
             }
         });
     }
@@ -3098,21 +3358,25 @@ function setupRecurringBills() {
             const rawAmount = String($("#recurringAmount")?.value || "").trim().replace("R$", "").trim();
             const normalized = rawAmount.includes(",") ? rawAmount.replace(/\./g, "").replace(",", ".") : rawAmount;
             const amount = Number(normalized);
-            const dueDay = parseInt($("#recurringDueDay")?.value || "0", 10);
-            const category = $("#recurringCategory")?.value || "Outros";
+            const startDate = String($("#recurringDate")?.value || "").trim();
+            const frequency = String($("#recurringFrequency")?.value || "monthly");
+            const customCategory = String($("#recurringCustomCategory")?.value || "").trim();
+            const category = customCategory || String($("#recurringCategory")?.value || "Assinaturas");
 
             if (!name) {
-                showToast("Informe o nome da conta.");
+                showToast("Informe o nome da conta ou assinatura.");
                 return;
             }
             if (!Number.isFinite(amount) || amount <= 0) {
                 showToast("Informe um valor válido.");
                 return;
             }
-            if (!Number.isInteger(dueDay) || dueDay < 1 || dueDay > 31) {
-                showToast("Informe um dia de vencimento entre 1 e 31.");
+            if (!startDate) {
+                showToast("Informe a data de vencimento.");
                 return;
             }
+
+            const dueDay = parseInt(startDate.slice(8, 10), 10) || 1;
 
             if (!Array.isArray(data.recurringBills)) {
                 data.recurringBills = [];
@@ -3122,8 +3386,11 @@ function setupRecurringBills() {
                 id: createId(),
                 name,
                 amount,
+                startDate,
                 dueDay,
+                frequency,
                 category,
+                paidDates: [],
                 paidMonths: []
             };
 
@@ -3132,7 +3399,7 @@ function setupRecurringBills() {
 
             form.reset();
             form.classList.add("hidden");
-            showToast(`Conta fixa "${name}" cadastrada com sucesso!`);
+            showToast(`Conta "${name}" cadastrada com sucesso!`);
             renderAll();
         });
     }
@@ -3144,12 +3411,12 @@ function setupRecurringBills() {
             if (!btn) return;
             const action = btn.dataset.action;
             const id = btn.dataset.id;
-            const month = selectedMonth();
+            const targetDate = btn.dataset.date;
 
             if (action === "pay-recurring") {
-                payRecurringBill(id, month);
+                payRecurringBill(id, targetDate);
             } else if (action === "unpay-recurring") {
-                unpayRecurringBill(id, month);
+                unpayRecurringBill(id, targetDate);
             } else if (action === "delete-recurring") {
                 deleteRecurringBill(id);
             }
@@ -3163,10 +3430,10 @@ function setupRecurringBills() {
             if (!btn) return;
             const action = btn.dataset.action;
             const id = btn.dataset.id;
-            const month = btn.dataset.month || selectedMonth();
+            const targetDate = btn.dataset.date;
 
             if (action === "pay-recurring") {
-                payRecurringBill(id, month);
+                payRecurringBill(id, targetDate);
             }
         });
     }
