@@ -32,15 +32,15 @@
             <p class="menu-label">MENU PRINCIPAL</p>
 
             <nav class="navigation desktop-navigation">
-                <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
-                <a href="lancamentos.html" class="nav-link">＋ <span>Novo lançamento</span></a>
-                <a href="contas-fixas.html" class="nav-link">🔄 <span>Contas fixas</span></a>
-                <a href="agenda.html" class="nav-link">📅 <span>Agenda</span></a>
-                <a href="relatorios.html" class="nav-link">▥ <span>Relatórios</span></a>
-                <a href="historico.html" class="nav-link active">◷ <span>Histórico</span></a>
-                <a href="planejamento.html" class="nav-link">◎ <span>Planejamento</span></a>
-                <a href="configuracoes.html" class="nav-link">⚙ <span>Configurações</span></a>
-                <a href="index.html?tutorial=true&returnUrl=historico.html" class="nav-link nav-link-tutorial">📖 <span>Como usar</span></a>
+                <a href="index.html" class="nav-link"><span class="nav-icon">▦</span><span class="nav-label">Visão geral</span></a>
+                <a href="lancamentos.html" class="nav-link"><span class="nav-icon">＋</span><span class="nav-label">Novo lançamento</span></a>
+                <a href="contas-fixas.html" class="nav-link"><span class="nav-icon">⟳</span><span class="nav-label">Contas fixas</span></a>
+                <a href="agenda.html" class="nav-link"><span class="nav-icon">◫</span><span class="nav-label">Agenda</span></a>
+                <a href="relatorios.html" class="nav-link"><span class="nav-icon">▥</span><span class="nav-label">Relatórios</span></a>
+                <a href="historico.html" class="nav-link active"><span class="nav-icon">◷</span><span class="nav-label">Histórico</span></a>
+                <a href="planejamento.html" class="nav-link"><span class="nav-icon">◎</span><span class="nav-label">Planejamento</span></a>
+                <a href="configuracoes.html" class="nav-link"><span class="nav-icon">⚙</span><span class="nav-label">Configurações</span></a>
+                <a href="index.html?tutorial=true&returnUrl=historico.html" class="nav-link nav-link-tutorial"><span class="nav-icon">ⓘ</span><span class="nav-label">Como usar</span></a>
             </nav>
 
             <div class="sidebar-bottom">
@@ -56,6 +56,9 @@
                     <p class="subtitle" id="todayText">Escolha exatamente o dia, mês e ano para consultar relatórios completos e todas as movimentações.</p>
                 </div>
                 <div class="topbar-actions">
+                    <button type="button" class="privacy-btn" aria-label="Ocultar valores na tela" title="Ocultar valores na tela" aria-pressed="false">
+                        <span class="privacy-icon">👁️</span>
+                    </button>
                     <a href="lancamentos.html" class="button button-primary btn-new-transaction">
                         + Novo lançamento
                     </a>
@@ -186,22 +189,6 @@
                 </div>
             </article>
 
-            <!-- Contas Fixas e Assinaturas no Histórico -->
-            <section class="panel" style="margin: 24px 0 30px;">
-                <div class="panel-heading">
-                    <div>
-                        <h2>Contas Fixas e Assinaturas</h2>
-                        <p>Status e histórico de vencimentos das suas despesas recorrentes.</p>
-                    </div>
-                    <div class="panel-actions">
-                        <input type="search" placeholder="Buscar conta fixa..." class="search-input search-recurring-input" style="max-width: 250px; font-size: 13px; padding: 7px 12px;">
-                        <a href="contas-fixas.html" class="button button-primary" style="font-size: 12px; padding: 6px 14px;">+ Nova conta fixa</a>
-                    </div>
-                </div>
-
-                <div id="historyRecurringBillsList" class="transaction-list recurring-rows-list"></div>
-            </section>
-
             <footer class="main-footer">
                 <p>Meu Financeiro © <span id="currentYear"></span></p>
                 <p>Organize hoje. Conquiste amanhã. ✨</p>
@@ -241,15 +228,15 @@
         <p class="menu-label">MENU PRINCIPAL</p>
 
         <nav class="navigation mobile-navigation">
-            <a href="index.html" class="nav-link">▦ <span>Visão geral</span></a>
-            <a href="lancamentos.html" class="nav-link">＋ <span>Novo lançamento</span></a>
-            <a href="contas-fixas.html" class="nav-link">🔄 <span>Contas fixas</span></a>
-            <a href="agenda.html" class="nav-link">📅 <span>Agenda</span></a>
-            <a href="relatorios.html" class="nav-link">▥ <span>Relatórios</span></a>
-            <a href="historico.html" class="nav-link active">◷ <span>Histórico</span></a>
-            <a href="planejamento.html" class="nav-link">◎ <span>Planejamento</span></a>
-            <a href="configuracoes.html" class="nav-link">⚙ <span>Configurações</span></a>
-            <a href="index.html?tutorial=true&returnUrl=historico.html" class="nav-link nav-link-tutorial">📖 <span>Como usar</span></a>
+            <a href="index.html" class="nav-link"><span class="nav-icon">▦</span><span class="nav-label">Visão geral</span></a>
+            <a href="lancamentos.html" class="nav-link"><span class="nav-icon">＋</span><span class="nav-label">Novo lançamento</span></a>
+            <a href="contas-fixas.html" class="nav-link"><span class="nav-icon">⟳</span><span class="nav-label">Contas fixas</span></a>
+            <a href="agenda.html" class="nav-link"><span class="nav-icon">◫</span><span class="nav-label">Agenda</span></a>
+            <a href="relatorios.html" class="nav-link"><span class="nav-icon">▥</span><span class="nav-label">Relatórios</span></a>
+            <a href="historico.html" class="nav-link active"><span class="nav-icon">◷</span><span class="nav-label">Histórico</span></a>
+            <a href="planejamento.html" class="nav-link"><span class="nav-icon">◎</span><span class="nav-label">Planejamento</span></a>
+            <a href="configuracoes.html" class="nav-link"><span class="nav-icon">⚙</span><span class="nav-label">Configurações</span></a>
+            <a href="index.html?tutorial=true&returnUrl=historico.html" class="nav-link nav-link-tutorial"><span class="nav-icon">ⓘ</span><span class="nav-label">Como usar</span></a>
         </nav>
 
         <div class="mobile-drawer-bottom">

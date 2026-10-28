@@ -1920,6 +1920,17 @@ function setupAgenda() {
     }
 }
 
+function formatChipMoney(value) {
+    const val = Number(value || 0);
+    if (val >= 10000) {
+        return "R$" + Math.round(val / 1000) + "k";
+    }
+    if (val >= 1000) {
+        return "R$" + (val / 1000).toFixed(1).replace(".0", "").replace(".", ",") + "k";
+    }
+    return "R$" + Math.round(val);
+}
+
 function renderAgenda() {
     const agendaLayout = $("#agendaLayout");
     if (!agendaLayout) return;
@@ -1956,20 +1967,98 @@ function renderAgenda() {
         const daysInPrevMonth = new Date(y, m - 1, 0).getDate();
         const todayStr = todayISO();
 
+        function buildDayEvents(dayIso, monthStr) {
+            const evts = [];
+            // Transações do dia
+            const dayTxs = data.transactions.filter((t) => t.date === dayIso);
+            dayTxs.forEach((t) => {
+                evts.push({
+                    type: t.type,
+                    title: t.description || (t.type === "receita" ? "Receita" : "Despesa"),
+                    amount: t.amount,
+                    isPaid: true
+                });
+            });
+
+            // Contas fixas / recorrentes com vencimento no dia
+            const dayBills = (data.recurringBills || []).filter((b) => {
+                return getBillOccurrencesInMonth(b, monthStr).includes(dayIso);
+            });
+            dayBills.forEach((b) => {
+                evts.push({
+                    type: "recurring",
+                    title: b.name,
+                    amount: b.amount,
+                    isPaid: isBillOccurrencePaid(b, dayIso)
+                });
+            });
+
+            return evts;
+        }
+
+        function renderChipsHtml(evts) {
+            if (!evts.length) return "";
+            const maxChips = 2;
+            const visible = evts.slice(0, maxChips);
+            const remaining = evts.length - maxChips;
+
+            let html = visible.map((evt) => {
+                if (evt.type === "receita") {
+                    return `
+                        <div class="agenda-chip chip-income" title="Receita: ${escapeHTML(evt.title)} - ${money(evt.amount)}">
+                            <span class="chip-dot">●</span>
+                            <span class="chip-title">${escapeHTML(evt.title)}</span>
+                            <span class="chip-val">+${formatChipMoney(evt.amount)}</span>
+                        </div>
+                    `;
+                } else if (evt.type === "despesa") {
+                    return `
+                        <div class="agenda-chip chip-expense" title="Despesa: ${escapeHTML(evt.title)} - ${money(evt.amount)}">
+                            <span class="chip-dot">●</span>
+                            <span class="chip-title">${escapeHTML(evt.title)}</span>
+                            <span class="chip-val">−${formatChipMoney(evt.amount)}</span>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="agenda-chip chip-recurring ${evt.isPaid ? "paid" : "due"}" title="Conta Fixa: ${escapeHTML(evt.title)} - ${money(evt.amount)} (${evt.isPaid ? "Paga" : "A vencer"})">
+                            <span class="chip-icon">${evt.isPaid ? "✓" : "⟳"}</span>
+                            <span class="chip-title">${escapeHTML(evt.title)}</span>
+                            <span class="chip-val">${formatChipMoney(evt.amount)}</span>
+                        </div>
+                    `;
+                }
+            }).join("");
+
+            if (remaining > 0) {
+                html += `<div class="agenda-chip chip-more">+${remaining} mais</div>`;
+            }
+
+            return `<div class="agenda-day-chips">${html}</div>`;
+        }
+
         // Prev month days
         for (let i = firstDayIdx - 1; i >= 0; i--) {
             const dayNum = daysInPrevMonth - i;
             const prevM = m === 1 ? 12 : m - 1;
             const prevY = m === 1 ? y - 1 : y;
             const iso = `${prevY}-${String(prevM).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
+            const mStr = `${prevY}-${String(prevM).padStart(2, "0")}`;
+            const evts = buildDayEvents(iso, mStr);
 
             const cell = document.createElement("div");
             cell.className = "agenda-day other-month";
-            cell.innerHTML = `<span class="agenda-day-num">${dayNum}</span>`;
+            if (iso === agendaSelectedDate) cell.classList.add("selected");
+            cell.innerHTML = `
+                <div class="agenda-day-header">
+                    <span class="agenda-day-num is-other-month">${dayNum}</span>
+                </div>
+                ${renderChipsHtml(evts)}
+            `;
             cell.addEventListener("click", () => {
                 agendaSelectedDate = iso;
                 sessionStorage.setItem("meuFinanceiro.date", iso);
-                sessionStorage.setItem("meuFinanceiro.month", `${prevY}-${String(prevM).padStart(2, "0")}`);
+                sessionStorage.setItem("meuFinanceiro.month", mStr);
                 const dashInput = $("#dashboardMonth");
                 if (dashInput) dashInput.value = iso;
                 syncDatePicker();
@@ -1981,37 +2070,18 @@ function renderAgenda() {
         // Current month days
         for (let d = 1; d <= daysInMonth; d++) {
             const iso = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-            const dayTxs = data.transactions.filter((t) => t.date === iso);
-            const dayIncome = dayTxs.filter((t) => t.type === "receita").reduce((sum, t) => sum + t.amount, 0);
-            const dayExpenses = dayTxs.filter((t) => t.type === "despesa").reduce((sum, t) => sum + t.amount, 0);
+            const evts = buildDayEvents(iso, currentM);
 
             const cell = document.createElement("div");
             cell.className = "agenda-day";
             if (iso === todayStr) cell.classList.add("today");
             if (iso === agendaSelectedDate) cell.classList.add("selected");
 
-            let badgesHtml = "";
-            if (dayIncome > 0) {
-                badgesHtml += `<span class="agenda-badge-item income">+${money(dayIncome)}</span>`;
-            }
-            if (dayExpenses > 0) {
-                badgesHtml += `<span class="agenda-badge-item expense">−${money(dayExpenses)}</span>`;
-            }
-
-            // Contas fixas com vencimento neste dia
-            const dueBills = (data.recurringBills || []).filter((b) => {
-                return getBillOccurrencesInMonth(b, currentM).includes(iso);
-            });
-            if (dueBills.length > 0) {
-                const pendingBills = dueBills.filter((b) => !isBillOccurrencePaid(b, iso));
-                if (pendingBills.length > 0) {
-                    badgesHtml += `<span class="agenda-badge-item recurring-badge" title="${pendingBills.length} conta(s) a vencer">🔔 ${pendingBills.length}</span>`;
-                }
-            }
-
             cell.innerHTML = `
-                <span class="agenda-day-num">${d}</span>
-                <div class="agenda-day-badges">${badgesHtml}</div>
+                <div class="agenda-day-header">
+                    <span class="agenda-day-num ${iso === todayStr ? "today-circle" : ""}">${d}</span>
+                </div>
+                ${renderChipsHtml(evts)}
             `;
 
             cell.addEventListener("click", () => {
@@ -2034,14 +2104,22 @@ function renderAgenda() {
             const nextM = m === 12 ? 1 : m + 1;
             const nextY = m === 12 ? y + 1 : y;
             const iso = `${nextY}-${String(nextM).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+            const mStr = `${nextY}-${String(nextM).padStart(2, "0")}`;
+            const evts = buildDayEvents(iso, mStr);
 
             const cell = document.createElement("div");
             cell.className = "agenda-day other-month";
-            cell.innerHTML = `<span class="agenda-day-num">${d}</span>`;
+            if (iso === agendaSelectedDate) cell.classList.add("selected");
+            cell.innerHTML = `
+                <div class="agenda-day-header">
+                    <span class="agenda-day-num is-other-month">${d}</span>
+                </div>
+                ${renderChipsHtml(evts)}
+            `;
             cell.addEventListener("click", () => {
                 agendaSelectedDate = iso;
                 sessionStorage.setItem("meuFinanceiro.date", iso);
-                sessionStorage.setItem("meuFinanceiro.month", `${nextY}-${String(nextM).padStart(2, "0")}`);
+                sessionStorage.setItem("meuFinanceiro.month", mStr);
                 const dashInput = $("#dashboardMonth");
                 if (dashInput) dashInput.value = iso;
                 syncDatePicker();
@@ -2146,7 +2224,12 @@ function renderAgendaDayDetails() {
                             </div>
                             <div>
                                 ${isPaid ? `
-                                    <span class="recurring-status-badge status-paid">✓ Paga</span>
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <span class="recurring-status-badge status-paid">✓ Paga</span>
+                                        <button type="button" class="mini-button btn-unpay-recurring" data-action="unpay-recurring" data-id="${b.id}" data-date="${iso}" title="Desmarcar pagamento desta data" style="padding: 3px 8px; font-size: 11px;">
+                                            Desfazer
+                                        </button>
+                                    </div>
                                 ` : `
                                     <button type="button" class="btn-pay-recurring" data-action="pay-recurring" data-id="${b.id}" data-date="${iso}">
                                         ✓ Pagar
@@ -2808,11 +2891,12 @@ function exportCSV() {
 
 function updatePrivacyButtons(isPrivate) {
     document.querySelectorAll(".privacy-btn").forEach((btn) => {
-        const icon = btn.querySelector(".privacy-icon");
-        const text = btn.querySelector(".privacy-text");
+        const icon = btn.querySelector(".privacy-icon") || btn;
         if (icon) icon.textContent = isPrivate ? "🙈" : "👁️";
-        if (text) text.textContent = isPrivate ? "Exibir" : "Ocultar";
+        const text = btn.querySelector(".privacy-text");
+        if (text) text.remove();
         btn.setAttribute("title", isPrivate ? "Exibir valores na tela" : "Ocultar valores na tela");
+        btn.setAttribute("aria-label", isPrivate ? "Exibir valores na tela" : "Ocultar valores na tela");
         btn.setAttribute("aria-pressed", String(isPrivate));
     });
 }

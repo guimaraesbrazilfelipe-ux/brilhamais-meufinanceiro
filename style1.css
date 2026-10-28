@@ -125,11 +125,38 @@ a {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 11px 13px;
+    padding: 10px 14px;
     border-radius: 10px;
     color: var(--muted);
     font-size: 14px;
     transition: .2s;
+    text-decoration: none;
+}
+
+.nav-link .nav-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    font-size: 16px;
+    line-height: 1;
+    text-align: center;
+    opacity: 0.85;
+}
+
+.nav-link:hover .nav-icon,
+.nav-link.active .nav-icon {
+    opacity: 1;
+    color: var(--purple-light);
+}
+
+.nav-link .nav-label {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .nav-link:hover,
@@ -1919,10 +1946,11 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     }
 
     .topbar-actions .privacy-btn {
-        flex: 0 0 auto;
+        flex: 0 0 42px;
+        width: 42px;
+        height: 42px;
         min-height: 42px;
-        padding: 8px 12px;
-        font-size: 12px;
+        padding: 0;
     }
 
     .btn-new-transaction {
@@ -2696,23 +2724,34 @@ body::-webkit-scrollbar-thumb:hover {
 .privacy-btn {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    min-height: 41px;
-    padding: 8px 14px;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    min-height: 42px;
+    padding: 0;
     border: 1px solid var(--border);
     border-radius: 10px;
     background: var(--panel-light);
     color: var(--text);
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 16px;
     cursor: pointer;
-    transition: .2s ease;
+    transition: all .2s ease;
+    flex-shrink: 0;
 }
 
 .privacy-btn:hover {
     border-color: var(--purple);
     background: #223049;
     transform: translateY(-1px);
+    color: #ffffff;
+}
+
+.privacy-btn .privacy-icon {
+    font-size: 16px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 body.privacy-mode .summary-card h2,
@@ -2720,7 +2759,11 @@ body.privacy-mode .summary-card .summary-amount,
 body.privacy-mode .transaction-amount,
 body.privacy-mode .legend-value,
 body.privacy-mode #budgetStatus,
-body.privacy-mode #goalStatus {
+body.privacy-mode #goalStatus,
+body.privacy-mode .recurring-kpi-val,
+body.privacy-mode .recurring-card-amount,
+body.privacy-mode .agenda-chip .chip-val,
+body.privacy-mode .day-summary-box strong {
     filter: blur(8px);
     user-select: none;
     transition: filter .22s ease;
@@ -3307,106 +3350,190 @@ body.privacy-mode #goalStatus {
 .agenda-weekdays {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
-    margin-bottom: 8px;
+    gap: 1px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px 10px 0 0;
+    padding: 8px 0;
+    margin-bottom: 0;
     text-align: center;
 }
 
 .agenda-weekdays span {
     font-size: 11px;
     font-weight: 700;
+    letter-spacing: 0.5px;
     color: var(--muted, #9ca9bd);
     text-transform: uppercase;
-    padding: 4px 0;
 }
 
 .agenda-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
+    gap: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    overflow: hidden;
 }
 
 .agenda-day {
-    min-height: 72px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 10px;
-    padding: 6px 8px;
+    min-height: 94px;
+    background: #141f33;
+    padding: 6px 6px 8px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.15s ease, border-color 0.15s ease;
     text-align: left;
     position: relative;
     user-select: none;
+    box-sizing: border-box;
 }
 
 .agenda-day:hover {
-    background: rgba(124, 93, 250, 0.12);
-    border-color: rgba(148, 117, 255, 0.3);
-    transform: translateY(-1px);
+    background: #1b2842;
 }
 
 .agenda-day.other-month {
-    opacity: 0.35;
+    background: #0f1624;
+    opacity: 0.45;
 }
 
-.agenda-day.today {
-    border-color: #45d6a0;
-    box-shadow: 0 0 10px rgba(69, 214, 160, 0.2);
-}
-
-.agenda-day.today .agenda-day-num {
-    color: #45d6a0;
-    font-weight: 800;
+.agenda-day.other-month:hover {
+    opacity: 0.75;
 }
 
 .agenda-day.selected {
-    background: rgba(124, 93, 250, 0.25);
-    border-color: #9475ff;
-    box-shadow: 0 0 14px rgba(124, 93, 250, 0.35);
+    background: rgba(124, 93, 250, 0.18);
+    outline: 2px solid var(--purple-light, #9475ff);
+    outline-offset: -2px;
+    z-index: 2;
 }
 
-.agenda-day.selected .agenda-day-num {
-    color: #ffffff;
-    font-weight: 800;
+.agenda-day-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 4px;
 }
 
 .agenda-day-num {
     font-size: 12px;
     font-weight: 600;
     color: #c4d1e6;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    transition: all 0.2s;
 }
 
-.agenda-day-badges {
+.agenda-day-num.is-other-month {
+    color: #62728d;
+}
+
+/* Indicador de Hoje estilo Google Calendar (círculo sólido com número em destaque) */
+.agenda-day.today .agenda-day-num,
+.agenda-day-num.today-circle {
+    background: var(--purple, #7c5dfa);
+    color: #ffffff;
+    font-weight: 800;
+    box-shadow: 0 2px 6px rgba(124, 93, 250, 0.4);
+}
+
+.agenda-day.today {
+    background: rgba(124, 93, 250, 0.08);
+}
+
+/* Event Chips Google Calendar Style */
+.agenda-day-chips {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    margin-top: 4px;
+    gap: 3px;
+    flex: 1;
+    overflow: hidden;
 }
 
-.agenda-badge-item {
-    font-size: 9px;
-    font-weight: 700;
-    padding: 1px 4px;
+.agenda-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 5px;
     border-radius: 4px;
+    font-size: 10px;
+    line-height: 1.25;
+    font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    line-height: 1.2;
+    transition: transform 0.12s ease;
 }
 
-.agenda-badge-item.income {
-    background: rgba(69, 214, 160, 0.2);
+.agenda-chip:hover {
+    transform: translateY(-0.5px);
+}
+
+.agenda-chip .chip-dot {
+    font-size: 8px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.agenda-chip .chip-icon {
+    font-size: 10px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.agenda-chip .chip-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.agenda-chip .chip-val {
+    font-weight: 700;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.agenda-chip.chip-income {
+    background: rgba(69, 214, 160, 0.16);
     color: #45d6a0;
-    border: 1px solid rgba(69, 214, 160, 0.3);
+    border-left: 2.5px solid #45d6a0;
 }
 
-.agenda-badge-item.expense {
-    background: rgba(255, 116, 133, 0.2);
+.agenda-chip.chip-expense {
+    background: rgba(255, 116, 133, 0.16);
     color: #ff7485;
-    border: 1px solid rgba(255, 116, 133, 0.3);
+    border-left: 2.5px solid #ff7485;
+}
+
+.agenda-chip.chip-recurring {
+    background: rgba(148, 117, 255, 0.16);
+    color: #c4b5fd;
+    border-left: 2.5px solid #9475ff;
+}
+
+.agenda-chip.chip-recurring.paid {
+    background: rgba(69, 214, 160, 0.12);
+    color: #a7f3d0;
+    border-left: 2.5px solid #10b981;
+}
+
+.agenda-chip.chip-more {
+    font-size: 9px;
+    color: var(--muted, #9ca9bd);
+    padding: 1px 4px;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 3px;
+    align-self: flex-start;
 }
 
 @media (max-width: 650px) {
@@ -3432,27 +3559,45 @@ body.privacy-mode #goalStatus {
         justify-content: space-between;
     }
     .agenda-grid {
-        gap: 3px;
+        gap: 1px;
     }
     .agenda-weekdays {
-        gap: 3px;
-        margin-bottom: 6px;
+        gap: 1px;
+        margin-bottom: 0;
     }
     .agenda-weekdays span {
-        font-size: 11px;
+        font-size: 10px;
     }
     .agenda-day {
-        min-height: 52px;
-        padding: 4px 3px;
-        border-radius: 8px;
+        min-height: 58px;
+        padding: 4px 2px 5px;
+    }
+    .agenda-day-header {
+        justify-content: center;
+        margin-bottom: 2px;
     }
     .agenda-day-num {
-        font-size: 11px;
+        width: 19px;
+        height: 19px;
+        font-size: 10px;
     }
-    .agenda-badge-item {
-        font-size: 8px;
-        padding: 1px 2px;
+    .agenda-day-chips {
+        gap: 2px;
+        align-items: stretch;
+    }
+    .agenda-chip {
+        padding: 1px 3px;
+        font-size: 8.5px;
+        max-width: 100%;
         border-radius: 3px;
+    }
+    .agenda-chip .chip-title {
+        display: none;
+    }
+    .agenda-chip.chip-more {
+        font-size: 8px;
+        padding: 0 2px;
+    }
     }
     .agenda-day-details-panel {
         padding: 16px 14px;
