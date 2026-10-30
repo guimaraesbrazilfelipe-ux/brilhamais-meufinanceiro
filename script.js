@@ -234,39 +234,95 @@ function transactionsForYear(year) {
 }
 
 function getPeriodSummary(periodType = "month", value = null) {
+    if (periodType === "month") {
+        const targetMonth = value || selectedMonth();
+        return getMonthlySummary(targetMonth);
+    }
+
     let transactions = [];
-    let salary = 0;
+    let salaryConfig = 0;
     const currentM = selectedMonth();
     const currentD = selectedDate();
 
     if (periodType === "day") {
         const targetDate = value || currentD;
-        transactions = transactionsForDate(targetDate);
-        salary = 0;
+        transactions = transactionsForDate(targetDate).filter((t) => !t.recurringBillId);
+        salaryConfig = 0;
     } else if (periodType === "year") {
-        const targetYear = value || (currentD ? currentD.slice(0, 4) : new Date().getFullYear());
-        transactions = transactionsForYear(targetYear);
-        salary = Object.entries(data.salaries)
-            .filter(([m]) => m.startsWith(String(targetYear)))
+        const targetYear = String(value || (currentD ? currentD.slice(0, 4) : new Date().getFullYear()));
+        transactions = transactionsForYear(targetYear).filter((t) => !t.recurringBillId);
+        salaryConfig = Object.entries(data.salaries)
+            .filter(([m]) => m.startsWith(targetYear))
             .reduce((sum, [, val]) => sum + Number(val || 0), 0);
     } else if (periodType === "all") {
-        transactions = [...data.transactions];
-        salary = Object.values(data.salaries).reduce((sum, val) => sum + Number(val || 0), 0);
-    } else {
-        const targetMonth = value || currentM;
-        return getMonthlySummary(targetMonth);
+        transactions = (data.transactions || []).filter((t) => !t.recurringBillId);
+        salaryConfig = Object.values(data.salaries || {}).reduce((sum, val) => sum + Number(val || 0), 0);
     }
 
-    const expenses = sumTransactions(transactions, "despesa");
-    const extraIncome = sumTransactions(transactions, "receita");
-    const income = salary + extraIncome;
+    // Evita duplicar salário se foi lançado manualmente como 'Salário'
+    const salaryFromTransactions = transactions
+        .filter((t) => t.type === "receita" && t.category === "Salário")
+        .reduce((sum, t) => sum + t.amount, 0);
+
+    const otherExtraIncome = transactions
+        .filter((t) => t.type === "receita" && t.category !== "Salário")
+        .reduce((sum, t) => sum + t.amount, 0);
+
+    const effectiveSalary = salaryFromTransactions > 0 ? salaryFromTransactions : salaryConfig;
+    const extraIncome = otherExtraIncome;
+    const income = effectiveSalary + extraIncome;
+
+    const manualExpenses = sumTransactions(transactions, "despesa");
+
+    // Despesas de contas fixas pagas e previstas no período
+    let paidRecurringTotal = 0;
+    let allRecurringTotal = 0;
+
+    (data.recurringBills || []).forEach((b) => {
+        if (periodType === "day") {
+            const targetDate = value || currentD;
+            const mStr = targetDate.slice(0, 7);
+            const occs = getBillOccurrencesInMonth(b, mStr);
+            if (occs.includes(targetDate)) {
+                const amt = Number(b.amount || 0);
+                allRecurringTotal += amt;
+                if (isBillOccurrencePaid(b, targetDate)) {
+                    paidRecurringTotal += amt;
+                }
+            }
+        } else if (periodType === "year") {
+            const targetYear = String(value || (currentD ? currentD.slice(0, 4) : new Date().getFullYear()));
+            for (let mon = 1; mon <= 12; mon++) {
+                const mStr = `${targetYear}-${String(mon).padStart(2, "0")}`;
+                const occs = getBillOccurrencesInMonth(b, mStr);
+                occs.forEach((d) => {
+                    const amt = Number(b.amount || 0);
+                    allRecurringTotal += amt;
+                    if (isBillOccurrencePaid(b, d)) {
+                        paidRecurringTotal += amt;
+                    }
+                });
+            }
+        } else if (periodType === "all") {
+            (b.paidDates || []).forEach(() => {
+                paidRecurringTotal += Number(b.amount || 0);
+            });
+            allRecurringTotal += paidRecurringTotal;
+        }
+    });
+
+    const expenses = manualExpenses + paidRecurringTotal;
     const balance = income - expenses;
     const savingsRate = income > 0 ? (balance / income) * 100 : 0;
 
     return {
-        salary,
+        salary: effectiveSalary,
         extraIncome,
         income,
+        manualExpenses,
+        paidRecurringExpenses: paidRecurringTotal,
+        allRecurringExpenses: allRecurringTotal,
+        pendingRecurringExpenses: Math.max(0, allRecurringTotal - paidRecurringTotal),
         expenses,
         balance,
         savingsRate,
@@ -1139,6 +1195,12 @@ function renderRecurringBills() {
     if (kpiCount) kpiCount.textContent = `${bills.length} ${bills.length === 1 ? "cadastrada" : "cadastradas"}`;
     if (kpiPaidCount) kpiPaidCount.textContent = `${paidCount} ${paidCount === 1 ? "paga" : "pagas"}`;
     if (kpiPendingCount) kpiPendingCount.textContent = `${pendingCount} ${pendingCount === 1 ? "pendente" : "pendentes"}`;
+
+    const progressPct = occurrencesCount > 0 ? Math.round((paidCount / occurrencesCount) * 100) : (bills.length > 0 ? 100 : 0);
+    const progressPctEl = $("#recurringProgressPct");
+    const progressBarEl = $("#recurringProgressBar");
+    if (progressPctEl) progressPctEl.textContent = `${progressPct}% concluído (${paidCount}/${occurrencesCount} pagas)`;
+    if (progressBarEl) progressBarEl.style.width = `${progressPct}%`;
 
     if (listEl) {
         if (!bills.length) {
@@ -2353,13 +2415,44 @@ function renderHistoricalReports() {
     if (expEl) expEl.textContent = money(summary.expenses);
     if (savEl) savEl.textContent = `${summary.savingsRate.toFixed(1)}%`;
 
-    // Category Breakdown Report
+    // Category Breakdown Report (Despesas)
     const breakdownContainer = $("#historyCategoryBreakdown");
     if (breakdownContainer) {
         const expensesTxs = filteredTxs.filter((t) => t.type === "despesa");
         const catTotals = {};
         expensesTxs.forEach((t) => {
-            catTotals[t.category] = (catTotals[t.category] || 0) + t.amount;
+            catTotals[t.category] = (catTotals[t.category] || 0) + Number(t.amount || 0);
+        });
+
+        // Inclui contas fixas pagas no período
+        (data.recurringBills || []).forEach((b) => {
+            const cat = b.category || "Assinaturas";
+            if (historyFilterMode === "day") {
+                const mStr = currentD.slice(0, 7);
+                if (getBillOccurrencesInMonth(b, mStr).includes(currentD) && isBillOccurrencePaid(b, currentD)) {
+                    catTotals[cat] = (catTotals[cat] || 0) + Number(b.amount || 0);
+                }
+            } else if (historyFilterMode === "month") {
+                const occs = getBillOccurrencesInMonth(b, currentM);
+                occs.forEach((d) => {
+                    if (isBillOccurrencePaid(b, d)) {
+                        catTotals[cat] = (catTotals[cat] || 0) + Number(b.amount || 0);
+                    }
+                });
+            } else if (historyFilterMode === "year") {
+                for (let mon = 1; mon <= 12; mon++) {
+                    const mStr = `${currentY}-${String(mon).padStart(2, "0")}`;
+                    getBillOccurrencesInMonth(b, mStr).forEach((d) => {
+                        if (isBillOccurrencePaid(b, d)) {
+                            catTotals[cat] = (catTotals[cat] || 0) + Number(b.amount || 0);
+                        }
+                    });
+                }
+            } else if (historyFilterMode === "all") {
+                (b.paidDates || []).forEach(() => {
+                    catTotals[cat] = (catTotals[cat] || 0) + Number(b.amount || 0);
+                });
+            }
         });
 
         const totalExp = Object.values(catTotals).reduce((sum, v) => sum + v, 0);
@@ -2380,6 +2473,200 @@ function renderHistoricalReports() {
                         </div>
                         <div class="breakdown-bar-bg">
                             <div class="breakdown-bar-fill" style="width: ${pct}%; background: ${color};"></div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+    }
+
+    // Category Breakdown Report (Receitas que Entraram)
+    const incomeBreakdownContainer = $("#historyIncomeBreakdown");
+    if (incomeBreakdownContainer) {
+        const incomeTotals = {};
+        if (summary.salary > 0) {
+            incomeTotals["Salário"] = summary.salary;
+        }
+
+        const incomeTxs = filteredTxs.filter((t) => t.type === "receita");
+        incomeTxs.forEach((t) => {
+            if (t.category === "Salário" && summary.salary > 0) return; // evita duplicar salário já listado
+            incomeTotals[t.category] = (incomeTotals[t.category] || 0) + Number(t.amount || 0);
+        });
+
+        const totalInc = Object.values(incomeTotals).reduce((sum, v) => sum + v, 0);
+        const entries = Object.entries(incomeTotals).sort((a, b) => b[1] - a[1]);
+
+        if (!entries.length) {
+            incomeBreakdownContainer.innerHTML = `<p style="font-size: 13px; color: var(--muted); margin: 0;">Nenhuma receita registrada para ${periodLabel}.</p>`;
+        } else {
+            incomeBreakdownContainer.innerHTML = entries.map(([cat, amt], idx) => {
+                const icon = CATEGORY_ICONS[cat] || "💰";
+                const pct = totalInc > 0 ? (amt / totalInc) * 100 : 0;
+                const color = ["#10b981", "#059669", "#34d399", "#6ee7b7", "#047857"][idx % 5];
+                return `
+                    <div class="breakdown-item">
+                        <div class="breakdown-info">
+                            <span>${icon} <strong>${escapeHTML(cat)}</strong></span>
+                            <span>${money(amt)} <small style="color: var(--muted);">(${pct.toFixed(1)}%)</small></span>
+                        </div>
+                        <div class="breakdown-bar-bg">
+                            <div class="breakdown-bar-fill" style="width: ${pct}%; background: ${color};"></div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+    }
+
+    // Histórico de Contas Fixas e Assinaturas no Período
+    const historyRecurringListEl = $("#historyRecurringList");
+    if (historyRecurringListEl) {
+        const periodBillsOccurrences = [];
+        (data.recurringBills || []).forEach((b) => {
+            if (historyFilterMode === "day") {
+                const mStr = currentD.slice(0, 7);
+                const occs = getBillOccurrencesInMonth(b, mStr);
+                if (occs.includes(currentD)) {
+                    periodBillsOccurrences.push({
+                        bill: b,
+                        date: currentD,
+                        isPaid: isBillOccurrencePaid(b, currentD)
+                    });
+                }
+            } else if (historyFilterMode === "month") {
+                const occs = getBillOccurrencesInMonth(b, currentM);
+                occs.forEach((d) => {
+                    periodBillsOccurrences.push({
+                        bill: b,
+                        date: d,
+                        isPaid: isBillOccurrencePaid(b, d)
+                    });
+                });
+            } else if (historyFilterMode === "year") {
+                for (let mon = 1; mon <= 12; mon++) {
+                    const mStr = `${currentY}-${String(mon).padStart(2, "0")}`;
+                    getBillOccurrencesInMonth(b, mStr).forEach((d) => {
+                        periodBillsOccurrences.push({
+                            bill: b,
+                            date: d,
+                            isPaid: isBillOccurrencePaid(b, d)
+                        });
+                    });
+                }
+            } else {
+                // "all" - exibe o próximo vencimento e todos os pagos
+                (b.paidDates || []).forEach((d) => {
+                    periodBillsOccurrences.push({
+                        bill: b,
+                        date: d,
+                        isPaid: true
+                    });
+                });
+                const nextOcc = getNextUnpaidOccurrence(b);
+                if (nextOcc) {
+                    periodBillsOccurrences.push({
+                        bill: b,
+                        date: nextOcc,
+                        isPaid: false
+                    });
+                }
+            }
+        });
+
+        periodBillsOccurrences.sort((a, b) => a.date.localeCompare(b.date));
+
+        if (!periodBillsOccurrences.length) {
+            historyRecurringListEl.innerHTML = `
+                <div class="empty-state" style="padding: 24px 10px;">
+                    <div style="font-size: 28px; margin-bottom: 8px;">⟳</div>
+                    <p>Nenhuma conta fixa ou assinatura encontrada para este período (${periodLabel}).</p>
+                    <p><a href="contas-fixas.html" class="text-button">+ Cadastrar conta fixa</a></p>
+                </div>
+            `;
+        } else {
+            historyRecurringListEl.innerHTML = periodBillsOccurrences.map(({ bill, date, isPaid }) => {
+                const icon = CATEGORY_ICONS[bill.category] || "📄";
+                const freqName = getFrequencyLabel(bill.frequency);
+                return `
+                    <div class="transaction-item">
+                        <div class="transaction-icon">${icon}</div>
+                        <div class="transaction-info">
+                            <h3>${escapeHTML(bill.name)}</h3>
+                            <p>${escapeHTML(bill.category)} · ${freqName} · Vencimento: ${formatDate(date)}</p>
+                        </div>
+                        <div class="transaction-right">
+                            <span class="recurring-status-badge ${isPaid ? "status-paid" : "status-pending"}" style="font-size: 11px;">
+                                ${isPaid ? "✓ Paga" : "⏳ A vencer"}
+                            </span>
+                            <div class="transaction-amount expense-text">
+                                ${money(bill.amount)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+    }
+
+    // Receitas que Entraram no Período
+    const historyIncomeListEl = $("#historyIncomeList");
+    if (historyIncomeListEl) {
+        const incomeItems = [];
+
+        // Salário configurado/efetivo do período
+        if (summary.salary > 0) {
+            incomeItems.push({
+                isSalary: true,
+                title: "Salário do período",
+                category: "Salário",
+                date: (historyFilterMode === "day" ? currentD : (historyFilterMode === "month" ? `${currentM}-05` : (historyFilterMode === "year" ? `${currentY}-01-05` : ""))),
+                amount: summary.salary,
+                notes: "Entrada principal configurada"
+            });
+        }
+
+        // Lançamentos manuais de receita
+        const incomeTxs = filteredTxs
+            .filter((t) => t.type === "receita")
+            .filter((t) => !(t.category === "Salário" && summary.salary > 0));
+
+        incomeTxs.forEach((t) => {
+            incomeItems.push({
+                isSalary: false,
+                id: t.id,
+                title: t.description || "Receita avulsa",
+                category: t.category || "Outros",
+                date: t.date,
+                amount: t.amount,
+                notes: t.notes || ""
+            });
+        });
+
+        incomeItems.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+        if (!incomeItems.length) {
+            historyIncomeListEl.innerHTML = `
+                <div class="empty-state" style="padding: 24px 10px;">
+                    <div style="font-size: 28px; margin-bottom: 8px;">💰</div>
+                    <p>Nenhuma receita registrada para este período (${periodLabel}).</p>
+                    <p><a href="lancamentos.html" class="text-button">+ Registrar receita</a></p>
+                </div>
+            `;
+        } else {
+            historyIncomeListEl.innerHTML = incomeItems.map((item) => {
+                const icon = CATEGORY_ICONS[item.category] || "💰";
+                return `
+                    <div class="transaction-item">
+                        <div class="transaction-icon">${icon}</div>
+                        <div class="transaction-info">
+                            <h3>${escapeHTML(item.title)}</h3>
+                            <p>${escapeHTML(item.category)}${item.date ? ` · ${formatDate(item.date)}` : ""}${item.notes ? ` · <span style="opacity:0.8">${escapeHTML(item.notes)}</span>` : ""}</p>
+                        </div>
+                        <div class="transaction-right">
+                            <div class="transaction-amount income-text">
+                                +${money(item.amount)}
+                            </div>
                         </div>
                     </div>
                 `;

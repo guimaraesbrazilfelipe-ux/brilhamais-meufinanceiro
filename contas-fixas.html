@@ -333,20 +333,46 @@
 
                 <!-- Resumo dos Custos Fixos do Mês -->
                 <div class="recurring-kpis-grid">
-                    <div class="recurring-kpi-card">
-                        <span class="recurring-kpi-label">Total fixo mensal</span>
+                    <div class="recurring-kpi-card card-total">
+                        <div class="recurring-kpi-top">
+                            <span class="recurring-kpi-icon">📊</span>
+                            <span class="recurring-kpi-label">Total fixo mensal</span>
+                        </div>
                         <strong class="recurring-kpi-value" id="recurringKpiTotal">R$ 0,00</strong>
-                        <span class="recurring-kpi-sub" id="recurringKpiCount">0 cadastradas</span>
+                        <div class="recurring-kpi-footer">
+                            <span class="recurring-kpi-sub" id="recurringKpiCount">0 cadastradas</span>
+                        </div>
                     </div>
-                    <div class="recurring-kpi-card">
-                        <span class="recurring-kpi-label">Já pago no mês</span>
+                    <div class="recurring-kpi-card card-paid">
+                        <div class="recurring-kpi-top">
+                            <span class="recurring-kpi-icon">💎</span>
+                            <span class="recurring-kpi-label">Já pago no mês</span>
+                        </div>
                         <strong class="recurring-kpi-value income-text" id="recurringKpiPaid">R$ 0,00</strong>
-                        <span class="recurring-kpi-sub" id="recurringKpiPaidCount">0 pagas</span>
+                        <div class="recurring-kpi-footer">
+                            <span class="recurring-kpi-sub" id="recurringKpiPaidCount">0 pagas</span>
+                        </div>
                     </div>
-                    <div class="recurring-kpi-card">
-                        <span class="recurring-kpi-label">Pendente a pagar</span>
+                    <div class="recurring-kpi-card card-pending">
+                        <div class="recurring-kpi-top">
+                            <span class="recurring-kpi-icon">⏳</span>
+                            <span class="recurring-kpi-label">Pendente a pagar</span>
+                        </div>
                         <strong class="recurring-kpi-value expense-text" id="recurringKpiPending">R$ 0,00</strong>
-                        <span class="recurring-kpi-sub" id="recurringKpiPendingCount">0 pendentes</span>
+                        <div class="recurring-kpi-footer">
+                            <span class="recurring-kpi-sub" id="recurringKpiPendingCount">0 pendentes</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Barra de Progresso de Quitação das Contas Fixas do Mês -->
+                <div class="recurring-progress-card" style="margin-bottom: 22px;">
+                    <div class="recurring-progress-header">
+                        <span class="recurring-progress-title">Progresso de quitação deste mês</span>
+                        <strong class="recurring-progress-pct" id="recurringProgressPct">0% concluído</strong>
+                    </div>
+                    <div class="progress-track" style="height: 8px; border-radius: 99px; background: rgba(255,255,255,0.06); overflow: hidden; margin-top: 8px;">
+                        <div class="progress-fill" id="recurringProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #10b981, #059669); border-radius: 99px; transition: width 0.4s ease;"></div>
                     </div>
                 </div>
 

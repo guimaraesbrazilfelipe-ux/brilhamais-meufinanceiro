@@ -141,16 +141,93 @@
                 </button>
             </div>
 
-            <!-- Bloco de Relatórios do Período -->
-            <div id="historicalReportsContainer">
-                <!-- Relatório por Categorias -->
-                <article class="category-breakdown-card">
+            <!-- Resumo Financeiro do Período -->
+            <section class="summary-grid" style="margin-top: 16px;">
+                <article class="summary-card">
+                    <div class="summary-top">
+                        <h2 class="summary-title">Saldo do período</h2>
+                        <span class="summary-icon blue">💰</span>
+                    </div>
+                    <p class="summary-amount" id="historyPeriodBalance">R$ 0,00</p>
+                    <p class="summary-description" id="historyCurrentPeriodLabel">Período selecionado</p>
+                </article>
+
+                <article class="summary-card">
+                    <div class="summary-top">
+                        <h2 class="summary-title">Receitas que entraram</h2>
+                        <span class="summary-icon green">↗</span>
+                    </div>
+                    <p class="summary-amount income-text" id="historyPeriodIncome">R$ 0,00</p>
+                    <p class="summary-description">Salário e receitas avulsas</p>
+                </article>
+
+                <article class="summary-card">
+                    <div class="summary-top">
+                        <h2 class="summary-title">Despesas totais</h2>
+                        <span class="summary-icon red">↘</span>
+                    </div>
+                    <p class="summary-amount expense-text" id="historyPeriodExpenses">R$ 0,00</p>
+                    <p class="summary-description">Lançamentos e contas fixas pagas</p>
+                </article>
+
+                <article class="summary-card">
+                    <div class="summary-top">
+                        <h2 class="summary-title">Taxa de economia</h2>
+                        <span class="summary-icon blue">%</span>
+                    </div>
+                    <p class="summary-amount" id="historyPeriodSavings">0%</p>
+                    <p class="summary-description">Economizado no período</p>
+                </article>
+            </section>
+
+            <!-- Bloco de Relatórios do Período (Categorias de Despesas e Receitas) -->
+            <div id="historicalReportsContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 16px; margin-top: 20px;">
+                <!-- Relatório de Despesas por Categoria -->
+                <article class="category-breakdown-card" style="margin-top: 0;">
                     <div class="category-breakdown-header">
-                        <h3>📊 Relatório de despesas por categoria</h3>
+                        <h3>📊 Despesas por categoria</h3>
                     </div>
                     <div id="historyCategoryBreakdown" class="category-breakdown-list"></div>
                 </article>
+
+                <!-- Relatório de Receitas por Categoria/Fonte -->
+                <article class="category-breakdown-card" style="margin-top: 0;">
+                    <div class="category-breakdown-header">
+                        <h3>💰 Receitas que entraram por fonte</h3>
+                    </div>
+                    <div id="historyIncomeBreakdown" class="category-breakdown-list"></div>
+                </article>
             </div>
+
+            <!-- Histórico de Contas Fixas e Assinaturas no Período -->
+            <article class="panel" id="historyRecurringPanel" style="margin-top: 24px;">
+                <div class="panel-heading">
+                    <div>
+                        <h2>⟳ Histórico de Contas Fixas e Assinaturas</h2>
+                        <p>Compromissos mensais e assinaturas recorrentes com vencimento no período selecionado.</p>
+                    </div>
+                    <div class="panel-actions">
+                        <a href="contas-fixas.html" class="button button-secondary" style="font-size: 12px; padding: 6px 14px;">Gerenciar contas fixas</a>
+                    </div>
+                </div>
+
+                <div id="historyRecurringList" class="transaction-list"></div>
+            </article>
+
+            <!-- Receitas que Entraram no Período -->
+            <article class="panel" id="historyIncomePanel" style="margin-top: 24px;">
+                <div class="panel-heading">
+                    <div>
+                        <h2>💰 Receitas que Entraram</h2>
+                        <p>Entradas de dinheiro, salário e rendimentos correspondentes a este período.</p>
+                    </div>
+                    <div class="panel-actions">
+                        <a href="lancamentos.html" class="button button-primary" style="font-size: 12px; padding: 6px 14px;">+ Nova receita</a>
+                    </div>
+                </div>
+
+                <div id="historyIncomeList" class="transaction-list"></div>
+            </article>
 
             <!-- Movimentações do Período -->
             <article class="panel history-panel" style="margin: 24px 0 30px;">
