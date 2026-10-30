@@ -52,25 +52,95 @@
             <header class="topbar">
                 <div>
                     <p class="eyebrow">GESTÃO FINANCEIRA</p>
-                    <h1 id="formTitle">Novo lançamento</h1>
-                    <p class="subtitle" id="todayText">Registre seus rendimentos e despesas.</p>
+                    <h1>Lançamentos e movimentações</h1>
+                    <p class="subtitle" id="todayText">Registre receitas e despesas e acompanhe suas finanças mensais.</p>
                 </div>
                 <div class="topbar-actions">
+                    <button type="button" class="privacy-btn" aria-label="Ocultar valores na tela" title="Ocultar valores na tela" aria-pressed="false">
+                        <span class="privacy-icon">👁️</span>
+                    </button>
                     <a href="historico.html" class="button button-secondary">
                         Ver histórico
                     </a>
                 </div>
             </header>
 
-            <article class="panel" style="margin: 24px 0 30px;">
+            <section class="month-toolbar">
+                <div>
+                    <label for="datePickerTrigger">Período de referência (Dia, Mês e Ano)</label>
+                    <div class="custom-datepicker" id="customDatePicker">
+                        <input type="date" id="dashboardMonth" class="datepicker-native-input" tabindex="-1" aria-hidden="true">
+                        <button type="button" class="datepicker-trigger" id="datePickerTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="datePickerDropdown">
+                            <span class="datepicker-trigger-left">
+                                <span class="datepicker-icon" aria-hidden="true">📅</span>
+                                <span class="datepicker-text" id="datePickerText">Selecione uma data</span>
+                            </span>
+                            <span class="datepicker-chevron" aria-hidden="true">⌄</span>
+                        </button>
+
+                        <div class="datepicker-backdrop" id="datePickerBackdrop" aria-hidden="true"></div>
+
+                        <div class="datepicker-dropdown" id="datePickerDropdown" role="dialog" aria-modal="true" aria-label="Seletor de data" aria-hidden="true">
+                            <div class="dp-header">
+                                <button type="button" class="dp-btn-view" id="dpViewBtn" title="Alternar para seleção de mês e ano">
+                                    <span id="dpCurrentMonthYear">Outubro de 2026</span>
+                                    <span class="dp-view-chevron" aria-hidden="true">▾</span>
+                                </button>
+                                <div class="dp-nav-group">
+                                    <button type="button" class="dp-nav-btn dp-prev-btn" id="dpPrevBtn" aria-label="Mês anterior">‹</button>
+                                    <button type="button" class="dp-nav-btn dp-next-btn" id="dpNextBtn" aria-label="Próximo mês">›</button>
+                                    <button type="button" class="dp-close-btn" id="dpCloseBtn" aria-label="Fechar calendário">✕</button>
+                                </div>
+                            </div>
+
+                            <div class="dp-shortcuts">
+                                <button type="button" class="dp-shortcut-btn dp-today-btn" id="dpTodayBtn">Hoje</button>
+                                <button type="button" class="dp-shortcut-btn dp-yesterday-btn" id="dpYesterdayBtn">Ontem</button>
+                            </div>
+
+                            <div class="dp-days-view" id="dpDaysView">
+                                <div class="dp-weekdays">
+                                    <span>Dom</span>
+                                    <span>Seg</span>
+                                    <span>Ter</span>
+                                    <span>Qua</span>
+                                    <span>Qui</span>
+                                    <span>Sex</span>
+                                    <span>Sáb</span>
+                                </div>
+                                <div class="dp-grid" id="dpGrid"></div>
+                            </div>
+
+                            <div class="dp-months-view hidden" id="dpMonthsView">
+                                <div class="dp-year-selector">
+                                    <button type="button" class="dp-nav-btn dp-prev-year-btn" id="dpPrevYearBtn" aria-label="Ano anterior">‹</button>
+                                    <span id="dpSelectedYear" class="dp-year-display">2026</span>
+                                    <button type="button" class="dp-nav-btn dp-next-year-btn" id="dpNextYearBtn" aria-label="Próximo ano">›</button>
+                                </div>
+                                <div class="dp-months-grid" id="dpMonthsGrid"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="button button-primary" id="btnToggleNewTransaction">+ Novo lançamento</button>
+            </section>
+
+            <!-- Painel Principal de Lançamentos e Resumo -->
+            <section class="panel transaction-panel" style="margin-top: 24px;">
                 <div class="panel-heading">
                     <div>
-                        <h2>Dados da movimentação</h2>
-                        <p>Preencha os detalhes para manter suas contas atualizadas.</p>
+                        <h2>Painel de Lançamentos</h2>
+                        <p>Cadastre receitas e despesas com categorização inteligente e acompanhe o balanço do mês.</p>
                     </div>
                 </div>
 
-                <form id="transactionForm">
+                <!-- Formulário de Novo Lançamento (Colapsável) -->
+                <form id="transactionForm" class="recurring-form hidden" novalidate>
+                    <div class="recurring-form-header">
+                        <h3 id="formTitle">Cadastrar novo lançamento</h3>
+                        <p>Defina tipo, descrição, valor, categoria, data e observações.</p>
+                    </div>
+
                     <input type="hidden" id="editId">
 
                     <div class="form-row transaction-basic-row">
@@ -172,38 +242,38 @@
                     </div>
 
                     <div class="field">
-                        <label for="datePickerTrigger">Data do lançamento</label>
-                        <div class="custom-datepicker" id="customDatePicker">
+                        <label for="txDatePickerTrigger">Data do lançamento</label>
+                        <div class="custom-datepicker" id="txDatePickerContainer">
                             <input id="transactionDate" type="date" required class="datepicker-native-input" tabindex="-1" aria-hidden="true">
-                            <button type="button" class="datepicker-trigger" id="datePickerTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="datePickerDropdown">
+                            <button type="button" class="datepicker-trigger" id="txDatePickerTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="txDatePickerDropdown">
                                 <span class="datepicker-trigger-left">
                                     <span class="datepicker-icon" aria-hidden="true">📅</span>
-                                    <span class="datepicker-text" id="datePickerText">Selecione uma data</span>
+                                    <span class="datepicker-text" id="txDatePickerText">Selecione uma data</span>
                                 </span>
                                 <span class="datepicker-chevron" aria-hidden="true">⌄</span>
                             </button>
 
-                            <div class="datepicker-backdrop" id="datePickerBackdrop" aria-hidden="true"></div>
+                            <div class="datepicker-backdrop" id="txDatePickerBackdrop" aria-hidden="true"></div>
 
-                            <div class="datepicker-dropdown" id="datePickerDropdown" role="dialog" aria-modal="true" aria-label="Seletor de data" aria-hidden="true">
+                            <div class="datepicker-dropdown" id="txDatePickerDropdown" role="dialog" aria-modal="true" aria-label="Seletor de data" aria-hidden="true">
                                 <div class="dp-header">
-                                    <button type="button" class="dp-btn-view" id="dpViewBtn" title="Alternar para seleção de mês e ano">
-                                        <span id="dpCurrentMonthYear">Outubro de 2026</span>
+                                    <button type="button" class="dp-btn-view" title="Alternar para seleção de mês e ano">
+                                        <span class="dp-current-month-year">Outubro de 2026</span>
                                         <span class="dp-view-chevron" aria-hidden="true">▾</span>
                                     </button>
                                     <div class="dp-nav-group">
-                                        <button type="button" class="dp-nav-btn" id="dpPrevBtn" aria-label="Mês anterior">‹</button>
-                                        <button type="button" class="dp-nav-btn" id="dpNextBtn" aria-label="Próximo mês">›</button>
-                                        <button type="button" class="dp-close-btn" id="dpCloseBtn" aria-label="Fechar calendário">✕</button>
+                                        <button type="button" class="dp-nav-btn dp-prev-btn" aria-label="Mês anterior">‹</button>
+                                        <button type="button" class="dp-nav-btn dp-next-btn" aria-label="Próximo mês">›</button>
+                                        <button type="button" class="dp-close-btn" aria-label="Fechar calendário">✕</button>
                                     </div>
                                 </div>
 
                                 <div class="dp-shortcuts">
-                                    <button type="button" class="dp-shortcut-btn" id="dpTodayBtn">Hoje</button>
-                                    <button type="button" class="dp-shortcut-btn" id="dpYesterdayBtn">Ontem</button>
+                                    <button type="button" class="dp-shortcut-btn dp-today-btn">Hoje</button>
+                                    <button type="button" class="dp-shortcut-btn dp-yesterday-btn">Ontem</button>
                                 </div>
 
-                                <div class="dp-days-view" id="dpDaysView">
+                                <div class="dp-days-view">
                                     <div class="dp-weekdays">
                                         <span>Dom</span>
                                         <span>Seg</span>
@@ -213,16 +283,16 @@
                                         <span>Sex</span>
                                         <span>Sáb</span>
                                     </div>
-                                    <div class="dp-grid" id="dpGrid"></div>
+                                    <div class="dp-grid"></div>
                                 </div>
 
-                                <div class="dp-months-view hidden" id="dpMonthsView">
+                                <div class="dp-months-view hidden">
                                     <div class="dp-year-selector">
-                                        <button type="button" class="dp-nav-btn" id="dpPrevYearBtn" aria-label="Ano anterior">‹</button>
-                                        <span id="dpSelectedYear" class="dp-year-display">2026</span>
-                                        <button type="button" class="dp-nav-btn" id="dpNextYearBtn" aria-label="Próximo ano">›</button>
+                                        <button type="button" class="dp-nav-btn dp-prev-year-btn" aria-label="Ano anterior">‹</button>
+                                        <span class="dp-year-display">2026</span>
+                                        <button type="button" class="dp-nav-btn dp-next-year-btn" aria-label="Próximo ano">›</button>
                                     </div>
-                                    <div class="dp-months-grid" id="dpMonthsGrid"></div>
+                                    <div class="dp-months-grid"></div>
                                 </div>
                             </div>
                         </div>
@@ -234,15 +304,60 @@
                             placeholder="Detalhes sobre esse lançamento..."></textarea>
                     </div>
 
-                    <div class="form-actions">
+                    <div class="recurring-form-actions">
                         <button type="submit" class="button button-primary" id="saveBtn">
                             Salvar lançamento
                         </button>
-                        <button type="button" class="button button-secondary hidden"
-                            id="cancelEditBtn">Cancelar edição</button>
+                        <button type="button" class="button button-secondary"
+                            id="cancelEditBtn">Cancelar</button>
                     </div>
                 </form>
-            </article>
+
+                <!-- Resumo dos Lançamentos do Mês (KPIs com visual idêntico à imagem de referência) -->
+                <div class="recurring-kpis-grid">
+                    <div class="recurring-kpi-card card-total">
+                        <div class="recurring-kpi-top">
+                            <span class="recurring-kpi-icon">📊</span>
+                            <span class="recurring-kpi-label">Saldo do mês</span>
+                        </div>
+                        <strong class="recurring-kpi-value" id="monthBalance">R$ 0,00</strong>
+                        <div class="recurring-kpi-footer">
+                            <span class="recurring-kpi-sub" id="txCountPill">0 lançamentos</span>
+                        </div>
+                    </div>
+                    <div class="recurring-kpi-card card-paid">
+                        <div class="recurring-kpi-top">
+                            <span class="recurring-kpi-icon">💰</span>
+                            <span class="recurring-kpi-label">Receitas do mês</span>
+                        </div>
+                        <strong class="recurring-kpi-value income-text" id="monthIncome">R$ 0,00</strong>
+                        <div class="recurring-kpi-footer">
+                            <span class="recurring-kpi-sub" id="incomeCountPill">0 entradas</span>
+                        </div>
+                    </div>
+                    <div class="recurring-kpi-card card-expense">
+                        <div class="recurring-kpi-top">
+                            <span class="recurring-kpi-icon">💸</span>
+                            <span class="recurring-kpi-label">Despesas do mês</span>
+                        </div>
+                        <strong class="recurring-kpi-value expense-text" id="monthExpenses">R$ 0,00</strong>
+                        <div class="recurring-kpi-footer">
+                            <span class="recurring-kpi-sub" id="expenseCountPill">0 saídas</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Barra de Progresso de Economia do Mês -->
+                <div class="recurring-progress-card" style="margin-bottom: 10px;">
+                    <div class="recurring-progress-header">
+                        <span class="recurring-progress-title">Taxa de economia deste mês</span>
+                        <strong class="recurring-progress-pct" id="savingsRate">0% guardado</strong>
+                    </div>
+                    <div class="recurring-progress-bar-bg" style="margin-top: 8px;">
+                        <div class="recurring-progress-bar-fill" id="savingsProgressBar" style="width: 0%;"></div>
+                    </div>
+                </div>
+            </section>
 
             <!-- Lista de Lançamentos Recentes -->
             <article class="panel" style="margin-top: 24px; margin-bottom: 30px;">

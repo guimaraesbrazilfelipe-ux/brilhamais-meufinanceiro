@@ -342,63 +342,222 @@ h1 {
 }
 
 .summary-card {
-    padding: 20px 18px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border-radius: var(--radius, 14px);
+    transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
+}
+
+.summary-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: transparent;
+    transition: background 0.2s ease;
+    border-radius: 99px 99px 0 0;
 }
 
 .summary-top {
-    color: var(--muted);
-    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 2px;
 }
 
 .summary-icon {
-    display: grid;
-    place-items: center;
-    width: 35px;
-    height: 35px;
-    border-radius: 11px;
-    font-size: 19px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    font-size: 16px;
+    flex-shrink: 0;
 }
 
 .purple {
-    color: var(--purple-light);
-    background: #30294f;
+    color: #c4b5fd;
+    background: rgba(124, 93, 250, 0.18);
 }
 
 .green {
-    color: var(--green);
-    background: #183d35;
+    color: #6ee7b7;
+    background: rgba(16, 185, 129, 0.18);
 }
 
 .red {
-    color: var(--red);
-    background: #432632;
+    color: #fca5a5;
+    background: rgba(239, 68, 68, 0.18);
 }
 
 .blue {
-    color: var(--blue);
-    background: #1c3452;
+    color: #c4b5fd;
+    background: rgba(124, 93, 250, 0.18);
+}
+
+.yellow,
+.amber {
+    color: #fde68a;
+    background: rgba(245, 158, 11, 0.18);
+}
+
+/* Cores e Decorações Universais de Cards (Imagem de Referência) */
+/* 1. Total, Saldo e Metas: Roxinho */
+.summary-card.card-total,
+.summary-card.card-purple,
+.summary-card:has(.purple),
+.summary-card:has(#monthBalance),
+.summary-card:has(#historyPeriodBalance),
+.summary-card:has(#savingsRate),
+.summary-card:has(#historySavingsRate) {
+    background: linear-gradient(145deg, rgba(124, 93, 250, 0.1) 0%, rgba(19, 29, 46, 0.98) 100%);
+    border-color: rgba(124, 93, 250, 0.28);
+}
+.summary-card.card-total::before,
+.summary-card.card-purple::before,
+.summary-card:has(.purple)::before,
+.summary-card:has(#monthBalance)::before,
+.summary-card:has(#historyPeriodBalance)::before,
+.summary-card:has(#savingsRate)::before,
+.summary-card:has(#historySavingsRate)::before {
+    background: linear-gradient(90deg, #7c5dfa, #9475ff);
+}
+.summary-card.card-total:hover,
+.summary-card.card-purple:hover,
+.summary-card:has(.purple):hover,
+.summary-card:has(#monthBalance):hover,
+.summary-card:has(#historyPeriodBalance):hover,
+.summary-card:has(#savingsRate):hover,
+.summary-card:has(#historySavingsRate):hover {
+    border-color: rgba(148, 117, 255, 0.55);
+    box-shadow: 0 8px 24px rgba(124, 93, 250, 0.25);
+    transform: translateY(-3px);
+}
+
+/* 2. Receitas e Já Pagas: Verde */
+.summary-card.card-paid,
+.summary-card.card-income,
+.summary-card.card-green,
+.summary-card:has(.green),
+.summary-card:has(#monthIncome),
+.summary-card:has(#historyPeriodIncome) {
+    background: linear-gradient(145deg, rgba(16, 185, 129, 0.1) 0%, rgba(19, 29, 46, 0.98) 100%);
+    border-color: rgba(16, 185, 129, 0.28);
+}
+.summary-card.card-paid::before,
+.summary-card.card-income::before,
+.summary-card.card-green::before,
+.summary-card:has(.green)::before,
+.summary-card:has(#monthIncome)::before,
+.summary-card:has(#historyPeriodIncome)::before {
+    background: linear-gradient(90deg, #10b981, #34d399);
+}
+.summary-card.card-paid:hover,
+.summary-card.card-income:hover,
+.summary-card.card-green:hover,
+.summary-card:has(.green):hover,
+.summary-card:has(#monthIncome):hover,
+.summary-card:has(#historyPeriodIncome):hover {
+    border-color: rgba(52, 211, 153, 0.55);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25);
+    transform: translateY(-3px);
+}
+
+/* 3. Pendentes e A Vencer: Amarelo Alaranjado */
+.summary-card.card-pending,
+.summary-card.card-amber,
+.summary-card.card-yellow,
+.summary-card:has(.yellow),
+.summary-card:has(.amber) {
+    background: linear-gradient(145deg, rgba(245, 158, 11, 0.1) 0%, rgba(19, 29, 46, 0.98) 100%);
+    border-color: rgba(245, 158, 11, 0.28);
+}
+.summary-card.card-pending::before,
+.summary-card.card-amber::before,
+.summary-card.card-yellow::before,
+.summary-card:has(.yellow)::before,
+.summary-card:has(.amber)::before {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+.summary-card.card-pending:hover,
+.summary-card.card-amber:hover,
+.summary-card.card-yellow:hover,
+.summary-card:has(.yellow):hover,
+.summary-card:has(.amber):hover {
+    border-color: rgba(251, 191, 36, 0.55);
+    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.25);
+    transform: translateY(-3px);
+}
+
+/* 4. Despesas e Gastos: Vermelho */
+.summary-card.card-expense,
+.summary-card.card-red,
+.summary-card:has(.red),
+.summary-card:has(#monthExpenses),
+.summary-card:has(#historyPeriodExpenses) {
+    background: linear-gradient(145deg, rgba(239, 68, 68, 0.1) 0%, rgba(19, 29, 46, 0.98) 100%);
+    border-color: rgba(239, 68, 68, 0.28);
+}
+.summary-card.card-expense::before,
+.summary-card.card-red::before,
+.summary-card:has(.red)::before,
+.summary-card:has(#monthExpenses)::before,
+.summary-card:has(#historyPeriodExpenses)::before {
+    background: linear-gradient(90deg, #ef4444, #f87171);
+}
+.summary-card.card-expense:hover,
+.summary-card.card-red:hover,
+.summary-card:has(.red):hover,
+.summary-card:has(#monthExpenses):hover,
+.summary-card:has(#historyPeriodExpenses):hover {
+    border-color: rgba(248, 113, 113, 0.55);
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.25);
+    transform: translateY(-3px);
+}
+
+.summary-card:hover {
+    transform: translateY(-3px);
 }
 
 .summary-card h2,
 .summary-card .summary-amount {
-    font-size: clamp(19px, 2vw, 27px);
-    font-weight: 700;
-    letter-spacing: -.7px;
-    margin: 17px 0 5px;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin: 8px 0 2px;
     overflow-wrap: anywhere;
 }
 
 .summary-title {
     font-size: 11px;
-    font-weight: 600;
-    color: var(--muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted, #9ca9bd);
     margin: 0;
 }
 
 .summary-description {
-    margin: 0;
-    font-size: 10px;
-    color: var(--muted);
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted, #9ca9bd);
+    width: fit-content;
+    margin-top: 6px;
 }
 
 .content-grid {
@@ -2787,33 +2946,75 @@ body.privacy-mode .breakdown-val {
     display: flex;
     align-items: center;
     gap: 12px;
-    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
 }
 
-.report-breakdown-card.highlight-expense {
-    border-color: rgba(239, 68, 68, 0.28);
-    background: linear-gradient(145deg, rgba(239, 68, 68, 0.08) 0%, rgba(19, 29, 46, 0.98) 100%);
+.report-breakdown-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: transparent;
+    transition: background 0.2s ease;
+}
+
+.report-breakdown-card.highlight-total {
+    border-color: rgba(124, 93, 250, 0.28);
+    background: linear-gradient(145deg, rgba(124, 93, 250, 0.08) 0%, rgba(19, 29, 46, 0.98) 100%);
+}
+.report-breakdown-card.highlight-total::before {
+    background: linear-gradient(90deg, #7c5dfa, #9475ff);
+}
+.report-breakdown-card.highlight-total:hover {
+    border-color: rgba(148, 117, 255, 0.55);
+    box-shadow: 0 6px 20px rgba(124, 93, 250, 0.22);
 }
 
 .report-breakdown-card.highlight-income {
     border-color: rgba(16, 185, 129, 0.28);
     background: linear-gradient(145deg, rgba(16, 185, 129, 0.08) 0%, rgba(19, 29, 46, 0.98) 100%);
 }
+.report-breakdown-card.highlight-income::before {
+    background: linear-gradient(90deg, #10b981, #34d399);
+}
+.report-breakdown-card.highlight-income:hover {
+    border-color: rgba(52, 211, 153, 0.55);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.22);
+}
+
+.report-breakdown-card.highlight-pending {
+    border-color: rgba(245, 158, 11, 0.28);
+    background: linear-gradient(145deg, rgba(245, 158, 11, 0.08) 0%, rgba(19, 29, 46, 0.98) 100%);
+}
+.report-breakdown-card.highlight-pending::before {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+.report-breakdown-card.highlight-pending:hover {
+    border-color: rgba(251, 191, 36, 0.55);
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.22);
+}
+
+.report-breakdown-card.highlight-expense {
+    border-color: rgba(239, 68, 68, 0.28);
+    background: linear-gradient(145deg, rgba(239, 68, 68, 0.08) 0%, rgba(19, 29, 46, 0.98) 100%);
+}
+.report-breakdown-card.highlight-expense::before {
+    background: linear-gradient(90deg, #ef4444, #f87171);
+}
+.report-breakdown-card.highlight-expense:hover {
+    border-color: rgba(248, 113, 113, 0.55);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.22);
+}
 
 .report-breakdown-card:hover {
     border-color: var(--purple-light, #9475ff);
     transform: translateY(-2px);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-}
-
-.report-breakdown-card.highlight-expense:hover {
-    border-color: rgba(239, 68, 68, 0.5);
-    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.18);
-}
-
-.report-breakdown-card.highlight-income:hover {
-    border-color: rgba(16, 185, 129, 0.5);
-    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.18);
 }
 
 .report-breakdown-card .breakdown-icon {
@@ -4072,7 +4273,8 @@ body.privacy-mode .breakdown-val {
     justify-content: center !important;
 }
 
-#btnToggleNewRecurring {
+#btnToggleNewRecurring,
+#btnToggleNewTransaction {
     min-height: 36px !important;
     height: 36px !important;
     padding: 0 14px !important;
@@ -4173,6 +4375,21 @@ body.privacy-mode .breakdown-val {
     box-shadow: 0 8px 24px rgba(245, 158, 11, 0.22);
 }
 
+.recurring-kpi-card.card-expense,
+.recurring-kpi-card.card-red {
+    background: linear-gradient(145deg, rgba(239, 68, 68, 0.1) 0%, rgba(19, 29, 46, 0.98) 100%);
+    border-color: rgba(239, 68, 68, 0.24);
+}
+.recurring-kpi-card.card-expense::before,
+.recurring-kpi-card.card-red::before {
+    background: linear-gradient(90deg, #ef4444, #f87171);
+}
+.recurring-kpi-card.card-expense:hover,
+.recurring-kpi-card.card-red:hover {
+    border-color: rgba(248, 113, 113, 0.5);
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.22);
+}
+
 .recurring-kpi-card:hover {
     transform: translateY(-3px);
 }
@@ -4206,6 +4423,11 @@ body.privacy-mode .breakdown-val {
 .card-pending .recurring-kpi-icon {
     background: rgba(245, 158, 11, 0.18);
     color: #fde68a;
+}
+.card-expense .recurring-kpi-icon,
+.card-red .recurring-kpi-icon {
+    background: rgba(239, 68, 68, 0.18);
+    color: #fca5a5;
 }
 
 .recurring-kpi-label {

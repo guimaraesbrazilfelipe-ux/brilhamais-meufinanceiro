@@ -124,37 +124,37 @@
             </section>
 
             <section class="summary-grid" aria-label="Resumo do mês">
-                <article class="summary-card">
+                <article class="summary-card card-total">
                     <div class="summary-top">
-                        <h2 class="summary-title">Saldo do mês</h2>
                         <span class="summary-icon purple">◈</span>
+                        <h2 class="summary-title">Saldo do mês</h2>
                     </div>
                     <p class="summary-amount" id="monthBalance">R$ 0,00</p>
                     <p class="summary-description">Receitas menos despesas</p>
                 </article>
 
-                <article class="summary-card">
+                <article class="summary-card card-income">
                     <div class="summary-top">
-                        <h2 class="summary-title">Receitas do mês</h2>
                         <span class="summary-icon green">↗</span>
+                        <h2 class="summary-title">Receitas do mês</h2>
                     </div>
                     <p class="summary-amount" id="monthIncome">R$ 0,00</p>
                     <p class="summary-description">Salário e outras entradas</p>
                 </article>
 
-                <article class="summary-card">
+                <article class="summary-card card-expense">
                     <div class="summary-top">
-                        <h2 class="summary-title">Despesas do mês</h2>
                         <span class="summary-icon red">↘</span>
+                        <h2 class="summary-title">Despesas do mês</h2>
                     </div>
                     <p class="summary-amount" id="monthExpenses">R$ 0,00</p>
                     <p class="summary-description">Total das saídas registradas</p>
                 </article>
 
-                <article class="summary-card">
+                <article class="summary-card card-purple">
                     <div class="summary-top">
-                        <h2 class="summary-title">Taxa de economia</h2>
                         <span class="summary-icon blue">%</span>
+                        <h2 class="summary-title">Taxa de economia</h2>
                     </div>
                     <p class="summary-amount" id="savingsRate">0%</p>
                     <p class="summary-description">Parte da receita que sobrou</p>
@@ -177,28 +177,28 @@
                         <strong class="breakdown-val income-text" id="reportManualIncomeVal">R$ 0,00</strong>
                     </div>
                 </div>
-                <div class="report-breakdown-card">
+                <div class="report-breakdown-card highlight-expense">
                     <div class="breakdown-icon">🧾</div>
                     <div class="breakdown-info">
                         <span class="breakdown-label">Lançamentos avulsos gastos</span>
                         <strong class="breakdown-val" id="reportManualExpensesVal">R$ 0,00</strong>
                     </div>
                 </div>
-                <div class="report-breakdown-card">
-                    <div class="breakdown-icon">⟳</div>
+                <div class="report-breakdown-card highlight-income">
+                    <div class="breakdown-icon">💎</div>
                     <div class="breakdown-info">
                         <span class="breakdown-label">Contas fixas pagas no mês</span>
                         <strong class="breakdown-val" id="reportRecurringPaidVal">R$ 0,00</strong>
                     </div>
                 </div>
-                <div class="report-breakdown-card">
+                <div class="report-breakdown-card highlight-pending">
                     <div class="breakdown-icon">⏳</div>
                     <div class="breakdown-info">
                         <span class="breakdown-label">Contas fixas a vencer</span>
                         <strong class="breakdown-val" id="reportRecurringPendingVal">R$ 0,00</strong>
                     </div>
                 </div>
-                <div class="report-breakdown-card">
+                <div class="report-breakdown-card highlight-total">
                     <div class="breakdown-icon">💵</div>
                     <div class="breakdown-info">
                         <span class="breakdown-label">Salário base do mês</span>

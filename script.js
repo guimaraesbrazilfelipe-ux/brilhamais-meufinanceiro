@@ -408,22 +408,45 @@ function renderSummary() {
     const incomeElement = $("#monthIncome");
     const expensesElement = $("#monthExpenses");
     const savingsElement = $("#savingsRate");
+    const txCountPill = $("#txCountPill");
+    const incomeCountPill = $("#incomeCountPill");
+    const expenseCountPill = $("#expenseCountPill");
+    const savingsProgressBar = $("#savingsProgressBar");
 
-    if (!balanceElement || !incomeElement || !expensesElement || !savingsElement) return;
+    const m = selectedMonth();
+    const summary = getMonthlySummary(m);
+    const monthTx = getTransactionsForMonth(m);
+    const incomeCount = monthTx.filter(t => t.type === "receita").length;
+    const expenseCount = monthTx.filter(t => t.type === "despesa").length;
 
-    const summary = getMonthlySummary(selectedMonth());
-
-    balanceElement.textContent = money(summary.balance);
-    incomeElement.textContent = money(summary.income);
-    expensesElement.textContent = money(summary.expenses);
-
-    balanceElement.style.color =
-        summary.balance < 0 ? "var(--red)" : "var(--text)";
-
-    savingsElement.textContent =
-        `${summary.savingsRate.toLocaleString("pt-BR", {
+    if (balanceElement) {
+        balanceElement.textContent = money(summary.balance);
+        balanceElement.style.color = summary.balance < 0 ? "var(--red)" : "var(--text)";
+    }
+    if (incomeElement) {
+        incomeElement.textContent = money(summary.income);
+    }
+    if (expensesElement) {
+        expensesElement.textContent = money(summary.expenses);
+    }
+    if (savingsElement) {
+        savingsElement.textContent = `${summary.savingsRate.toLocaleString("pt-BR", {
             maximumFractionDigits: 1
         })}%`;
+    }
+    if (txCountPill) {
+        txCountPill.textContent = `${monthTx.length} lançamento${monthTx.length !== 1 ? "s" : ""}`;
+    }
+    if (incomeCountPill) {
+        incomeCountPill.textContent = `${incomeCount} entrada${incomeCount !== 1 ? "s" : ""}`;
+    }
+    if (expenseCountPill) {
+        expenseCountPill.textContent = `${expenseCount} saída${expenseCount !== 1 ? "s" : ""}`;
+    }
+    if (savingsProgressBar) {
+        const clampedPct = Math.max(0, Math.min(100, summary.savingsRate));
+        savingsProgressBar.style.width = `${clampedPct}%`;
+    }
 }
 
 function renderMonthlyChart() {
@@ -2883,7 +2906,13 @@ function resetTransactionForm() {
     if (saveBtn) saveBtn.textContent = "Salvar lançamento";
 
     const cancelBtn = $("#cancelEditBtn");
-    if (cancelBtn) cancelBtn.classList.add("hidden");
+    if (cancelBtn && !form.classList.contains("recurring-form")) {
+        cancelBtn.classList.add("hidden");
+    }
+
+    if (form.classList.contains("recurring-form")) {
+        form.classList.add("hidden");
+    }
 }
 
 function editTransaction(id) {
@@ -2897,6 +2926,11 @@ function editTransaction(id) {
     if (!$("#transactionForm")) {
         window.location.href = `lancamentos.html?edit=${encodeURIComponent(id)}`;
         return;
+    }
+
+    const form = $("#transactionForm");
+    if (form) {
+        form.classList.remove("hidden");
     }
 
     if ($("#editId")) $("#editId").value = transaction.id;
@@ -3875,6 +3909,7 @@ function init() {
     setupAgenda();
     setupHistoricalReports();
     setupRecurringBills();
+    setupTransactionsPage();
     setupReports();
     setupWelcomeTutorial();
     renderAll();
@@ -4055,6 +4090,34 @@ function setupRecurringFrequencyPicker() {
     });
 
     sync(select.value || "monthly");
+}
+
+function setupTransactionsPage() {
+    const btnToggle = $("#btnToggleNewTransaction");
+    const form = $("#transactionForm");
+    const btnCancel = $("#cancelEditBtn");
+
+    if (btnToggle && form) {
+        btnToggle.addEventListener("click", () => {
+            const isHidden = form.classList.toggle("hidden");
+            if (!isHidden) {
+                const descInput = $("#description");
+                if (descInput) descInput.focus();
+                const dateInput = $("#transactionDate");
+                if (dateInput && !dateInput.value) {
+                    dateInput.value = todayISO();
+                }
+                syncDatePicker();
+            }
+        });
+    }
+
+    if (btnCancel && form) {
+        btnCancel.addEventListener("click", () => {
+            resetTransactionForm();
+            form.classList.add("hidden");
+        });
+    }
 }
 
 function setupRecurringBills() {
