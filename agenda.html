@@ -211,36 +211,119 @@
                     </div>
                 </div>
 
-                <div class="field">
-                    <label for="gcalQuickCategory">Categoria</label>
-                    <select id="gcalQuickCategory" class="field-select">
-                        <option value="Alimentação">🍽️ Alimentação</option>
-                        <option value="Moradia">🏠 Moradia</option>
-                        <option value="Água e luz">💡 Água e luz</option>
-                        <option value="Transporte">🚗 Transporte</option>
-                        <option value="Saúde">💊 Saúde</option>
-                        <option value="Educação">📚 Educação</option>
-                        <option value="Lazer">🎮 Lazer</option>
-                        <option value="Compras">🛍️ Compras</option>
-                        <option value="Assinaturas">📱 Assinaturas</option>
-                        <option value="Investimentos">📈 Investimentos</option>
-                        <option value="Salário">💰 Salário</option>
-                        <option value="Outros">📦 Outros</option>
-                    </select>
+                <div class="field category-field">
+                    <label for="gcalQuickCategoryPickerButton">Categoria</label>
+                    <div class="category-controls">
+                        <div class="category-picker" id="gcalQuickCategoryPicker">
+                            <select id="gcalQuickCategory" class="category-native-select" aria-hidden="true" tabindex="-1">
+                                <option value="Alimentação" selected>🍽️ Alimentação</option>
+                                <option value="Moradia">🏠 Moradia</option>
+                                <option value="Água e luz">💡 Água e luz</option>
+                                <option value="Transporte">🚗 Transporte</option>
+                                <option value="Saúde">💊 Saúde</option>
+                                <option value="Educação">📚 Educação</option>
+                                <option value="Lazer">🎮 Lazer</option>
+                                <option value="Compras">🛍️ Compras</option>
+                                <option value="Assinaturas">📱 Assinaturas</option>
+                                <option value="Investimentos">📈 Investimentos</option>
+                                <option value="Salário">💰 Salário</option>
+                                <option value="Outros">📦 Outros</option>
+                            </select>
+
+                            <button type="button" id="gcalQuickCategoryPickerButton" class="category-picker-button" aria-haspopup="listbox" aria-expanded="false" aria-controls="gcalQuickCategoryOptions">
+                                <span id="gcalQuickCategoryPickerLabel">🍽️ Alimentação</span>
+                                <span class="category-chevron" aria-hidden="true">⌄</span>
+                            </button>
+
+                            <div class="category-drawer" id="gcalQuickCategoryOptions" role="listbox" aria-label="Escolha uma categoria">
+                                <button type="button" class="category-option selected" role="option" aria-selected="true" data-value="Alimentação">🍽️ Alimentação</button>
+                                <button type="button" class="category-option" role="option" aria-selected="false" data-value="Moradia">🏠 Moradia</button>
+                                <button type="button" class="category-option" role="option" aria-selected="false" data-value="Água e luz">💡 Água e luz</button>
+                                <button type="button" class="category-option" role="option" aria-selected="false" data-value="Transporte">🚗 Transporte</button>
+                                <button type="button" class="category-option" role="option" aria-selected="false" data-value="Saúde">💊 Saúde</button>
+                                <button type="button" class="category-option" role="option" aria-selected="false" data-value="Educação">📚 Educação</button>
+                                <button type="button" class="category-option" role="option" aria-selected="false" data-value="Lazer">🎮 Lazer</button>
+                                <button type="button" class="category-option" role="option" aria-selected="false" data-value="Compras">🛍️ Compras</button>
+                                <button type="button" class="category-option" role="option" aria-selected="false" data-value="Assinaturas">📱 Assinaturas</button>
+                                <button type="button" class="category-option" role="option" aria-selected="false" data-value="Investimentos">📈 Investimentos</button>
+                                <button type="button" class="category-option" role="option" aria-selected="false" data-value="Salário">💰 Salário</button>
+                                <button type="button" class="category-option" role="option" aria-selected="false" data-value="Outros">📦 Outros</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Campo exclusivo para conta fixa (frequência) -->
                 <div class="field hidden" id="gcalRecurringFreqGroup">
-                    <label for="gcalQuickFrequency">Frequência da conta fixa</label>
-                    <select id="gcalQuickFrequency" class="field-select">
-                        <option value="monthly" selected>Mensal</option>
-                        <option value="weekly">Semanal</option>
-                        <option value="biweekly">Quinzenal</option>
-                        <option value="bimonthly">Bimestral</option>
-                        <option value="quarterly">Trimestral</option>
-                        <option value="semiannual">Semestral</option>
-                        <option value="annual">Anual</option>
-                    </select>
+                    <label for="gcalQuickFrequencyPickerButton">Frequência da conta fixa</label>
+                    <div class="category-picker frequency-picker" id="gcalQuickFrequencyPicker">
+                        <select id="gcalQuickFrequency" class="category-native-select" aria-hidden="true" tabindex="-1">
+                            <option value="monthly" selected>Mensal</option>
+                            <option value="weekly">Semanal</option>
+                            <option value="biweekly">Quinzenal</option>
+                            <option value="bimonthly">Bimestral</option>
+                            <option value="quarterly">Trimestral</option>
+                            <option value="semiannual">Semestral</option>
+                            <option value="annual">Anual</option>
+                        </select>
+
+                        <button type="button" id="gcalQuickFrequencyPickerButton" class="category-picker-button" aria-haspopup="listbox" aria-expanded="false" aria-controls="gcalQuickFrequencyOptions">
+                            <span id="gcalQuickFrequencyPickerLabel">🔄 Mensal</span>
+                            <span class="category-chevron" aria-hidden="true">⌄</span>
+                        </button>
+
+                        <div class="category-drawer frequency-drawer" id="gcalQuickFrequencyOptions" role="listbox" aria-label="Escolha a frequência">
+                            <button type="button" class="category-option selected" role="option" aria-selected="true" data-value="monthly">
+                                <span class="freq-opt-icon">🔄</span>
+                                <div class="freq-opt-text">
+                                    <strong>Mensal</strong>
+                                    <span>A cada 1 mês (padrão)</span>
+                                </div>
+                            </button>
+                            <button type="button" class="category-option" role="option" aria-selected="false" data-value="weekly">
+                                <span class="freq-opt-icon">📅</span>
+                                <div class="freq-opt-text">
+                                    <strong>Semanal</strong>
+                                    <span>A cada 7 dias</span>
+                                </div>
+                            </button>
+                            <button type="button" class="category-option" role="option" aria-selected="false" data-value="biweekly">
+                                <span class="freq-opt-icon">🗓️</span>
+                                <div class="freq-opt-text">
+                                    <strong>Quinzenal</strong>
+                                    <span>A cada 14 dias (2 semanas)</span>
+                                </div>
+                            </button>
+                            <button type="button" class="category-option" role="option" aria-selected="false" data-value="bimonthly">
+                                <span class="freq-opt-icon">⏳</span>
+                                <div class="freq-opt-text">
+                                    <strong>Bimestral</strong>
+                                    <span>A cada 2 meses</span>
+                                </div>
+                            </button>
+                            <button type="button" class="category-option" role="option" aria-selected="false" data-value="quarterly">
+                                <span class="freq-opt-icon">📈</span>
+                                <div class="freq-opt-text">
+                                    <strong>Trimestral</strong>
+                                    <span>A cada 3 meses</span>
+                                </div>
+                            </button>
+                            <button type="button" class="category-option" role="option" aria-selected="false" data-value="semiannual">
+                                <span class="freq-opt-icon">📆</span>
+                                <div class="freq-opt-text">
+                                    <strong>Semestral</strong>
+                                    <span>A cada 6 meses</span>
+                                </div>
+                            </button>
+                            <button type="button" class="category-option" role="option" aria-selected="false" data-value="annual">
+                                <span class="freq-opt-icon">🎯</span>
+                                <div class="freq-opt-text">
+                                    <strong>Anual</strong>
+                                    <span>A cada 1 ano (12 meses)</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="field">

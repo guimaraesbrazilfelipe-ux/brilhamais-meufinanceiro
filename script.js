@@ -3038,8 +3038,187 @@ function setupGcalQuickModal() {
 
     if (!modal || !form) return;
 
-    if (closeBtn) closeBtn.addEventListener("click", () => modal.classList.add("hidden"));
-    if (cancelBtn) cancelBtn.addEventListener("click", () => modal.classList.add("hidden"));
+    // Elementos da Gaveta de Categoria do Modal da Agenda
+    const catPicker = $("#gcalQuickCategoryPicker");
+    const catBtn = $("#gcalQuickCategoryPickerButton");
+    const catLabel = $("#gcalQuickCategoryPickerLabel");
+    const catOptions = $("#gcalQuickCategoryOptions");
+    const catSelect = $("#gcalQuickCategory");
+
+    // Elementos da Gaveta de Frequência do Modal da Agenda
+    const freqPicker = $("#gcalQuickFrequencyPicker");
+    const freqBtn = $("#gcalQuickFrequencyPickerButton");
+    const freqLabel = $("#gcalQuickFrequencyPickerLabel");
+    const freqOptions = $("#gcalQuickFrequencyOptions");
+    const freqSelect = $("#gcalQuickFrequency");
+
+    const FREQ_LABEL_MAP = {
+        monthly: "🔄 Mensal",
+        weekly: "📅 Semanal",
+        biweekly: "🗓️ Quinzenal",
+        bimonthly: "⏳ Bimestral",
+        quarterly: "📈 Trimestral",
+        semiannual: "📆 Semestral",
+        annual: "🎯 Anual"
+    };
+
+    function closeAllGcalDrawers() {
+        if (catPicker) {
+            catPicker.classList.remove("open");
+            if (catBtn) catBtn.setAttribute("aria-expanded", "false");
+        }
+        if (freqPicker) {
+            freqPicker.classList.remove("open");
+            if (freqBtn) freqBtn.setAttribute("aria-expanded", "false");
+        }
+    }
+
+    function syncGcalCategory(val) {
+        if (!catSelect || !catLabel || !catOptions) return;
+        catSelect.value = val;
+        const opt = [...catSelect.options].find((o) => o.value === val);
+        if (opt) {
+            catLabel.textContent = opt.textContent;
+        } else {
+            catLabel.textContent = val;
+        }
+
+        catOptions.querySelectorAll(".category-option").forEach((btn) => {
+            const isSelected = btn.dataset.value === val;
+            btn.classList.toggle("selected", isSelected);
+            btn.setAttribute("aria-selected", String(isSelected));
+        });
+    }
+
+    function renderGcalCategoryOptions(type = "despesa", selectedValue = null) {
+        if (!catSelect || !catOptions || !catLabel) return;
+
+        let categories = EXPENSE_CATEGORIES;
+        if (type === "receita") {
+            categories = [
+                { name: "Salário", icon: "💰" },
+                ...INCOME_CATEGORIES
+            ];
+        }
+
+        const currentVal = selectedValue || catSelect.value;
+        const isValid = categories.some((c) => c.name === currentVal);
+        const targetValue = isValid ? currentVal : (categories[0]?.name || "Outros");
+
+        catSelect.innerHTML = "";
+        categories.forEach((cat) => {
+            const opt = document.createElement("option");
+            opt.value = cat.name;
+            opt.textContent = `${cat.icon} ${cat.name}`;
+            if (cat.name === targetValue) opt.selected = true;
+            catSelect.appendChild(opt);
+        });
+
+        catOptions.innerHTML = "";
+        categories.forEach((cat) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "category-option";
+            btn.setAttribute("role", "option");
+            btn.dataset.value = cat.name;
+            btn.textContent = `${cat.icon} ${cat.name}`;
+            const isSelected = cat.name === targetValue;
+            btn.classList.toggle("selected", isSelected);
+            btn.setAttribute("aria-selected", String(isSelected));
+            catOptions.appendChild(btn);
+        });
+
+        const activeCat = categories.find((c) => c.name === targetValue) || categories[0];
+        if (activeCat) {
+            catLabel.textContent = `${activeCat.icon} ${activeCat.name}`;
+        }
+    }
+
+    function syncGcalFrequency(val) {
+        if (!freqSelect || !freqLabel || !freqOptions) return;
+        const targetVal = val || "monthly";
+        freqSelect.value = targetVal;
+        freqLabel.textContent = FREQ_LABEL_MAP[targetVal] || "🔄 Mensal";
+
+        freqOptions.querySelectorAll(".category-option").forEach((btn) => {
+            const isSelected = btn.dataset.value === targetVal;
+            btn.classList.toggle("selected", isSelected);
+            btn.setAttribute("aria-selected", String(isSelected));
+        });
+    }
+
+    // Toggle da gaveta de categoria
+    if (catBtn && catPicker) {
+        catBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const isOpen = catPicker.classList.contains("open");
+            closeAllGcalDrawers();
+            if (!isOpen) {
+                catPicker.classList.add("open");
+                catBtn.setAttribute("aria-expanded", "true");
+            }
+        });
+    }
+
+    // Seleção de categoria na gaveta
+    if (catOptions) {
+        catOptions.addEventListener("click", (e) => {
+            const optBtn = e.target.closest(".category-option");
+            if (!optBtn) return;
+            const val = optBtn.dataset.value;
+            syncGcalCategory(val);
+            closeAllGcalDrawers();
+        });
+    }
+
+    // Toggle da gaveta de frequência
+    if (freqBtn && freqPicker) {
+        freqBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const isOpen = freqPicker.classList.contains("open");
+            closeAllGcalDrawers();
+            if (!isOpen) {
+                freqPicker.classList.add("open");
+                freqBtn.setAttribute("aria-expanded", "true");
+            }
+        });
+    }
+
+    // Seleção de frequência na gaveta
+    if (freqOptions) {
+        freqOptions.addEventListener("click", (e) => {
+            const optBtn = e.target.closest(".category-option");
+            if (!optBtn) return;
+            const val = optBtn.dataset.value;
+            syncGcalFrequency(val);
+            closeAllGcalDrawers();
+        });
+    }
+
+    // Fechar gavetas ao clicar fora ou pressionar Escape
+    document.addEventListener("click", (e) => {
+        if (
+            catPicker && !catPicker.contains(e.target) &&
+            freqPicker && !freqPicker.contains(e.target)
+        ) {
+            closeAllGcalDrawers();
+        }
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            closeAllGcalDrawers();
+        }
+    });
+
+    if (closeBtn) closeBtn.addEventListener("click", () => {
+        closeAllGcalDrawers();
+        modal.classList.add("hidden");
+    });
+    if (cancelBtn) cancelBtn.addEventListener("click", () => {
+        closeAllGcalDrawers();
+        modal.classList.add("hidden");
+    });
 
     // Tabs de tipo no modal
     modal.querySelectorAll(".gcal-type-tab").forEach((tab) => {
@@ -3052,6 +3231,9 @@ function setupGcalQuickModal() {
             if (freqGroup) {
                 freqGroup.classList.toggle("hidden", activeGcalModalType !== "recorrente");
             }
+
+            renderGcalCategoryOptions(activeGcalModalType);
+            closeAllGcalDrawers();
         });
     });
 
@@ -3105,19 +3287,51 @@ function setupGcalQuickModal() {
             showToast(`Lançamento "${desc}" adicionado à agenda!`);
         }
 
+        closeAllGcalDrawers();
         modal.classList.add("hidden");
         form.reset();
         renderAll();
     });
+
+    // Inicializar opções iniciais
+    renderGcalCategoryOptions("despesa");
+    syncGcalFrequency("monthly");
 }
 
 function openGcalQuickModal(dateISO) {
     const modal = $("#gcalQuickModal");
     if (!modal) return;
 
+    // Reset de tipo para despesa ao abrir novo modal
+    activeGcalModalType = "despesa";
+    modal.querySelectorAll(".gcal-type-tab").forEach((t) => {
+        t.classList.toggle("active", t.dataset.type === "despesa");
+    });
+    const freqGroup = $("#gcalRecurringFreqGroup");
+    if (freqGroup) freqGroup.classList.add("hidden");
+
     const dateInput = $("#gcalQuickDate");
     if (dateInput) {
         dateInput.value = dateISO || agendaSelectedDate || todayISO();
+    }
+
+    const catPicker = $("#gcalQuickCategoryPicker");
+    const freqPicker = $("#gcalQuickFrequencyPicker");
+    if (catPicker) catPicker.classList.remove("open");
+    if (freqPicker) freqPicker.classList.remove("open");
+
+    const catSelect = $("#gcalQuickCategory");
+    const catLabel = $("#gcalQuickCategoryPickerLabel");
+    if (catSelect && catLabel) {
+        catSelect.value = "Alimentação";
+        catLabel.textContent = "🍽️ Alimentação";
+    }
+
+    const freqSelect = $("#gcalQuickFrequency");
+    const freqLabel = $("#gcalQuickFrequencyPickerLabel");
+    if (freqSelect && freqLabel) {
+        freqSelect.value = "monthly";
+        freqLabel.textContent = "🔄 Mensal";
     }
 
     modal.classList.remove("hidden");
