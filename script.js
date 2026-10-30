@@ -2734,15 +2734,19 @@ function renderReports() {
     const summary = getMonthlySummary(currentM);
 
     // 1. Atualizar KPIs de detalhamento em relatórios
+    const totalExpEl = $("#reportTotalExpensesSpent");
     const manExpEl = $("#reportManualExpensesVal");
     const manIncEl = $("#reportManualIncomeVal");
     const recPaidEl = $("#reportRecurringPaidVal");
     const recPendingEl = $("#reportRecurringPendingVal");
+    const salaryEl = $("#reportSalaryBaseVal");
 
+    if (totalExpEl) totalExpEl.textContent = money(summary.expenses);
     if (manExpEl) manExpEl.textContent = money(summary.manualExpenses);
     if (manIncEl) manIncEl.textContent = money(summary.extraIncome);
     if (recPaidEl) recPaidEl.textContent = money(summary.paidRecurringExpenses);
     if (recPendingEl) recPendingEl.textContent = money(summary.pendingRecurringExpenses);
+    if (salaryEl) salaryEl.textContent = money(summary.salary);
 
     // 2. Controlar visibilidade de painéis conforme o filtro ativo
     const recPanel = $("#reportRecurringPanel");

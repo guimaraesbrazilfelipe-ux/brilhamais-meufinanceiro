@@ -60,9 +60,6 @@
                     <button type="button" class="privacy-btn" aria-label="Ocultar valores na tela" title="Ocultar valores na tela" aria-pressed="false">
                         <span class="privacy-icon">👁️</span>
                     </button>
-                    <a href="lancamentos.html" class="button button-primary btn-new-transaction">
-                        + Novo lançamento
-                    </a>
                 </div>
             </header>
 
@@ -164,34 +161,48 @@
                 </article>
             </section>
 
-            <!-- Detalhamento de Lançamentos vs. Contas Fixas -->
+            <!-- Detalhamento de Despesas e Receitas em Relatórios -->
             <div class="report-breakdown-kpis">
+                <div class="report-breakdown-card highlight-expense">
+                    <div class="breakdown-icon">💸</div>
+                    <div class="breakdown-info">
+                        <span class="breakdown-label">Total de despesas gastas</span>
+                        <strong class="breakdown-val expense-text" id="reportTotalExpensesSpent">R$ 0,00</strong>
+                    </div>
+                </div>
+                <div class="report-breakdown-card highlight-income">
+                    <div class="breakdown-icon">💰</div>
+                    <div class="breakdown-info">
+                        <span class="breakdown-label">Total de receitas extras</span>
+                        <strong class="breakdown-val income-text" id="reportManualIncomeVal">R$ 0,00</strong>
+                    </div>
+                </div>
                 <div class="report-breakdown-card">
                     <div class="breakdown-icon">🧾</div>
                     <div class="breakdown-info">
-                        <span class="breakdown-label">Lançamentos Avulsos (Despesas)</span>
+                        <span class="breakdown-label">Lançamentos avulsos gastos</span>
                         <strong class="breakdown-val" id="reportManualExpensesVal">R$ 0,00</strong>
                     </div>
                 </div>
                 <div class="report-breakdown-card">
                     <div class="breakdown-icon">⟳</div>
                     <div class="breakdown-info">
-                        <span class="breakdown-label">Contas Fixas (Pagas no Mês)</span>
+                        <span class="breakdown-label">Contas fixas pagas no mês</span>
                         <strong class="breakdown-val" id="reportRecurringPaidVal">R$ 0,00</strong>
                     </div>
                 </div>
                 <div class="report-breakdown-card">
                     <div class="breakdown-icon">⏳</div>
                     <div class="breakdown-info">
-                        <span class="breakdown-label">Contas Fixas (A Vencer)</span>
+                        <span class="breakdown-label">Contas fixas a vencer</span>
                         <strong class="breakdown-val" id="reportRecurringPendingVal">R$ 0,00</strong>
                     </div>
                 </div>
                 <div class="report-breakdown-card">
-                    <div class="breakdown-icon">💰</div>
+                    <div class="breakdown-icon">💵</div>
                     <div class="breakdown-info">
-                        <span class="breakdown-label">Receitas Extras Avulsas</span>
-                        <strong class="breakdown-val income-text" id="reportManualIncomeVal">R$ 0,00</strong>
+                        <span class="breakdown-label">Salário base do mês</span>
+                        <strong class="breakdown-val" id="reportSalaryBaseVal">R$ 0,00</strong>
                     </div>
                 </div>
             </div>
