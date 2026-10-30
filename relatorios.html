@@ -65,7 +65,7 @@
 
             <section class="month-toolbar">
                 <div>
-                    <label for="datePickerTrigger">Período de análise (Dia, Mês e Ano)</label>
+                    <label for="datePickerTrigger">Data de referência</label>
                     <div class="custom-datepicker" id="customDatePicker">
                         <input type="date" id="dashboardMonth" class="datepicker-native-input" tabindex="-1" aria-hidden="true">
                         <button type="button" class="datepicker-trigger" id="datePickerTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="datePickerDropdown">
@@ -120,44 +120,92 @@
                         </div>
                     </div>
                 </div>
-                <span class="status-pill">● Análise comparativa</span>
+
+                <!-- Seletor Moderno de Período dos Relatórios (Estilo Contas Fixas) -->
+                <div class="report-period-control">
+                    <label for="reportPeriodPickerButton">Período de análise</label>
+                    <div class="category-picker frequency-picker report-period-picker" id="reportPeriodPicker">
+                        <select id="reportPeriodSelect" class="category-native-select" aria-hidden="true" tabindex="-1">
+                            <option value="this_week">📅 Esta semana</option>
+                            <option value="this_month" selected>🗓️ Este mês</option>
+                            <option value="this_year">📆 Este ano</option>
+                            <option value="last_2_years">📈 Últimos 2 anos</option>
+                        </select>
+
+                        <button type="button" id="reportPeriodPickerButton" class="category-picker-button" aria-haspopup="listbox" aria-expanded="false" aria-controls="reportPeriodOptions">
+                            <span id="reportPeriodPickerLabel">🗓️ Este mês</span>
+                            <span class="category-chevron" aria-hidden="true">⌄</span>
+                        </button>
+
+                        <div class="category-drawer frequency-drawer" id="reportPeriodOptions" role="listbox" aria-label="Escolha o período do relatório">
+                            <button type="button" class="category-option" role="option" aria-selected="false" data-value="this_week">
+                                <span class="freq-opt-icon">📅</span>
+                                <div class="freq-opt-text">
+                                    <strong>Esta semana</strong>
+                                    <span>Últimos 7 dias (semana atual)</span>
+                                </div>
+                            </button>
+                            <button type="button" class="category-option selected" role="option" aria-selected="true" data-value="this_month">
+                                <span class="freq-opt-icon">🗓️</span>
+                                <div class="freq-opt-text">
+                                    <strong>Este mês</strong>
+                                    <span>Mês de referência completo</span>
+                                </div>
+                            </button>
+                            <button type="button" class="category-option" role="option" aria-selected="false" data-value="this_year">
+                                <span class="freq-opt-icon">📆</span>
+                                <div class="freq-opt-text">
+                                    <strong>Este ano</strong>
+                                    <span>Janeiro a Dezembro</span>
+                                </div>
+                            </button>
+                            <button type="button" class="category-option" role="option" aria-selected="false" data-value="last_2_years">
+                                <span class="freq-opt-icon">📈</span>
+                                <div class="freq-opt-text">
+                                    <strong>Últimos 2 anos</strong>
+                                    <span>Histórico de 24 meses</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </section>
 
-            <section class="summary-grid" aria-label="Resumo do mês">
+            <section class="summary-grid" aria-label="Resumo do relatório">
                 <article class="summary-card card-total">
                     <div class="summary-top">
                         <span class="summary-icon purple">◈</span>
-                        <h2 class="summary-title">Saldo do mês</h2>
+                        <h2 class="summary-title" id="reportSummaryTitleBalance">Saldo do mês</h2>
                     </div>
                     <p class="summary-amount" id="monthBalance">R$ 0,00</p>
-                    <p class="summary-description">Receitas menos despesas</p>
+                    <p class="summary-description" id="reportSummaryDescBalance">Receitas menos despesas</p>
                 </article>
 
                 <article class="summary-card card-income">
                     <div class="summary-top">
                         <span class="summary-icon green">↗</span>
-                        <h2 class="summary-title">Receitas do mês</h2>
+                        <h2 class="summary-title" id="reportSummaryTitleIncome">Receitas do mês</h2>
                     </div>
                     <p class="summary-amount" id="monthIncome">R$ 0,00</p>
-                    <p class="summary-description">Salário e outras entradas</p>
+                    <p class="summary-description" id="reportSummaryDescIncome">Salário e outras entradas</p>
                 </article>
 
                 <article class="summary-card card-expense">
                     <div class="summary-top">
                         <span class="summary-icon red">↘</span>
-                        <h2 class="summary-title">Despesas do mês</h2>
+                        <h2 class="summary-title" id="reportSummaryTitleExpenses">Despesas do mês</h2>
                     </div>
                     <p class="summary-amount" id="monthExpenses">R$ 0,00</p>
-                    <p class="summary-description">Total das saídas registradas</p>
+                    <p class="summary-description" id="reportSummaryDescExpenses">Total das saídas registradas</p>
                 </article>
 
                 <article class="summary-card card-purple">
                     <div class="summary-top">
                         <span class="summary-icon blue">%</span>
-                        <h2 class="summary-title">Taxa de economia</h2>
+                        <h2 class="summary-title" id="reportSummaryTitleSavings">Taxa de economia</h2>
                     </div>
                     <p class="summary-amount" id="savingsRate">0%</p>
-                    <p class="summary-description">Parte da receita que sobrou</p>
+                    <p class="summary-description" id="reportSummaryDescSavings">Parte da receita que sobrou</p>
                 </article>
             </section>
 

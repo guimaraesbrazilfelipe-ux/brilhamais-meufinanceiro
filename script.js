@@ -81,6 +81,15 @@ function todayISO() {
     return local.toISOString().slice(0, 10);
 }
 
+function toISODate(d) {
+    if (!d) return todayISO();
+    if (typeof d === "string") return d.slice(0, 10);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
 function yesterdayISO() {
     const now = new Date();
     now.setDate(now.getDate() - 1);
@@ -457,21 +466,76 @@ function renderMonthlyChart() {
     const incomeValues = [];
     const expenseValues = [];
 
-    const [year, month] = selectedMonth().split("-").map(Number);
+    // Se estiver na página de relatórios e um período específico estiver ativo
+    const isReportsPage = !!$("#reportPeriodPicker");
+    const filter = isReportsPage ? getReportDateFilter() : null;
 
-    for (let i = 5; i >= 0; i--) {
-        const date = new Date(year, month - 1 - i, 1, 12);
+    if (isReportsPage && filter && filter.mode === "this_week") {
+        const days = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+        const d = new Date(`${selectedDate() || todayISO()}T12:00:00`);
+        const dayOfWeek = (d.getDay() + 6) % 7;
+        const monday = new Date(d);
+        monday.setDate(d.getDate() - dayOfWeek);
 
-        const key = [
-            date.getFullYear(),
-            String(date.getMonth() + 1).padStart(2, "0")
-        ].join("-");
+        for (let i = 0; i < 7; i++) {
+            const curDay = new Date(monday);
+            curDay.setDate(monday.getDate() + i);
+            const iso = toISODate(curDay);
+            const dayNum = String(curDay.getDate()).padStart(2, "0");
+            const monNum = String(curDay.getMonth() + 1).padStart(2, "0");
+            labels.push(`${days[i]} ${dayNum}/${monNum}`);
 
-        const summary = getMonthlySummary(key);
+            const dayTxs = (data.transactions || []).filter(t => !t.recurringBillId && t.date === iso);
+            const dayInc = dayTxs.filter(t => t.type === "receita").reduce((s, t) => s + t.amount, 0);
+            let dayExp = dayTxs.filter(t => t.type === "despesa").reduce((s, t) => s + t.amount, 0);
 
-        labels.push(monthLabel(key));
-        incomeValues.push(summary.income);
-        expenseValues.push(summary.expenses);
+            (data.recurringBills || []).forEach(b => {
+                if (isBillOccurrencePaid(b, iso)) dayExp += Number(b.amount || 0);
+            });
+
+            incomeValues.push(dayInc);
+            expenseValues.push(dayExp);
+        }
+    } else if (isReportsPage && filter && filter.mode === "this_year") {
+        const y = selectedMonth().slice(0, 4);
+        const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+        for (let m = 1; m <= 12; m++) {
+            const k = `${y}-${String(m).padStart(2, "0")}`;
+            const sum = getMonthlySummary(k);
+            labels.push(monthNames[m - 1]);
+            incomeValues.push(sum.income);
+            expenseValues.push(sum.expenses);
+        }
+    } else if (isReportsPage && filter && filter.mode === "last_2_years") {
+        const [year, month] = selectedMonth().split("-").map(Number);
+        for (let i = 23; i >= 0; i--) {
+            const date = new Date(year, month - 1 - i, 1, 12);
+            const key = [
+                date.getFullYear(),
+                String(date.getMonth() + 1).padStart(2, "0")
+            ].join("-");
+            const sum = getMonthlySummary(key);
+            labels.push(monthLabel(key));
+            incomeValues.push(sum.income);
+            expenseValues.push(sum.expenses);
+        }
+    } else {
+        const [year, month] = selectedMonth().split("-").map(Number);
+
+        for (let i = 5; i >= 0; i--) {
+            const date = new Date(year, month - 1 - i, 1, 12);
+
+            const key = [
+                date.getFullYear(),
+                String(date.getMonth() + 1).padStart(2, "0")
+            ].join("-");
+
+            const summary = getMonthlySummary(key);
+
+            labels.push(monthLabel(key));
+            incomeValues.push(summary.income);
+            expenseValues.push(summary.expenses);
+        }
     }
 
     if (monthlyChart) {
@@ -585,6 +649,137 @@ function renderMonthlyChart() {
     });
 }
 
+let currentReportPeriod = "this_month"; // "this_week" | "this_month" | "this_year" | "last_2_years"
+let syncReportPeriodPicker = null;
+
+function getReportDateFilter() {
+    const curDate = selectedDate() || todayISO();
+    const curMonth = selectedMonth() || currentMonth();
+    const curYear = curMonth.slice(0, 4);
+
+    if (currentReportPeriod === "this_week") {
+        const d = new Date(`${curDate}T12:00:00`);
+        const dayOfWeek = (d.getDay() + 6) % 7;
+        const monday = new Date(d);
+        monday.setDate(d.getDate() - dayOfWeek);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        const startISO = toISODate(monday);
+        const endISO = toISODate(sunday);
+
+        return {
+            mode: "this_week",
+            startDate: startISO,
+            endDate: endISO,
+            matchesDate: (isoDate) => Boolean(isoDate && isoDate >= startISO && isoDate <= endISO),
+            label: `Esta semana (${String(monday.getDate()).padStart(2, "0")}/${String(monday.getMonth() + 1).padStart(2, "0")} a ${String(sunday.getDate()).padStart(2, "0")}/${String(sunday.getMonth() + 1).padStart(2, "0")})`,
+            periodTitle: "da semana"
+        };
+    } else if (currentReportPeriod === "this_year") {
+        return {
+            mode: "this_year",
+            year: curYear,
+            matchesDate: (isoDate) => Boolean(isoDate && isoDate.startsWith(curYear)),
+            label: `Ano de ${curYear}`,
+            periodTitle: "do ano"
+        };
+    } else if (currentReportPeriod === "last_2_years") {
+        const y = parseInt(curYear, 10);
+        const y1 = String(y - 1);
+        const y2 = String(y);
+        return {
+            mode: "last_2_years",
+            years: [y1, y2],
+            matchesDate: (isoDate) => Boolean(isoDate && (isoDate.startsWith(y1) || isoDate.startsWith(y2))),
+            label: `Últimos 2 anos (${y1} - ${y2})`,
+            periodTitle: "dos últimos 2 anos"
+        };
+    } else {
+        return {
+            mode: "this_month",
+            month: curMonth,
+            matchesDate: (isoDate) => Boolean(isoDate && isoDate.startsWith(curMonth)),
+            label: monthLabel(curMonth),
+            periodTitle: "do mês"
+        };
+    }
+}
+
+function setupReportPeriodPicker() {
+    const picker = $("#reportPeriodPicker");
+    const button = $("#reportPeriodPickerButton");
+    const options = $("#reportPeriodOptions");
+    const select = $("#reportPeriodSelect");
+    const label = $("#reportPeriodPickerLabel");
+
+    if (!picker || !button || !options || !select || !label) {
+        return;
+    }
+
+    function closeDrawer() {
+        picker.classList.remove("open");
+        button.setAttribute("aria-expanded", "false");
+    }
+
+    function openDrawer() {
+        picker.classList.add("open");
+        button.setAttribute("aria-expanded", "true");
+    }
+
+    function sync(val) {
+        const targetVal = val || select.value || "this_month";
+        currentReportPeriod = targetVal;
+        select.value = targetVal;
+
+        const option = [...select.options].find((item) => item.value === targetVal);
+        if (option) {
+            label.textContent = option.textContent;
+        }
+
+        options.querySelectorAll(".category-option").forEach((btn) => {
+            const isSelected = btn.dataset.value === targetVal;
+            btn.classList.toggle("selected", isSelected);
+            btn.setAttribute("aria-selected", String(isSelected));
+        });
+    }
+
+    syncReportPeriodPicker = sync;
+    sync(currentReportPeriod);
+
+    button.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (picker.classList.contains("open")) {
+            closeDrawer();
+        } else {
+            openDrawer();
+        }
+    });
+
+    options.addEventListener("click", (e) => {
+        const optBtn = e.target.closest(".category-option");
+        if (!optBtn) return;
+        const val = optBtn.dataset.value;
+        sync(val);
+        closeDrawer();
+        renderReports();
+        renderMonthlyChart();
+        renderCategoryChart();
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!picker.contains(e.target)) {
+            closeDrawer();
+        }
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && picker.classList.contains("open")) {
+            closeDrawer();
+            button.focus();
+        }
+    });
+}
+
 let currentReportFilter = "all"; // "all" | "lancamentos" | "contas-fixas"
 
 function setReportFilter(filter) {
@@ -603,13 +798,15 @@ function renderCategoryChart() {
     const legend = $("#categoryLegend");
     if (!canvas) return;
 
+    const isReportsPage = !!$("#reportPeriodPicker");
+    const filter = isReportsPage ? getReportDateFilter() : null;
     const mStr = selectedMonth();
     const totals = {};
 
     // 1. Lançamentos manuais de despesa (se não estiver filtrado apenas para contas fixas)
     if (currentReportFilter !== "contas-fixas") {
-        const manualExpenses = transactionsForMonth(mStr)
-            .filter((t) => t.type === "despesa" && !t.recurringBillId);
+        const manualExpenses = (data.transactions || [])
+            .filter((t) => t.type === "despesa" && !t.recurringBillId && (filter ? filter.matchesDate(t.date) : t.date.startsWith(mStr)));
         manualExpenses.forEach((t) => {
             totals[t.category] = (totals[t.category] || 0) + Number(t.amount || 0);
         });
@@ -618,16 +815,38 @@ function renderCategoryChart() {
     // 2. Contas fixas (se não estiver filtrado apenas para lançamentos)
     if (currentReportFilter !== "lancamentos") {
         (data.recurringBills || []).forEach((b) => {
-            const occs = getBillOccurrencesInMonth(b, mStr);
-            occs.forEach((d) => {
-                const isPaid = isBillOccurrencePaid(b, d);
-                // Na visão consolidada ou contas fixas, soma se estiver paga ou se estiver filtrando só contas fixas
-                const shouldInclude = (currentReportFilter === "contas-fixas") ? true : isPaid;
-                if (shouldInclude) {
-                    const cat = b.category || "Assinaturas";
-                    totals[cat] = (totals[cat] || 0) + Number(b.amount || 0);
-                }
-            });
+            if (filter && (filter.mode === "this_year" || filter.mode === "last_2_years")) {
+                const y = parseInt(mStr.slice(0, 4), 10);
+                const years = filter.mode === "this_year" ? [y] : [y - 1, y];
+                years.forEach(yr => {
+                    for (let m = 1; m <= 12; m++) {
+                        const k = `${yr}-${String(m).padStart(2, "0")}`;
+                        getBillOccurrencesInMonth(b, k).forEach(d => {
+                            if (isBillOccurrencePaid(b, d) || currentReportFilter === "contas-fixas") {
+                                const cat = b.category || "Assinaturas";
+                                totals[cat] = (totals[cat] || 0) + Number(b.amount || 0);
+                            }
+                        });
+                    }
+                });
+            } else if (filter && filter.mode === "this_week") {
+                getBillOccurrencesInMonth(b, mStr).forEach(d => {
+                    if (filter.matchesDate(d) && (isBillOccurrencePaid(b, d) || currentReportFilter === "contas-fixas")) {
+                        const cat = b.category || "Assinaturas";
+                        totals[cat] = (totals[cat] || 0) + Number(b.amount || 0);
+                    }
+                });
+            } else {
+                const occs = getBillOccurrencesInMonth(b, mStr);
+                occs.forEach((d) => {
+                    const isPaid = isBillOccurrencePaid(b, d);
+                    const shouldInclude = (currentReportFilter === "contas-fixas") ? true : isPaid;
+                    if (shouldInclude) {
+                        const cat = b.category || "Assinaturas";
+                        totals[cat] = (totals[cat] || 0) + Number(b.amount || 0);
+                    }
+                });
+            }
         });
     }
 
@@ -2432,7 +2651,7 @@ function renderHistoricalReports() {
 
     if (balEl) {
         balEl.textContent = money(summary.balance);
-        balEl.style.color = summary.balance >= 0 ? "var(--green)" : "var(--red)";
+        balEl.style.color = summary.balance < 0 ? "var(--red)" : "var(--text)";
     }
     if (incEl) incEl.textContent = money(summary.income);
     if (expEl) expEl.textContent = money(summary.expenses);
@@ -2754,9 +2973,119 @@ function renderHistoricalReports() {
 
 function renderReports() {
     const currentM = selectedMonth() || currentMonth();
-    const summary = getMonthlySummary(currentM);
+    const filter = getReportDateFilter();
+    let summary = {};
 
-    // 1. Atualizar KPIs de detalhamento em relatórios
+    if (filter.mode === "this_week") {
+        const curDate = selectedDate() || todayISO();
+        const d = new Date(`${curDate}T12:00:00`);
+        const dayOfWeek = (d.getDay() + 6) % 7;
+        const monday = new Date(d);
+        monday.setDate(d.getDate() - dayOfWeek);
+
+        const weekDates = [];
+        for (let i = 0; i < 7; i++) {
+            const curDay = new Date(monday);
+            curDay.setDate(monday.getDate() + i);
+            weekDates.push(toISODate(curDay));
+        }
+
+        const manualTxs = (data.transactions || []).filter((t) => !t.recurringBillId && weekDates.includes(t.date));
+        const salaryFromTransactions = manualTxs.filter((t) => t.type === "receita" && t.category === "Salário").reduce((s, t) => s + t.amount, 0);
+        const extraIncome = manualTxs.filter((t) => t.type === "receita" && t.category !== "Salário").reduce((s, t) => s + t.amount, 0);
+        const effectiveSalary = salaryFromTransactions;
+        const income = effectiveSalary + extraIncome;
+        const manualExpenses = sumTransactions(manualTxs, "despesa");
+
+        let paidRecurringTotal = 0;
+        let allRecurringTotal = 0;
+        (data.recurringBills || []).forEach((b) => {
+            weekDates.forEach((iso) => {
+                const mStr = iso.slice(0, 7);
+                if (getBillOccurrencesInMonth(b, mStr).includes(iso)) {
+                    const amt = Number(b.amount || 0);
+                    allRecurringTotal += amt;
+                    if (isBillOccurrencePaid(b, iso)) {
+                        paidRecurringTotal += amt;
+                    }
+                }
+            });
+        });
+
+        const expenses = manualExpenses + paidRecurringTotal;
+        const balance = income - expenses;
+        const savingsRate = income > 0 ? (balance / income) * 100 : 0;
+
+        summary = {
+            salary: effectiveSalary,
+            extraIncome,
+            income,
+            manualExpenses,
+            paidRecurringExpenses: paidRecurringTotal,
+            allRecurringExpenses: allRecurringTotal,
+            pendingRecurringExpenses: Math.max(0, allRecurringTotal - paidRecurringTotal),
+            expenses,
+            balance,
+            savingsRate
+        };
+    } else if (filter.mode === "this_year") {
+        summary = getPeriodSummary("year", filter.year);
+    } else if (filter.mode === "last_2_years") {
+        const sum1 = getPeriodSummary("year", filter.years[0]);
+        const sum2 = getPeriodSummary("year", filter.years[1]);
+        const totalIncome = sum1.income + sum2.income;
+        const totalExpenses = sum1.expenses + sum2.expenses;
+        const totalBal = totalIncome - totalExpenses;
+        summary = {
+            salary: sum1.salary + sum2.salary,
+            extraIncome: sum1.extraIncome + sum2.extraIncome,
+            income: totalIncome,
+            manualExpenses: sum1.manualExpenses + sum2.manualExpenses,
+            paidRecurringExpenses: sum1.paidRecurringExpenses + sum2.paidRecurringExpenses,
+            allRecurringExpenses: sum1.allRecurringExpenses + sum2.allRecurringExpenses,
+            pendingRecurringExpenses: sum1.pendingRecurringExpenses + sum2.pendingRecurringExpenses,
+            expenses: totalExpenses,
+            balance: totalBal,
+            savingsRate: totalIncome > 0 ? (totalBal / totalIncome) * 100 : 0
+        };
+    } else {
+        // "this_month"
+        summary = getMonthlySummary(currentM);
+    }
+
+    // 1. Atualizar títulos, descrições e valores dos 4 Cards de Resumo
+    const titleBal = $("#reportSummaryTitleBalance");
+    const descBal = $("#reportSummaryDescBalance");
+    const titleInc = $("#reportSummaryTitleIncome");
+    const descInc = $("#reportSummaryDescIncome");
+    const titleExp = $("#reportSummaryTitleExpenses");
+    const descExp = $("#reportSummaryDescExpenses");
+    const titleSav = $("#reportSummaryTitleSavings");
+    const descSav = $("#reportSummaryDescSavings");
+
+    if (titleBal) titleBal.textContent = `Saldo ${filter.periodTitle}`;
+    if (descBal) descBal.textContent = `Receitas menos despesas (${filter.label})`;
+    if (titleInc) titleInc.textContent = `Receitas ${filter.periodTitle}`;
+    if (descInc) descInc.textContent = `Salário e entradas extras (${filter.label})`;
+    if (titleExp) titleExp.textContent = `Despesas ${filter.periodTitle}`;
+    if (descExp) descExp.textContent = `Saídas e contas pagas (${filter.label})`;
+    if (titleSav) titleSav.textContent = `Taxa de economia`;
+    if (descSav) descSav.textContent = `Percentual poupado (${filter.label})`;
+
+    const monthBalEl = $("#monthBalance");
+    const monthIncEl = $("#monthIncome");
+    const monthExpEl = $("#monthExpenses");
+    const savingsEl = $("#savingsRate");
+
+    if (monthBalEl) {
+        monthBalEl.textContent = money(summary.balance);
+        monthBalEl.style.color = summary.balance < 0 ? "var(--red)" : "var(--text)";
+    }
+    if (monthIncEl) monthIncEl.textContent = money(summary.income);
+    if (monthExpEl) monthExpEl.textContent = money(summary.expenses);
+    if (savingsEl) savingsEl.textContent = `${summary.savingsRate.toFixed(1)}%`;
+
+    // 2. Atualizar KPIs de detalhamento em relatórios
     const totalExpEl = $("#reportTotalExpensesSpent");
     const manExpEl = $("#reportManualExpensesVal");
     const manIncEl = $("#reportManualIncomeVal");
@@ -2771,7 +3100,7 @@ function renderReports() {
     if (recPendingEl) recPendingEl.textContent = money(summary.pendingRecurringExpenses);
     if (salaryEl) salaryEl.textContent = money(summary.salary);
 
-    // 2. Controlar visibilidade de painéis conforme o filtro ativo
+    // 3. Controlar visibilidade de painéis conforme o filtro ativo
     const recPanel = $("#reportRecurringPanel");
     const txPanel = $("#reportTransactionsPanel");
 
@@ -2785,32 +3114,77 @@ function renderReports() {
     const recurringListEl = $("#reportRecurringList");
     const transactionsListEl = $("#reportTransactionsList");
 
-    // 3. Renderizar Lista de Contas Fixas e Assinaturas no Relatório
+    // 4. Renderizar Lista de Contas Fixas e Assinaturas no Relatório conforme Período
     if (recurringListEl) {
-        const monthBillsOccurrences = [];
+        const periodBillsOccurrences = [];
         (data.recurringBills || []).forEach((b) => {
-            const occs = getBillOccurrencesInMonth(b, currentM);
-            occs.forEach((d) => {
-                monthBillsOccurrences.push({
-                    bill: b,
-                    date: d,
-                    isPaid: isBillOccurrencePaid(b, d)
+            if (filter.mode === "this_week") {
+                const curDate = selectedDate() || todayISO();
+                const d = new Date(`${curDate}T12:00:00`);
+                const dayOfWeek = (d.getDay() + 6) % 7;
+                const monday = new Date(d);
+                monday.setDate(d.getDate() - dayOfWeek);
+                for (let i = 0; i < 7; i++) {
+                    const curDay = new Date(monday);
+                    curDay.setDate(monday.getDate() + i);
+                    const iso = toISODate(curDay);
+                    const mStr = iso.slice(0, 7);
+                    if (getBillOccurrencesInMonth(b, mStr).includes(iso)) {
+                        periodBillsOccurrences.push({
+                            bill: b,
+                            date: iso,
+                            isPaid: isBillOccurrencePaid(b, iso)
+                        });
+                    }
+                }
+            } else if (filter.mode === "this_year") {
+                for (let mon = 1; mon <= 12; mon++) {
+                    const mStr = `${filter.year}-${String(mon).padStart(2, "0")}`;
+                    getBillOccurrencesInMonth(b, mStr).forEach((d) => {
+                        periodBillsOccurrences.push({
+                            bill: b,
+                            date: d,
+                            isPaid: isBillOccurrencePaid(b, d)
+                        });
+                    });
+                }
+            } else if (filter.mode === "last_2_years") {
+                filter.years.forEach((yr) => {
+                    for (let mon = 1; mon <= 12; mon++) {
+                        const mStr = `${yr}-${String(mon).padStart(2, "0")}`;
+                        getBillOccurrencesInMonth(b, mStr).forEach((d) => {
+                            periodBillsOccurrences.push({
+                                bill: b,
+                                date: d,
+                                isPaid: isBillOccurrencePaid(b, d)
+                            });
+                        });
+                    }
                 });
-            });
+            } else {
+                const occs = getBillOccurrencesInMonth(b, currentM);
+                occs.forEach((d) => {
+                    periodBillsOccurrences.push({
+                        bill: b,
+                        date: d,
+                        isPaid: isBillOccurrencePaid(b, d)
+                    });
+                });
+            }
         });
 
-        monthBillsOccurrences.sort((a, b) => a.date.localeCompare(b.date));
+        periodBillsOccurrences.sort((a, b) => a.date.localeCompare(b.date));
 
-        if (!monthBillsOccurrences.length) {
+        if (!periodBillsOccurrences.length) {
             recurringListEl.innerHTML = `
                 <div class="empty-state" style="padding: 24px 10px;">
                     <div style="font-size: 28px; margin-bottom: 8px;">⟳</div>
-                    <p>Nenhuma conta fixa ou assinatura cadastrada para este mês.</p>
+                    <p>Nenhuma conta fixa ou assinatura encontrada para ${escapeHTML(filter.label)}.</p>
                     <p><a href="contas-fixas.html" class="text-button">+ Cadastrar conta fixa</a></p>
                 </div>
             `;
         } else {
-            recurringListEl.innerHTML = monthBillsOccurrences.map(({ bill, date, isPaid }) => {
+            recurringListEl.innerHTML = periodBillsOccurrences.map(({ bill, date, isPaid }) => {
                 const icon = CATEGORY_ICONS[bill.category] || "📄";
                 const freqName = getFrequencyLabel(bill.frequency);
                 return `
@@ -2834,22 +3208,22 @@ function renderReports() {
         }
     }
 
-    // 4. Renderizar Lista de Lançamentos Avulsos no Relatório
+    // 5. Renderizar Lista de Lançamentos Avulsos no Relatório conforme Período
     if (transactionsListEl) {
-        const monthTxs = (data.transactions || [])
-            .filter((t) => !t.recurringBillId && t.date.startsWith(currentM))
+        const periodTxs = (data.transactions || [])
+            .filter((t) => !t.recurringBillId && filter.matchesDate(t.date))
             .sort((a, b) => b.date.localeCompare(a.date));
 
-        if (!monthTxs.length) {
+        if (!periodTxs.length) {
             transactionsListEl.innerHTML = `
                 <div class="empty-state" style="padding: 24px 10px;">
                     <div style="font-size: 28px; margin-bottom: 8px;">🧾</div>
-                    <p>Nenhum lançamento avulso registrado neste mês.</p>
+                    <p>Nenhum lançamento avulso registrado para ${escapeHTML(filter.label)}.</p>
                     <p><a href="lancamentos.html" class="text-button">+ Novo lançamento</a></p>
                 </div>
             `;
         } else {
-            transactionsListEl.innerHTML = monthTxs.map((t) => {
+            transactionsListEl.innerHTML = periodTxs.map((t) => {
                 const isIncome = t.type === "receita";
                 const icon = CATEGORY_ICONS[t.category] || (isIncome ? "💰" : "📦");
                 return `
@@ -3923,6 +4297,8 @@ function init() {
 }
 
 function setupReports() {
+    setupReportPeriodPicker();
+
     document.querySelectorAll(".report-filter-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
             const filter = btn.dataset.reportFilter || "all";
