@@ -156,7 +156,7 @@ function loadData() {
         }
 
         return {
-            transactions: data.transactions,
+            transactions: (data.transactions || []).filter((t) => !t.recurringBillId),
             salaries: data.salaries || {},
             budgets: data.budgets || {},
             goals: data.goals || {},
@@ -281,7 +281,8 @@ function sumTransactions(transactions, type) {
 }
 
 function getMonthlySummary(month) {
-    const transactions = transactionsForMonth(month);
+    const rawTransactions = transactionsForMonth(month);
+    const transactions = rawTransactions.filter((t) => !t.recurringBillId);
     const salaryConfig = Number(data.salaries[month] || 0);
 
     // Evita o bug de duplicar o salário se o usuário lançar na categoria 'Salário' e também salvar nas Configurações
@@ -296,13 +297,35 @@ function getMonthlySummary(month) {
     const effectiveSalary = salaryFromTransactions > 0 ? salaryFromTransactions : salaryConfig;
     const extraIncome = otherExtraIncome;
     const income = effectiveSalary + extraIncome;
-    const expenses = sumTransactions(transactions, "despesa");
+
+    // Despesas de lançamentos avulsos
+    const manualExpenses = sumTransactions(transactions, "despesa");
+
+    // Despesas de contas fixas pagas e previstas no mês
+    let paidRecurringTotal = 0;
+    let allRecurringTotal = 0;
+    (data.recurringBills || []).forEach((b) => {
+        const occs = getBillOccurrencesInMonth(b, month);
+        occs.forEach((d) => {
+            const amt = Number(b.amount || 0);
+            allRecurringTotal += amt;
+            if (isBillOccurrencePaid(b, d)) {
+                paidRecurringTotal += amt;
+            }
+        });
+    });
+
+    const expenses = manualExpenses + paidRecurringTotal;
     const balance = income - expenses;
 
     return {
         salary: effectiveSalary,
         extraIncome,
         income,
+        manualExpenses,
+        paidRecurringExpenses: paidRecurringTotal,
+        allRecurringExpenses: allRecurringTotal,
+        pendingRecurringExpenses: Math.max(0, allRecurringTotal - paidRecurringTotal),
         expenses,
         balance,
         savingsRate: income > 0 ? (balance / income) * 100 : 0,
@@ -483,20 +506,51 @@ function renderMonthlyChart() {
     });
 }
 
+let currentReportFilter = "all"; // "all" | "lancamentos" | "contas-fixas"
+
+function setReportFilter(filter) {
+    currentReportFilter = filter;
+    document.querySelectorAll(".report-filter-btn").forEach((btn) => {
+        const isActive = btn.dataset.reportFilter === filter;
+        btn.classList.toggle("active", isActive);
+        btn.setAttribute("aria-selected", String(isActive));
+    });
+    renderCategoryChart();
+    renderReports();
+}
+
 function renderCategoryChart() {
     const canvas = $("#categoryChart");
     const legend = $("#categoryLegend");
     if (!canvas) return;
 
-    const expenses = transactionsForMonth(selectedMonth())
-        .filter((transaction) => transaction.type === "despesa");
-
+    const mStr = selectedMonth();
     const totals = {};
 
-    expenses.forEach((transaction) => {
-        totals[transaction.category] =
-            (totals[transaction.category] || 0) + transaction.amount;
-    });
+    // 1. Lançamentos manuais de despesa (se não estiver filtrado apenas para contas fixas)
+    if (currentReportFilter !== "contas-fixas") {
+        const manualExpenses = transactionsForMonth(mStr)
+            .filter((t) => t.type === "despesa" && !t.recurringBillId);
+        manualExpenses.forEach((t) => {
+            totals[t.category] = (totals[t.category] || 0) + Number(t.amount || 0);
+        });
+    }
+
+    // 2. Contas fixas (se não estiver filtrado apenas para lançamentos)
+    if (currentReportFilter !== "lancamentos") {
+        (data.recurringBills || []).forEach((b) => {
+            const occs = getBillOccurrencesInMonth(b, mStr);
+            occs.forEach((d) => {
+                const isPaid = isBillOccurrencePaid(b, d);
+                // Na visão consolidada ou contas fixas, soma se estiver paga ou se estiver filtrando só contas fixas
+                const shouldInclude = (currentReportFilter === "contas-fixas") ? true : isPaid;
+                if (shouldInclude) {
+                    const cat = b.category || "Assinaturas";
+                    totals[cat] = (totals[cat] || 0) + Number(b.amount || 0);
+                }
+            });
+        });
+    }
 
     const entries = Object.entries(totals)
         .sort((a, b) => b[1] - a[1]);
@@ -1001,18 +1055,6 @@ function payRecurringBill(billId, targetDate) {
         bill.paidMonths.push(mStr);
     }
 
-    const tx = {
-        id: createId(),
-        type: "despesa",
-        description: bill.name,
-        category: bill.category || "Outros",
-        amount: Number(bill.amount),
-        date: dateToPay,
-        notes: `Lançamento de conta fixa (${getFrequencyLabel(bill.frequency)})`,
-        recurringBillId: bill.id
-    };
-
-    data.transactions.unshift(tx);
     saveData();
     showToast(`Conta "${bill.name}" marcada como paga para ${formatDate(dateToPay)}!`);
     renderAll();
@@ -1033,13 +1075,6 @@ function unpayRecurringBill(billId, targetDate) {
         if (!stillHasPaidInMonth) {
             bill.paidMonths = bill.paidMonths.filter((m) => m !== mStr);
         }
-    }
-
-    const idx = data.transactions.findIndex(
-        (t) => t.recurringBillId === bill.id && (dateToUnpay ? t.date === dateToUnpay : t.date.startsWith(mStr))
-    );
-    if (idx !== -1) {
-        data.transactions.splice(idx, 1);
     }
 
     saveData();
@@ -1335,7 +1370,7 @@ function renderRecurringAlertBanner() {
                     <strong>Contas do mês a pagar:</strong> Você tem ${pendingCount} ${pendingCount === 1 ? "vencimento pendente" : "vencimentos pendentes"} somando ${money(pendingTotal)}.
                 </div>
             </div>
-            <a href="planejamento.html" class="recurring-alert-btn">Ver contas no Planejamento →</a>
+            <a href="contas-fixas.html" class="recurring-alert-btn">Ver contas fixas →</a>
         `;
     } else {
         banner.classList.add("all-paid");
@@ -1346,7 +1381,7 @@ function renderRecurringAlertBanner() {
                     <strong>Tudo em dia!</strong> Todas as suas contas fixas deste mês (${bills.length}) estão pagas.
                 </div>
             </div>
-            <a href="planejamento.html" class="recurring-alert-btn">Gerenciar contas →</a>
+            <a href="contas-fixas.html" class="recurring-alert-btn">Gerenciar contas fixas →</a>
         `;
     }
 }
@@ -1362,6 +1397,7 @@ function renderAll() {
     renderHistoricalReports();
     renderRecurringBills();
     renderRecurringAlertBanner();
+    renderReports();
 }
 
 /* ==============================
@@ -2406,6 +2442,121 @@ function renderHistoricalReports() {
     }
 }
 
+function renderReports() {
+    const currentM = selectedMonth() || currentMonth();
+    const summary = getMonthlySummary(currentM);
+
+    // 1. Atualizar KPIs de detalhamento em relatórios
+    const manExpEl = $("#reportManualExpensesVal");
+    const manIncEl = $("#reportManualIncomeVal");
+    const recPaidEl = $("#reportRecurringPaidVal");
+    const recPendingEl = $("#reportRecurringPendingVal");
+
+    if (manExpEl) manExpEl.textContent = money(summary.manualExpenses);
+    if (manIncEl) manIncEl.textContent = money(summary.extraIncome);
+    if (recPaidEl) recPaidEl.textContent = money(summary.paidRecurringExpenses);
+    if (recPendingEl) recPendingEl.textContent = money(summary.pendingRecurringExpenses);
+
+    // 2. Controlar visibilidade de painéis conforme o filtro ativo
+    const recPanel = $("#reportRecurringPanel");
+    const txPanel = $("#reportTransactionsPanel");
+
+    if (recPanel) {
+        recPanel.style.display = (currentReportFilter === "lancamentos") ? "none" : "";
+    }
+    if (txPanel) {
+        txPanel.style.display = (currentReportFilter === "contas-fixas") ? "none" : "";
+    }
+
+    const recurringListEl = $("#reportRecurringList");
+    const transactionsListEl = $("#reportTransactionsList");
+
+    // 3. Renderizar Lista de Contas Fixas e Assinaturas no Relatório
+    if (recurringListEl) {
+        const monthBillsOccurrences = [];
+        (data.recurringBills || []).forEach((b) => {
+            const occs = getBillOccurrencesInMonth(b, currentM);
+            occs.forEach((d) => {
+                monthBillsOccurrences.push({
+                    bill: b,
+                    date: d,
+                    isPaid: isBillOccurrencePaid(b, d)
+                });
+            });
+        });
+
+        monthBillsOccurrences.sort((a, b) => a.date.localeCompare(b.date));
+
+        if (!monthBillsOccurrences.length) {
+            recurringListEl.innerHTML = `
+                <div class="empty-state" style="padding: 24px 10px;">
+                    <div style="font-size: 28px; margin-bottom: 8px;">⟳</div>
+                    <p>Nenhuma conta fixa ou assinatura cadastrada para este mês.</p>
+                    <p><a href="contas-fixas.html" class="text-button">+ Cadastrar conta fixa</a></p>
+                </div>
+            `;
+        } else {
+            recurringListEl.innerHTML = monthBillsOccurrences.map(({ bill, date, isPaid }) => {
+                const icon = CATEGORY_ICONS[bill.category] || "📄";
+                const freqName = getFrequencyLabel(bill.frequency);
+                return `
+                    <div class="transaction-item">
+                        <div class="transaction-icon">${icon}</div>
+                        <div class="transaction-info">
+                            <h3>${escapeHTML(bill.name)}</h3>
+                            <p>${escapeHTML(bill.category)} · ${freqName} · Vencimento: ${formatDate(date)}</p>
+                        </div>
+                        <div class="transaction-right">
+                            <span class="recurring-status-badge ${isPaid ? "status-paid" : "status-pending"}" style="font-size: 11px;">
+                                ${isPaid ? "✓ Paga" : "⏳ A vencer"}
+                            </span>
+                            <div class="transaction-amount expense-text">
+                                ${money(bill.amount)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+    }
+
+    // 4. Renderizar Lista de Lançamentos Avulsos no Relatório
+    if (transactionsListEl) {
+        const monthTxs = (data.transactions || [])
+            .filter((t) => !t.recurringBillId && t.date.startsWith(currentM))
+            .sort((a, b) => b.date.localeCompare(a.date));
+
+        if (!monthTxs.length) {
+            transactionsListEl.innerHTML = `
+                <div class="empty-state" style="padding: 24px 10px;">
+                    <div style="font-size: 28px; margin-bottom: 8px;">🧾</div>
+                    <p>Nenhum lançamento avulso registrado neste mês.</p>
+                    <p><a href="lancamentos.html" class="text-button">+ Novo lançamento</a></p>
+                </div>
+            `;
+        } else {
+            transactionsListEl.innerHTML = monthTxs.map((t) => {
+                const isIncome = t.type === "receita";
+                const icon = CATEGORY_ICONS[t.category] || (isIncome ? "💰" : "📦");
+                return `
+                    <div class="transaction-item">
+                        <div class="transaction-icon">${icon}</div>
+                        <div class="transaction-info">
+                            <h3>${escapeHTML(t.description)}</h3>
+                            <p>${escapeHTML(t.category)} · ${formatDate(t.date)}${t.notes ? ` · <span style="opacity:0.8">${escapeHTML(t.notes)}</span>` : ""}</p>
+                        </div>
+                        <div class="transaction-right">
+                            <div class="transaction-amount ${isIncome ? "income-text" : "expense-text"}">
+                                ${isIncome ? "+" : "−"}${money(t.amount)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+    }
+}
+
 /* ==============================
    FORMULÁRIO DE LANÇAMENTOS
 ================================ */
@@ -3433,6 +3584,7 @@ function init() {
     setupAgenda();
     setupHistoricalReports();
     setupRecurringBills();
+    setupReports();
     setupWelcomeTutorial();
     renderAll();
 
@@ -3441,6 +3593,27 @@ function init() {
     const editId = urlParams.get("edit");
     if (editId) {
         editTransaction(editId);
+    }
+}
+
+function setupReports() {
+    document.querySelectorAll(".report-filter-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const filter = btn.dataset.reportFilter || "all";
+            setReportFilter(filter);
+        });
+    });
+
+    const topbarNewRecurringBtn = $("#topbarNewRecurringBtn");
+    if (topbarNewRecurringBtn) {
+        topbarNewRecurringBtn.addEventListener("click", () => {
+            const form = $("#recurringForm");
+            if (form) {
+                form.classList.remove("hidden");
+                const nameInput = $("#recurringName");
+                if (nameInput) nameInput.focus();
+            }
+        });
     }
 }
 

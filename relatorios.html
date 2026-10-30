@@ -164,6 +164,51 @@
                 </article>
             </section>
 
+            <!-- Detalhamento de Lançamentos vs. Contas Fixas -->
+            <div class="report-breakdown-kpis">
+                <div class="report-breakdown-card">
+                    <div class="breakdown-icon">🧾</div>
+                    <div class="breakdown-info">
+                        <span class="breakdown-label">Lançamentos Avulsos (Despesas)</span>
+                        <strong class="breakdown-val" id="reportManualExpensesVal">R$ 0,00</strong>
+                    </div>
+                </div>
+                <div class="report-breakdown-card">
+                    <div class="breakdown-icon">⟳</div>
+                    <div class="breakdown-info">
+                        <span class="breakdown-label">Contas Fixas (Pagas no Mês)</span>
+                        <strong class="breakdown-val" id="reportRecurringPaidVal">R$ 0,00</strong>
+                    </div>
+                </div>
+                <div class="report-breakdown-card">
+                    <div class="breakdown-icon">⏳</div>
+                    <div class="breakdown-info">
+                        <span class="breakdown-label">Contas Fixas (A Vencer)</span>
+                        <strong class="breakdown-val" id="reportRecurringPendingVal">R$ 0,00</strong>
+                    </div>
+                </div>
+                <div class="report-breakdown-card">
+                    <div class="breakdown-icon">💰</div>
+                    <div class="breakdown-info">
+                        <span class="breakdown-label">Receitas Extras Avulsas</span>
+                        <strong class="breakdown-val income-text" id="reportManualIncomeVal">R$ 0,00</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Abas interativas de visualização do relatório -->
+            <div class="period-tabs" role="tablist" aria-label="Filtrar visão dos relatórios" style="margin: 22px 0 24px;">
+                <button type="button" class="period-tab-btn report-filter-btn active" data-report-filter="all" role="tab" aria-selected="true">
+                    ◫ Visão Consolidada (Lançamentos + Contas Fixas)
+                </button>
+                <button type="button" class="period-tab-btn report-filter-btn" data-report-filter="lancamentos" role="tab" aria-selected="false">
+                    ＋ Apenas Lançamentos
+                </button>
+                <button type="button" class="period-tab-btn report-filter-btn" data-report-filter="contas-fixas" role="tab" aria-selected="false">
+                    ⟳ Apenas Contas Fixas
+                </button>
+            </div>
+
             <section class="content-grid">
                 <article class="panel chart-panel">
                     <div class="panel-heading">
@@ -190,6 +235,36 @@
                     <div id="categoryLegend" class="category-legend"></div>
                 </article>
             </section>
+
+            <!-- Seção de Contas Fixas e Assinaturas no Relatório -->
+            <article class="panel" id="reportRecurringPanel" style="margin-top: 24px;">
+                <div class="panel-heading">
+                    <div>
+                        <h2>⟳ Relatório de Contas Fixas e Assinaturas</h2>
+                        <p>Compromissos mensais e assinaturas recorrentes com vencimento no mês selecionado.</p>
+                    </div>
+                    <div class="panel-actions">
+                        <a href="contas-fixas.html" class="button button-secondary" style="font-size: 12px; padding: 6px 14px;">Gerenciar contas fixas</a>
+                    </div>
+                </div>
+
+                <div id="reportRecurringList" class="transaction-list"></div>
+            </article>
+
+            <!-- Seção de Lançamentos Avulsos no Relatório -->
+            <article class="panel" id="reportTransactionsPanel" style="margin-top: 24px; margin-bottom: 30px;">
+                <div class="panel-heading">
+                    <div>
+                        <h2>＋ Relatório de Lançamentos Avulsos</h2>
+                        <p>Movimentações e gastos do dia a dia registrados manualmente no mês selecionado.</p>
+                    </div>
+                    <div class="panel-actions">
+                        <a href="lancamentos.html" class="button button-primary" style="font-size: 12px; padding: 6px 14px;">+ Novo lançamento</a>
+                    </div>
+                </div>
+
+                <div id="reportTransactionsList" class="transaction-list"></div>
+            </article>
 
             <footer class="main-footer">
                 <p>Meu Financeiro © <span id="currentYear"></span></p>

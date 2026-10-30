@@ -2763,10 +2763,82 @@ body.privacy-mode #goalStatus,
 body.privacy-mode .recurring-kpi-val,
 body.privacy-mode .recurring-card-amount,
 body.privacy-mode .agenda-chip .chip-val,
-body.privacy-mode .day-summary-box strong {
+body.privacy-mode .day-summary-box strong,
+body.privacy-mode .breakdown-val {
     filter: blur(8px);
     user-select: none;
     transition: filter .22s ease;
+}
+
+/* Detalhamento de Lançamentos vs Contas Fixas em Relatórios */
+.report-breakdown-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.report-breakdown-card {
+    background: var(--panel, #131d2e);
+    border: 1px solid var(--border, #24344d);
+    border-radius: var(--radius, 14px);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.report-breakdown-card:hover {
+    border-color: var(--purple-light, #9475ff);
+    transform: translateY(-1px);
+}
+
+.report-breakdown-card .breakdown-icon {
+    font-size: 20px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    flex-shrink: 0;
+}
+
+.report-breakdown-card .breakdown-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.report-breakdown-card .breakdown-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted, #9ca9bd);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.report-breakdown-card .breakdown-val {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+@media (max-width: 950px) {
+    .report-breakdown-kpis {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 550px) {
+    .report-breakdown-kpis {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Mantém os dois controles com a mesma altura visual, mesmo com regras anteriores. */
