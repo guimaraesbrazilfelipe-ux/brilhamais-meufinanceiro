@@ -415,7 +415,7 @@ function renderSummary() {
 
     const m = selectedMonth();
     const summary = getMonthlySummary(m);
-    const monthTx = getTransactionsForMonth(m);
+    const monthTx = transactionsForMonth(m).filter((t) => !t.recurringBillId);
     const incomeCount = monthTx.filter(t => t.type === "receita").length;
     const expenseCount = monthTx.filter(t => t.type === "despesa").length;
 
