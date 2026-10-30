@@ -125,22 +125,17 @@
                 <button type="button" class="button button-primary" id="btnToggleNewTransaction">+ Novo lançamento</button>
             </section>
 
-            <!-- Painel Principal de Lançamentos e Resumo -->
+            <!-- Painel de Cadastro de Novo Lançamento -->
             <section class="panel transaction-panel" style="margin-top: 24px;">
                 <div class="panel-heading">
                     <div>
-                        <h2>Painel de Lançamentos</h2>
-                        <p>Cadastre receitas e despesas com categorização inteligente e acompanhe o balanço do mês.</p>
+                        <h2 id="formTitle">Novo lançamento</h2>
+                        <p>Preencha os dados abaixo para registrar uma nova despesa ou receita.</p>
                     </div>
                 </div>
 
-                <!-- Formulário de Novo Lançamento (Colapsável) -->
-                <form id="transactionForm" class="recurring-form hidden" novalidate>
-                    <div class="recurring-form-header">
-                        <h3 id="formTitle">Cadastrar novo lançamento</h3>
-                        <p>Defina tipo, descrição, valor, categoria, data e observações.</p>
-                    </div>
-
+                <!-- Formulário de Novo Lançamento -->
+                <form id="transactionForm" class="transaction-create-form" novalidate>
                     <input type="hidden" id="editId">
 
                     <div class="form-row transaction-basic-row">
@@ -207,7 +202,7 @@
                                     <div class="category-drawer" id="categoryOptions"
                                         role="listbox" aria-label="Escolha uma categoria">
                                         <button type="button" class="category-option selected"
-                                            role="option" aria-selected="true" data-value="Alimentação">🍽️ Alimentação</button>
+                                             role="option" aria-selected="true" data-value="Alimentação">🍽️ Alimentação</button>
                                         <button type="button" class="category-option"
                                             role="option" aria-selected="false" data-value="Moradia">🏠 Moradia</button>
                                         <button type="button" class="category-option"
@@ -308,55 +303,10 @@
                         <button type="submit" class="button button-primary" id="saveBtn">
                             Salvar lançamento
                         </button>
-                        <button type="button" class="button button-secondary"
-                            id="cancelEditBtn">Cancelar</button>
+                        <button type="button" class="button button-secondary hidden"
+                            id="cancelEditBtn">Cancelar edição</button>
                     </div>
                 </form>
-
-                <!-- Resumo dos Lançamentos do Mês (KPIs com visual idêntico à imagem de referência) -->
-                <div class="recurring-kpis-grid">
-                    <div class="recurring-kpi-card card-total">
-                        <div class="recurring-kpi-top">
-                            <span class="recurring-kpi-icon">📊</span>
-                            <span class="recurring-kpi-label">Saldo do mês</span>
-                        </div>
-                        <strong class="recurring-kpi-value" id="monthBalance">R$ 0,00</strong>
-                        <div class="recurring-kpi-footer">
-                            <span class="recurring-kpi-sub" id="txCountPill">0 lançamentos</span>
-                        </div>
-                    </div>
-                    <div class="recurring-kpi-card card-paid">
-                        <div class="recurring-kpi-top">
-                            <span class="recurring-kpi-icon">💰</span>
-                            <span class="recurring-kpi-label">Receitas do mês</span>
-                        </div>
-                        <strong class="recurring-kpi-value income-text" id="monthIncome">R$ 0,00</strong>
-                        <div class="recurring-kpi-footer">
-                            <span class="recurring-kpi-sub" id="incomeCountPill">0 entradas</span>
-                        </div>
-                    </div>
-                    <div class="recurring-kpi-card card-expense">
-                        <div class="recurring-kpi-top">
-                            <span class="recurring-kpi-icon">💸</span>
-                            <span class="recurring-kpi-label">Despesas do mês</span>
-                        </div>
-                        <strong class="recurring-kpi-value expense-text" id="monthExpenses">R$ 0,00</strong>
-                        <div class="recurring-kpi-footer">
-                            <span class="recurring-kpi-sub" id="expenseCountPill">0 saídas</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Barra de Progresso de Economia do Mês -->
-                <div class="recurring-progress-card" style="margin-bottom: 10px;">
-                    <div class="recurring-progress-header">
-                        <span class="recurring-progress-title">Taxa de economia deste mês</span>
-                        <strong class="recurring-progress-pct" id="savingsRate">0% guardado</strong>
-                    </div>
-                    <div class="recurring-progress-bar-bg" style="margin-top: 8px;">
-                        <div class="recurring-progress-bar-fill" id="savingsProgressBar" style="width: 0%;"></div>
-                    </div>
-                </div>
             </section>
 
             <!-- Lista de Lançamentos Recentes -->

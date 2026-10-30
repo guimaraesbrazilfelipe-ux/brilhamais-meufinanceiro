@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#101827">
-    <meta name="description" content="Agenda financeira e calendário de movimentações e vencimentos.">
+    <meta name="description" content="Agenda financeira no estilo Google Agenda com calendário de vencimentos, receitas e despesas.">
     <title>Agenda Financeira | Meu Financeiro</title>
 
     <link rel="stylesheet" href="style1.css">
@@ -51,136 +51,251 @@
         <main class="main-content">
             <header class="topbar">
                 <div>
-                    <p class="eyebrow">CALENDÁRIO E COMPROMISSOS</p>
-                    <h1>Agenda financeira</h1>
+                    <p class="eyebrow">GOOGLE AGENDAS FINANCEIRAS</p>
+                    <h1>Agenda e compromissos</h1>
                     <p class="subtitle" id="todayText">Acompanhe seus vencimentos, receitas e despesas distribuídos pelos dias do mês.</p>
                 </div>
                 <div class="topbar-actions">
                     <button type="button" class="privacy-btn" aria-label="Ocultar valores na tela" title="Ocultar valores na tela" aria-pressed="false">
                         <span class="privacy-icon">👁️</span>
                     </button>
+                    <a href="lancamentos.html" class="button button-secondary">Novo lançamento</a>
                 </div>
             </header>
 
-            <section class="month-toolbar">
-                <div>
-                    <label for="datePickerTrigger">Data de referência</label>
-                    <div class="custom-datepicker" id="customDatePicker">
-                        <input type="date" id="dashboardMonth" class="datepicker-native-input" tabindex="-1" aria-hidden="true">
-                        <button type="button" class="datepicker-trigger" id="datePickerTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="datePickerDropdown">
-                            <span class="datepicker-trigger-left">
-                                <span class="datepicker-icon" aria-hidden="true">📅</span>
-                                <span class="datepicker-text" id="datePickerText">Selecione uma data</span>
-                            </span>
-                            <span class="datepicker-chevron" aria-hidden="true">⌄</span>
-                        </button>
+            <!-- Barra Superior no Estilo Google Agenda -->
+            <section class="gcal-action-bar panel" aria-label="Controles da agenda">
+                <div class="gcal-bar-left">
+                    <button type="button" class="gcal-create-btn" id="gcalCreateBtn" aria-label="Criar nova movimentação">
+                        <span class="gcal-create-icon" aria-hidden="true">+</span>
+                        <span>Criar</span>
+                    </button>
 
-                        <div class="datepicker-backdrop" id="datePickerBackdrop" aria-hidden="true"></div>
+                    <button type="button" class="gcal-today-btn" id="agendaTodayBtn">Hoje</button>
 
-                        <div class="datepicker-dropdown" id="datePickerDropdown" role="dialog" aria-modal="true" aria-label="Seletor de data" aria-hidden="true">
-                            <div class="dp-header">
-                                <button type="button" class="dp-btn-view" id="dpViewBtn" title="Alternar para seleção de mês e ano">
-                                    <span id="dpCurrentMonthYear">Outubro de 2026</span>
-                                    <span class="dp-view-chevron" aria-hidden="true">▾</span>
-                                </button>
-                                <div class="dp-nav-group">
-                                    <button type="button" class="dp-nav-btn dp-prev-btn" id="dpPrevBtn" aria-label="Mês anterior">‹</button>
-                                    <button type="button" class="dp-nav-btn dp-next-btn" id="dpNextBtn" aria-label="Próximo mês">›</button>
-                                    <button type="button" class="dp-close-btn" id="dpCloseBtn" aria-label="Fechar calendário">✕</button>
-                                </div>
-                            </div>
+                    <div class="gcal-nav-arrows">
+                        <button type="button" class="gcal-nav-btn" id="agendaPrevMonthBtn" aria-label="Anterior" title="Anterior">‹</button>
+                        <button type="button" class="gcal-nav-btn" id="agendaNextMonthBtn" aria-label="Próximo" title="Próximo">›</button>
+                    </div>
 
-                            <div class="dp-shortcuts">
-                                <button type="button" class="dp-shortcut-btn dp-today-btn" id="dpTodayBtn">Hoje</button>
-                                <button type="button" class="dp-shortcut-btn dp-yesterday-btn" id="dpYesterdayBtn">Ontem</button>
-                            </div>
+                    <h2 class="gcal-title" id="agendaMonthYearTitle">Outubro de 2026</h2>
+                </div>
 
-                            <div class="dp-days-view" id="dpDaysView">
-                                <div class="dp-weekdays">
-                                    <span>Dom</span>
-                                    <span>Seg</span>
-                                    <span>Ter</span>
-                                    <span>Qua</span>
-                                    <span>Qui</span>
-                                    <span>Sex</span>
-                                    <span>Sáb</span>
-                                </div>
-                                <div class="dp-grid" id="dpGrid"></div>
-                            </div>
+                <div class="gcal-bar-right">
+                    <div class="gcal-search-box">
+                        <span class="gcal-search-icon" aria-hidden="true">🔍</span>
+                        <input type="text" id="gcalSearchInput" placeholder="Pesquisar movimentações..." autocomplete="off" aria-label="Pesquisar movimentações">
+                    </div>
 
-                            <div class="dp-months-view hidden" id="dpMonthsView">
-                                <div class="dp-year-selector">
-                                    <button type="button" class="dp-nav-btn dp-prev-year-btn" id="dpPrevYearBtn" aria-label="Ano anterior">‹</button>
-                                    <span id="dpSelectedYear" class="dp-year-display">2026</span>
-                                    <button type="button" class="dp-nav-btn dp-next-year-btn" id="dpNextYearBtn" aria-label="Próximo ano">›</button>
-                                </div>
-                                <div class="dp-months-grid" id="dpMonthsGrid"></div>
-                            </div>
-                        </div>
+                    <div class="gcal-view-selector" role="tablist" aria-label="Modo de visualização">
+                        <button type="button" class="gcal-view-btn active" data-view="month" role="tab" aria-selected="true">Mês</button>
+                        <button type="button" class="gcal-view-btn" data-view="week" role="tab" aria-selected="false">Semana</button>
+                        <button type="button" class="gcal-view-btn" data-view="day" role="tab" aria-selected="false">Dia</button>
+                        <button type="button" class="gcal-view-btn" data-view="schedule" role="tab" aria-selected="false">Programação</button>
                     </div>
                 </div>
-                <span class="status-pill">● Calendário ativo</span>
             </section>
 
-            <div class="agenda-layout" id="agendaLayout">
-                <!-- Coluna Esquerda: Calendário -->
-                <div class="agenda-calendar-panel panel">
-                    <div class="agenda-header">
-                        <h2 id="agendaMonthYearTitle">Outubro de 2026</h2>
-                        <div class="agenda-nav-group">
-                            <button type="button" class="agenda-nav-btn" id="agendaPrevMonthBtn" aria-label="Mês anterior" title="Mês anterior">‹</button>
-                            <button type="button" class="agenda-today-btn" id="agendaTodayBtn">Hoje</button>
-                            <button type="button" class="agenda-nav-btn" id="agendaNextMonthBtn" aria-label="Próximo mês" title="Próximo mês">›</button>
+            <!-- Espaço de Trabalho do Google Agenda (Sidebar Lateral + Canvas Principal) -->
+            <div class="gcal-workspace agenda-layout panel" id="agendaLayout">
+                <!-- Sidebar Lateral do Google Agenda -->
+                <aside class="gcal-sidebar">
+                    <!-- Mini-Calendário Mensal -->
+                    <div class="gcal-mini-cal-panel">
+                        <div class="gcal-mini-header">
+                            <span id="gcalMiniTitle" class="gcal-mini-title">Outubro 2026</span>
+                            <div class="gcal-mini-nav">
+                                <button type="button" id="gcalMiniPrevBtn" aria-label="Mês anterior">‹</button>
+                                <button type="button" id="gcalMiniNextBtn" aria-label="Próximo mês">›</button>
+                            </div>
+                        </div>
+                        <div class="gcal-mini-weekdays">
+                            <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+                        </div>
+                        <div class="gcal-mini-grid" id="gcalMiniGrid"></div>
+                    </div>
+
+                    <!-- Minhas Finanças (Filtros no estilo Google Calendar) -->
+                    <div class="gcal-filters-panel">
+                        <h3 class="gcal-sidebar-heading">MINHAS FINANÇAS</h3>
+                        <div class="gcal-checkbox-list">
+                            <label class="gcal-checkbox-label">
+                                <input type="checkbox" id="gcalFilterIncome" checked>
+                                <span class="gcal-check-custom color-income"></span>
+                                <span>Receitas extras & Salário</span>
+                            </label>
+                            <label class="gcal-checkbox-label">
+                                <input type="checkbox" id="gcalFilterExpense" checked>
+                                <span class="gcal-check-custom color-expense"></span>
+                                <span>Despesas avulsas</span>
+                            </label>
+                            <label class="gcal-checkbox-label">
+                                <input type="checkbox" id="gcalFilterPending" checked>
+                                <span class="gcal-check-custom color-pending"></span>
+                                <span>Contas a vencer</span>
+                            </label>
+                            <label class="gcal-checkbox-label">
+                                <input type="checkbox" id="gcalFilterPaid" checked>
+                                <span class="gcal-check-custom color-paid"></span>
+                                <span>Contas pagas</span>
+                            </label>
                         </div>
                     </div>
 
-                    <div class="agenda-weekdays">
-                        <span>Dom</span>
-                        <span>Seg</span>
-                        <span>Ter</span>
-                        <span>Qua</span>
-                        <span>Qui</span>
-                        <span>Sex</span>
-                        <span>Sáb</span>
-                    </div>
-
-                    <div class="agenda-grid" id="agendaCalendarGrid"></div>
-                </div>
-
-                <!-- Coluna Direita: Detalhes do Dia Selecionado -->
-                <div class="agenda-day-details-panel panel" id="agendaDayDetails">
-                    <div class="day-details-header">
-                        <p class="eyebrow" style="margin-bottom: 2px;">DETALHES DO DIA</p>
-                        <h3 id="agendaSelectedDayTitle">25 de Outubro de 2026</h3>
-                    </div>
-
-                    <div class="day-summary-row">
-                        <div class="day-summary-box income">
-                            <span>Entradas</span>
-                            <strong id="agendaDayIncome">R$ 0,00</strong>
+                    <!-- Resumo Financeiro do Mês -->
+                    <div class="gcal-period-kpis">
+                        <h3 class="gcal-sidebar-heading">BALANÇO DO MÊS</h3>
+                        <div class="gcal-kpi-item">
+                            <span>Entradas:</span>
+                            <strong class="income-text" id="agendaMonthIncome">R$ 0,00</strong>
                         </div>
-                        <div class="day-summary-box expense">
-                            <span>Saídas</span>
-                            <strong id="agendaDayExpenses">R$ 0,00</strong>
+                        <div class="gcal-kpi-item">
+                            <span>Saídas:</span>
+                            <strong class="expense-text" id="agendaMonthExpenses">R$ 0,00</strong>
                         </div>
-                        <div class="day-summary-box balance">
-                            <span>Saldo</span>
-                            <strong id="agendaDayBalance">R$ 0,00</strong>
+                        <div class="gcal-kpi-item total">
+                            <span>Saldo previsto:</span>
+                            <strong id="agendaMonthBalance">R$ 0,00</strong>
                         </div>
+                        <div class="gcal-kpi-sub" id="agendaMonthCount">0 movimentações</div>
                     </div>
+                </aside>
 
-                    <div id="agendaDayList" class="transaction-list"></div>
-
-                    <!-- Contas fixas / recorrentes que vencem neste dia -->
-                    <div id="agendaDayRecurring" class="agenda-day-recurring"></div>
+                <!-- Canvas Principal do Calendário -->
+                <div class="gcal-main-canvas agenda-calendar-panel" id="gcalMainCanvas">
+                    <!-- O contêiner renderiza dinamicamente: Mês, Semana, Dia ou Programação -->
+                    <div id="gcalViewContainer"></div>
                 </div>
             </div>
+
+            <!-- Input oculto para sincronização de data do sistema -->
+            <input type="date" id="dashboardMonth" class="hidden" tabindex="-1" aria-hidden="true">
 
             <footer class="main-footer">
                 <p>Meu Financeiro © <span id="currentYear"></span></p>
                 <p>Organize hoje. Conquiste amanhã. ✨</p>
             </footer>
         </main>
+    </div>
+
+    <!-- Modal Rápido Google Agenda: Criar Lançamento ou Conta Fixa -->
+    <div id="gcalQuickModal" class="gcal-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="gcalQuickModalTitle" aria-hidden="true">
+        <div class="gcal-modal-card">
+            <div class="gcal-modal-header">
+                <h3 id="gcalQuickModalTitle">Nova movimentação</h3>
+                <button type="button" id="gcalQuickModalClose" class="gcal-modal-close" aria-label="Fechar">✕</button>
+            </div>
+
+            <!-- Seletor de Tipo no Modal -->
+            <div class="gcal-modal-type-tabs" role="tablist">
+                <button type="button" class="gcal-type-tab active" data-type="despesa" role="tab" aria-selected="true">Despesa</button>
+                <button type="button" class="gcal-type-tab" data-type="receita" role="tab" aria-selected="false">Receita extra</button>
+                <button type="button" class="gcal-type-tab" data-type="recorrente" role="tab" aria-selected="false">Conta fixa</button>
+            </div>
+
+            <form id="gcalQuickForm" class="gcal-quick-form" novalidate>
+                <div class="field">
+                    <label for="gcalQuickDesc">Título / Descrição</label>
+                    <input type="text" id="gcalQuickDesc" placeholder="Ex.: Aluguel, Supermercado, Salário" required maxlength="100">
+                </div>
+
+                <div class="form-row">
+                    <div class="field">
+                        <label for="gcalQuickAmount">Valor (R$)</label>
+                        <input type="number" id="gcalQuickAmount" step="0.01" min="0.01" max="100000000" placeholder="0,00" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="gcalQuickDate">Data</label>
+                        <input type="date" id="gcalQuickDate" required>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="gcalQuickCategory">Categoria</label>
+                    <select id="gcalQuickCategory" class="field-select">
+                        <option value="Alimentação">🍽️ Alimentação</option>
+                        <option value="Moradia">🏠 Moradia</option>
+                        <option value="Água e luz">💡 Água e luz</option>
+                        <option value="Transporte">🚗 Transporte</option>
+                        <option value="Saúde">💊 Saúde</option>
+                        <option value="Educação">📚 Educação</option>
+                        <option value="Lazer">🎮 Lazer</option>
+                        <option value="Compras">🛍️ Compras</option>
+                        <option value="Assinaturas">📱 Assinaturas</option>
+                        <option value="Investimentos">📈 Investimentos</option>
+                        <option value="Salário">💰 Salário</option>
+                        <option value="Outros">📦 Outros</option>
+                    </select>
+                </div>
+
+                <!-- Campo exclusivo para conta fixa (frequência) -->
+                <div class="field hidden" id="gcalRecurringFreqGroup">
+                    <label for="gcalQuickFrequency">Frequência da conta fixa</label>
+                    <select id="gcalQuickFrequency" class="field-select">
+                        <option value="monthly" selected>Mensal</option>
+                        <option value="weekly">Semanal</option>
+                        <option value="biweekly">Quinzenal</option>
+                        <option value="bimonthly">Bimestral</option>
+                        <option value="quarterly">Trimestral</option>
+                        <option value="semiannual">Semestral</option>
+                        <option value="annual">Anual</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="gcalQuickNotes">Observações (opcional)</label>
+                    <input type="text" id="gcalQuickNotes" placeholder="Anotações sobre essa movimentação..." maxlength="150">
+                </div>
+
+                <div class="gcal-modal-actions">
+                    <button type="button" class="button button-secondary" id="gcalQuickModalCancel">Cancelar</button>
+                    <button type="submit" class="button button-primary" id="gcalQuickModalSave">Salvar na agenda</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Google Agenda: Detalhes do Evento Selecionado -->
+    <div id="gcalDetailModal" class="gcal-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="gcalDetailTitle" aria-hidden="true">
+        <div class="gcal-modal-card gcal-detail-card">
+            <div class="gcal-detail-topbar" id="gcalDetailColorBar"></div>
+            <div class="gcal-modal-header" style="padding-top: 14px;">
+                <div class="gcal-detail-heading">
+                    <span id="gcalDetailIcon" class="gcal-detail-type-icon">📦</span>
+                    <div>
+                        <h3 id="gcalDetailTitle">Detalhes do Evento</h3>
+                        <p id="gcalDetailSubtitle" class="gcal-detail-subtitle">Categoria · Data</p>
+                    </div>
+                </div>
+                <button type="button" id="gcalDetailModalClose" class="gcal-modal-close" aria-label="Fechar">✕</button>
+            </div>
+
+            <div class="gcal-detail-body">
+                <div class="gcal-detail-amount-box">
+                    <span class="gcal-detail-amount-label">Valor:</span>
+                    <strong id="gcalDetailAmount" class="gcal-detail-amount">R$ 0,00</strong>
+                    <span id="gcalDetailStatusBadge" class="status-badge">Paga</span>
+                </div>
+
+                <div class="gcal-detail-meta" id="gcalDetailMeta"></div>
+            </div>
+
+            <div class="gcal-modal-actions gcal-detail-actions">
+                <button type="button" class="button button-secondary" id="gcalDetailTogglePaidBtn">Marcar como paga</button>
+                <button type="button" class="button button-secondary" id="gcalDetailEditBtn">Editar</button>
+                <button type="button" class="button button-danger" id="gcalDetailDeleteBtn">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popover Flutuante "+X mais" (quando há muitos eventos no mesmo dia) -->
+    <div id="gcalMorePopover" class="gcal-more-popover hidden" role="dialog" aria-label="Eventos do dia">
+        <div class="gcal-more-header">
+            <span id="gcalMoreDayTitle" class="gcal-more-day-title">25 de Outubro</span>
+            <button type="button" id="gcalMoreCloseBtn" class="gcal-more-close" aria-label="Fechar">✕</button>
+        </div>
+        <div class="gcal-more-list" id="gcalMoreList"></div>
     </div>
 
     <!-- Diálogo de confirmação de exclusão -->
@@ -190,11 +305,11 @@
             <button type="button" id="confirmDialogClose" class="confirm-dialog-close" aria-label="Fechar janela">×</button>
             <div class="confirm-dialog-icon" aria-hidden="true">🗑️</div>
             <p class="confirm-dialog-eyebrow">CONFIRMAÇÃO</p>
-            <h2 id="confirmDialogTitle">Excluir lançamento?</h2>
-            <p id="confirmDialogMessage" class="confirm-dialog-message">Tem certeza de que deseja excluir este lançamento?</p>
+            <h2 id="confirmDialogTitle">Excluir movimentação?</h2>
+            <p id="confirmDialogMessage" class="confirm-dialog-message">Tem certeza de que deseja excluir este item?</p>
             <div class="confirm-dialog-actions">
-                <button type="button" id="confirmDialogCancel" class="button button-secondary">Manter lançamento</button>
-                <button type="button" id="confirmDialogConfirm" class="button button-danger">Excluir lançamento</button>
+                <button type="button" id="confirmDialogCancel" class="button button-secondary">Cancelar</button>
+                <button type="button" id="confirmDialogConfirm" class="button button-danger">Excluir</button>
             </div>
         </div>
     </div>

@@ -2200,65 +2200,19 @@ function initSingleDatePicker(container) {
 }
 
 /* =========================================
-   AGENDA FINANCEIRA (CALENDÁRIO INTERATIVO)
+   AGENDA FINANCEIRA NO ESTILO GOOGLE AGENDAS
 ========================================= */
 
 let agendaSelectedDate = todayISO();
-
-function setupAgenda() {
-    const agendaLayout = $("#agendaLayout");
-    if (!agendaLayout) return;
-
-    agendaSelectedDate = selectedDate() || todayISO();
-
-    const prevMonthBtn = $("#agendaPrevMonthBtn");
-    const nextMonthBtn = $("#agendaNextMonthBtn");
-    const todayBtn = $("#agendaTodayBtn");
-
-    if (prevMonthBtn) {
-        prevMonthBtn.addEventListener("click", () => {
-            const [y, m] = selectedMonth().split("-").map(Number);
-            const prevD = new Date(y, m - 2, 1);
-            const isoMonth = `${prevD.getFullYear()}-${String(prevD.getMonth() + 1).padStart(2, "0")}`;
-            const isoDate = `${isoMonth}-01`;
-            sessionStorage.setItem("meuFinanceiro.date", isoDate);
-            sessionStorage.setItem("meuFinanceiro.month", isoMonth);
-            const dashInput = $("#dashboardMonth");
-            if (dashInput) dashInput.value = isoDate;
-            syncDatePicker();
-            renderAll();
-        });
-    }
-
-    if (nextMonthBtn) {
-        nextMonthBtn.addEventListener("click", () => {
-            const [y, m] = selectedMonth().split("-").map(Number);
-            const nextD = new Date(y, m, 1);
-            const isoMonth = `${nextD.getFullYear()}-${String(nextD.getMonth() + 1).padStart(2, "0")}`;
-            const isoDate = `${isoMonth}-01`;
-            sessionStorage.setItem("meuFinanceiro.date", isoDate);
-            sessionStorage.setItem("meuFinanceiro.month", isoMonth);
-            const dashInput = $("#dashboardMonth");
-            if (dashInput) dashInput.value = isoDate;
-            syncDatePicker();
-            renderAll();
-        });
-    }
-
-    if (todayBtn) {
-        todayBtn.addEventListener("click", () => {
-            const isoDate = todayISO();
-            const isoMonth = currentMonth();
-            sessionStorage.setItem("meuFinanceiro.date", isoDate);
-            sessionStorage.setItem("meuFinanceiro.month", isoMonth);
-            const dashInput = $("#dashboardMonth");
-            if (dashInput) dashInput.value = isoDate;
-            agendaSelectedDate = isoDate;
-            syncDatePicker();
-            renderAll();
-        });
-    }
-}
+let agendaCurrentView = "month"; // "month" | "week" | "day" | "schedule"
+let agendaSearchQuery = "";
+let agendaFilters = {
+    income: true,
+    expense: true,
+    pending: true,
+    paid: true
+};
+let gcalMiniMonth = currentMonth();
 
 function formatChipMoney(value) {
     const val = Number(value || 0);
@@ -2271,17 +2225,280 @@ function formatChipMoney(value) {
     return "R$" + Math.round(val);
 }
 
+function getAgendaEventsForDate(dayIso, monthStr) {
+    const mStr = monthStr || dayIso.slice(0, 7);
+    const evts = [];
+
+    // 1. Transações manuais (receitas e despesas)
+    const dayTxs = (data.transactions || []).filter((t) => !t.recurringBillId && t.date === dayIso);
+    dayTxs.forEach((t) => {
+        const isIncome = t.type === "receita";
+        if (isIncome && !agendaFilters.income) return;
+        if (!isIncome && !agendaFilters.expense) return;
+
+        evts.push({
+            id: t.id,
+            kind: "transaction",
+            type: isIncome ? "income" : "expense",
+            title: t.description || (isIncome ? "Receita extra" : "Despesa"),
+            category: t.category || (isIncome ? "Outros" : "Geral"),
+            amount: Number(t.amount || 0),
+            date: dayIso,
+            isPaid: true,
+            notes: t.notes || "",
+            raw: t
+        });
+    });
+
+    // 2. Salário mensal configurado (registrado simbolicamente no dia 05)
+    if (agendaFilters.income && dayIso.slice(8, 10) === "05") {
+        const salaryVal = Number((data.salaries && data.salaries[mStr]) || 0);
+        const hasManualSalary = dayTxs.some((t) => t.category === "Salário" && t.type === "receita");
+        if (salaryVal > 0 && !hasManualSalary) {
+            evts.unshift({
+                id: `salary-${mStr}`,
+                kind: "salary",
+                type: "income",
+                title: "Salário do mês",
+                category: "Salário",
+                amount: salaryVal,
+                date: dayIso,
+                isPaid: true,
+                notes: "Entrada principal configurada",
+                raw: null
+            });
+        }
+    }
+
+    // 3. Contas fixas e assinaturas recorrentes
+    (data.recurringBills || []).forEach((b) => {
+        const occs = getBillOccurrencesInMonth(b, mStr);
+        if (occs.includes(dayIso)) {
+            const isPaid = isBillOccurrencePaid(b, dayIso);
+            if (isPaid && !agendaFilters.paid) return;
+            if (!isPaid && !agendaFilters.pending) return;
+
+            evts.push({
+                id: b.id,
+                kind: "recurring",
+                type: isPaid ? "paid" : "pending",
+                title: b.name,
+                category: b.category || "Assinaturas",
+                amount: Number(b.amount || 0),
+                date: dayIso,
+                isPaid,
+                frequency: b.frequency || "monthly",
+                bill: b,
+                raw: b
+            });
+        }
+    });
+
+    // 4. Filtrar por termo de busca se houver
+    if (agendaSearchQuery) {
+        const q = agendaSearchQuery.toLowerCase();
+        return evts.filter((e) => {
+            return (
+                (e.title && e.title.toLowerCase().includes(q)) ||
+                (e.category && e.category.toLowerCase().includes(q)) ||
+                (e.notes && e.notes.toLowerCase().includes(q))
+            );
+        });
+    }
+
+    return evts;
+}
+
+function setupAgenda() {
+    const agendaLayout = $("#agendaLayout");
+    if (!agendaLayout) return;
+
+    agendaSelectedDate = selectedDate() || todayISO();
+    gcalMiniMonth = agendaSelectedDate.slice(0, 7);
+
+    // Botão "Hoje"
+    const todayBtn = $("#agendaTodayBtn");
+    if (todayBtn) {
+        todayBtn.addEventListener("click", () => {
+            agendaSelectedDate = todayISO();
+            const curM = currentMonth();
+            sessionStorage.setItem("meuFinanceiro.date", agendaSelectedDate);
+            sessionStorage.setItem("meuFinanceiro.month", curM);
+            gcalMiniMonth = curM;
+            renderAll();
+        });
+    }
+
+    // Botões de navegação Anterior / Próximo
+    const prevBtn = $("#agendaPrevMonthBtn");
+    const nextBtn = $("#agendaNextMonthBtn");
+
+    if (prevBtn) {
+        prevBtn.addEventListener("click", () => {
+            navigateAgendaPeriod(-1);
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener("click", () => {
+            navigateAgendaPeriod(1);
+        });
+    }
+
+    // Seletor de Modo de Visualização (Mês, Semana, Dia, Programação)
+    document.querySelectorAll(".gcal-view-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".gcal-view-btn").forEach((b) => {
+                b.classList.remove("active");
+                b.setAttribute("aria-selected", "false");
+            });
+            btn.classList.add("active");
+            btn.setAttribute("aria-selected", "true");
+            agendaCurrentView = btn.dataset.view || "month";
+            renderAgenda();
+        });
+    });
+
+    // Campo de busca em tempo real
+    const searchInput = $("#gcalSearchInput");
+    if (searchInput) {
+        searchInput.addEventListener("input", () => {
+            agendaSearchQuery = searchInput.value.trim();
+            renderAgenda();
+        });
+    }
+
+    // Filtros de visualização ("Minhas Finanças")
+    const filterIncome = $("#gcalFilterIncome");
+    const filterExpense = $("#gcalFilterExpense");
+    const filterPending = $("#gcalFilterPending");
+    const filterPaid = $("#gcalFilterPaid");
+
+    [filterIncome, filterExpense, filterPending, filterPaid].forEach((chk) => {
+        if (chk) {
+            chk.addEventListener("change", () => {
+                agendaFilters.income = !!(filterIncome && filterIncome.checked);
+                agendaFilters.expense = !!(filterExpense && filterExpense.checked);
+                agendaFilters.pending = !!(filterPending && filterPending.checked);
+                agendaFilters.paid = !!(filterPaid && filterPaid.checked);
+                renderAgenda();
+            });
+        }
+    });
+
+    // Mini-calendário navegação
+    const miniPrev = $("#gcalMiniPrevBtn");
+    const miniNext = $("#gcalMiniNextBtn");
+
+    if (miniPrev) {
+        miniPrev.addEventListener("click", () => {
+            const [y, m] = gcalMiniMonth.split("-").map(Number);
+            const prevD = new Date(y, m - 2, 1);
+            gcalMiniMonth = `${prevD.getFullYear()}-${String(prevD.getMonth() + 1).padStart(2, "0")}`;
+            renderGcalMiniCalendar();
+        });
+    }
+
+    if (miniNext) {
+        miniNext.addEventListener("click", () => {
+            const [y, m] = gcalMiniMonth.split("-").map(Number);
+            const nextD = new Date(y, m, 1);
+            gcalMiniMonth = `${nextD.getFullYear()}-${String(nextD.getMonth() + 1).padStart(2, "0")}`;
+            renderGcalMiniCalendar();
+        });
+    }
+
+    // Botão Google "+ Criar"
+    const createBtn = $("#gcalCreateBtn");
+    if (createBtn) {
+        createBtn.addEventListener("click", () => {
+            openGcalQuickModal(agendaSelectedDate || todayISO());
+        });
+    }
+
+    // Setup do Modal Rápido Google
+    setupGcalQuickModal();
+
+    // Setup do Modal de Detalhes
+    setupGcalDetailModal();
+
+    // Fechar popover ao clicar fora
+    document.addEventListener("click", (e) => {
+        const popover = $("#gcalMorePopover");
+        if (popover && !popover.classList.contains("hidden")) {
+            if (!popover.contains(e.target) && !e.target.closest(".gcal-chip-more")) {
+                popover.classList.add("hidden");
+            }
+        }
+    });
+}
+
+function navigateAgendaPeriod(direction) {
+    if (agendaCurrentView === "month" || agendaCurrentView === "schedule") {
+        const curM = selectedMonth() || currentMonth();
+        const [y, m] = curM.split("-").map(Number);
+        const newD = new Date(y, m - 1 + direction, 1);
+        const isoM = `${newD.getFullYear()}-${String(newD.getMonth() + 1).padStart(2, "0")}`;
+        const isoD = `${isoM}-01`;
+        sessionStorage.setItem("meuFinanceiro.date", isoD);
+        sessionStorage.setItem("meuFinanceiro.month", isoM);
+        gcalMiniMonth = isoM;
+        agendaSelectedDate = isoD;
+    } else if (agendaCurrentView === "week") {
+        const [y, m, d] = agendaSelectedDate.split("-").map(Number);
+        const dt = new Date(y, m - 1, d + direction * 7);
+        agendaSelectedDate = toISODate(dt);
+        const isoM = agendaSelectedDate.slice(0, 7);
+        sessionStorage.setItem("meuFinanceiro.date", agendaSelectedDate);
+        sessionStorage.setItem("meuFinanceiro.month", isoM);
+        gcalMiniMonth = isoM;
+    } else if (agendaCurrentView === "day") {
+        const [y, m, d] = agendaSelectedDate.split("-").map(Number);
+        const dt = new Date(y, m - 1, d + direction);
+        agendaSelectedDate = toISODate(dt);
+        const isoM = agendaSelectedDate.slice(0, 7);
+        sessionStorage.setItem("meuFinanceiro.date", agendaSelectedDate);
+        sessionStorage.setItem("meuFinanceiro.month", isoM);
+        gcalMiniMonth = isoM;
+    }
+
+    const dashInput = $("#dashboardMonth");
+    if (dashInput) dashInput.value = agendaSelectedDate;
+    syncDatePicker();
+    renderAll();
+}
+
 function renderAgenda() {
     const agendaLayout = $("#agendaLayout");
     if (!agendaLayout) return;
 
-    const currentM = selectedMonth();
+    const currentM = selectedMonth() || currentMonth();
     const [y, m] = currentM.split("-").map(Number);
-    const monthYearTitle = $("#agendaMonthYearTitle");
-    if (monthYearTitle) {
-        monthYearTitle.textContent = `${DP_MONTH_NAMES[m - 1]} de ${y}`;
+
+    // 1. Atualizar Título no Estilo Google Agenda
+    const titleEl = $("#agendaMonthYearTitle");
+    if (titleEl) {
+        if (agendaCurrentView === "month") {
+            titleEl.textContent = `${DP_MONTH_NAMES[m - 1]} de ${y}`;
+        } else if (agendaCurrentView === "week") {
+            const curDate = new Date(`${agendaSelectedDate}T12:00:00`);
+            const dayOfWeek = (curDate.getDay() + 6) % 7;
+            const monday = new Date(curDate);
+            monday.setDate(curDate.getDate() - dayOfWeek);
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            titleEl.textContent = `${monday.getDate()} a ${sunday.getDate()} de ${DP_MONTH_NAMES[sunday.getMonth()]} de ${sunday.getFullYear()}`;
+        } else if (agendaCurrentView === "day") {
+            const [dY, dM, dD] = agendaSelectedDate.split("-").map(Number);
+            const dObj = new Date(dY, dM - 1, dD);
+            const daysNames = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+            titleEl.textContent = `${dD} de ${DP_MONTH_NAMES[dM - 1]} de ${dY} (${daysNames[dObj.getDay()]})`;
+        } else if (agendaCurrentView === "schedule") {
+            titleEl.textContent = `Programação · ${DP_MONTH_NAMES[m - 1]} de ${y}`;
+        }
     }
 
+    // 2. Atualizar KPIs do Mês na Sidebar
     const monthSummary = getMonthlySummary(currentM);
     const monthIncomeEl = $("#agendaMonthIncome");
     const monthExpensesEl = $("#agendaMonthExpenses");
@@ -2299,289 +2516,771 @@ function renderAgenda() {
         monthCountEl.textContent = `${count} ${count === 1 ? "movimentação" : "movimentações"}`;
     }
 
-    const grid = $("#agendaCalendarGrid");
-    if (grid) {
-        grid.innerHTML = "";
-        const firstDayIdx = new Date(y, m - 1, 1).getDay();
-        const daysInMonth = new Date(y, m, 0).getDate();
-        const daysInPrevMonth = new Date(y, m - 1, 0).getDate();
-        const todayStr = todayISO();
+    // 3. Renderizar Mini-Calendário da Sidebar
+    renderGcalMiniCalendar();
 
-        function buildDayEvents(dayIso, monthStr) {
-            const evts = [];
-            // Transações do dia
-            const dayTxs = data.transactions.filter((t) => t.date === dayIso);
-            dayTxs.forEach((t) => {
-                evts.push({
-                    type: t.type,
-                    title: t.description || (t.type === "receita" ? "Receita" : "Despesa"),
-                    amount: t.amount,
-                    isPaid: true
-                });
-            });
+    // 4. Renderizar o Canvas Conforme a View Selecionada
+    const container = $("#gcalViewContainer");
+    if (!container) return;
+    container.innerHTML = "";
 
-            // Contas fixas / recorrentes com vencimento no dia
-            const dayBills = (data.recurringBills || []).filter((b) => {
-                return getBillOccurrencesInMonth(b, monthStr).includes(dayIso);
-            });
-            dayBills.forEach((b) => {
-                evts.push({
-                    type: "recurring",
-                    title: b.name,
-                    amount: b.amount,
-                    isPaid: isBillOccurrencePaid(b, dayIso)
-                });
-            });
-
-            return evts;
-        }
-
-        function renderChipsHtml(evts) {
-            if (!evts.length) return "";
-            const maxChips = 2;
-            const visible = evts.slice(0, maxChips);
-            const remaining = evts.length - maxChips;
-
-            let html = visible.map((evt) => {
-                if (evt.type === "receita") {
-                    return `
-                        <div class="agenda-chip chip-income" title="Receita: ${escapeHTML(evt.title)} - ${money(evt.amount)}">
-                            <span class="chip-dot">●</span>
-                            <span class="chip-title">${escapeHTML(evt.title)}</span>
-                            <span class="chip-val">+${formatChipMoney(evt.amount)}</span>
-                        </div>
-                    `;
-                } else if (evt.type === "despesa") {
-                    return `
-                        <div class="agenda-chip chip-expense" title="Despesa: ${escapeHTML(evt.title)} - ${money(evt.amount)}">
-                            <span class="chip-dot">●</span>
-                            <span class="chip-title">${escapeHTML(evt.title)}</span>
-                            <span class="chip-val">−${formatChipMoney(evt.amount)}</span>
-                        </div>
-                    `;
-                } else {
-                    return `
-                        <div class="agenda-chip chip-recurring ${evt.isPaid ? "paid" : "due"}" title="Conta Fixa: ${escapeHTML(evt.title)} - ${money(evt.amount)} (${evt.isPaid ? "Paga" : "A vencer"})">
-                            <span class="chip-icon">${evt.isPaid ? "✓" : "⟳"}</span>
-                            <span class="chip-title">${escapeHTML(evt.title)}</span>
-                            <span class="chip-val">${formatChipMoney(evt.amount)}</span>
-                        </div>
-                    `;
-                }
-            }).join("");
-
-            if (remaining > 0) {
-                html += `<div class="agenda-chip chip-more">+${remaining} mais</div>`;
-            }
-
-            return `<div class="agenda-day-chips">${html}</div>`;
-        }
-
-        // Prev month days
-        for (let i = firstDayIdx - 1; i >= 0; i--) {
-            const dayNum = daysInPrevMonth - i;
-            const prevM = m === 1 ? 12 : m - 1;
-            const prevY = m === 1 ? y - 1 : y;
-            const iso = `${prevY}-${String(prevM).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
-            const mStr = `${prevY}-${String(prevM).padStart(2, "0")}`;
-            const evts = buildDayEvents(iso, mStr);
-
-            const cell = document.createElement("div");
-            cell.className = "agenda-day other-month";
-            if (iso === agendaSelectedDate) cell.classList.add("selected");
-            cell.innerHTML = `
-                <div class="agenda-day-header">
-                    <span class="agenda-day-num is-other-month">${dayNum}</span>
-                </div>
-                ${renderChipsHtml(evts)}
-            `;
-            cell.addEventListener("click", () => {
-                agendaSelectedDate = iso;
-                sessionStorage.setItem("meuFinanceiro.date", iso);
-                sessionStorage.setItem("meuFinanceiro.month", mStr);
-                const dashInput = $("#dashboardMonth");
-                if (dashInput) dashInput.value = iso;
-                syncDatePicker();
-                renderAll();
-            });
-            grid.appendChild(cell);
-        }
-
-        // Current month days
-        for (let d = 1; d <= daysInMonth; d++) {
-            const iso = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-            const evts = buildDayEvents(iso, currentM);
-
-            const cell = document.createElement("div");
-            cell.className = "agenda-day";
-            if (iso === todayStr) cell.classList.add("today");
-            if (iso === agendaSelectedDate) cell.classList.add("selected");
-
-            cell.innerHTML = `
-                <div class="agenda-day-header">
-                    <span class="agenda-day-num ${iso === todayStr ? "today-circle" : ""}">${d}</span>
-                </div>
-                ${renderChipsHtml(evts)}
-            `;
-
-            cell.addEventListener("click", () => {
-                agendaSelectedDate = iso;
-                sessionStorage.setItem("meuFinanceiro.date", iso);
-                const dashInput = $("#dashboardMonth");
-                if (dashInput) dashInput.value = iso;
-                syncDatePicker();
-                renderAgenda();
-            });
-
-            grid.appendChild(cell);
-        }
-
-        // Next month days
-        const currentSlots = firstDayIdx + daysInMonth;
-        const totalSlots = currentSlots > 35 ? 42 : 35;
-        const remainingSlots = totalSlots - currentSlots;
-        for (let d = 1; d <= remainingSlots; d++) {
-            const nextM = m === 12 ? 1 : m + 1;
-            const nextY = m === 12 ? y + 1 : y;
-            const iso = `${nextY}-${String(nextM).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-            const mStr = `${nextY}-${String(nextM).padStart(2, "0")}`;
-            const evts = buildDayEvents(iso, mStr);
-
-            const cell = document.createElement("div");
-            cell.className = "agenda-day other-month";
-            if (iso === agendaSelectedDate) cell.classList.add("selected");
-            cell.innerHTML = `
-                <div class="agenda-day-header">
-                    <span class="agenda-day-num is-other-month">${d}</span>
-                </div>
-                ${renderChipsHtml(evts)}
-            `;
-            cell.addEventListener("click", () => {
-                agendaSelectedDate = iso;
-                sessionStorage.setItem("meuFinanceiro.date", iso);
-                sessionStorage.setItem("meuFinanceiro.month", mStr);
-                const dashInput = $("#dashboardMonth");
-                if (dashInput) dashInput.value = iso;
-                syncDatePicker();
-                renderAll();
-            });
-            grid.appendChild(cell);
-        }
+    if (agendaCurrentView === "month") {
+        renderGoogleMonthView(container, y, m);
+    } else if (agendaCurrentView === "week") {
+        renderGoogleWeekView(container);
+    } else if (agendaCurrentView === "day") {
+        renderGoogleDayView(container);
+    } else if (agendaCurrentView === "schedule") {
+        renderGoogleScheduleView(container, currentM);
     }
-
-    renderAgendaDayDetails();
 }
 
-function renderAgendaDayDetails() {
-    const detailsContainer = $("#agendaDayDetails");
-    if (!detailsContainer) return;
+/* =========================================
+   RENDERERS DE CADA VISUALIZAÇÃO GOOGLE
+========================================= */
 
-    const iso = agendaSelectedDate || todayISO();
-    const parts = iso.split("-");
-    const day = parseInt(parts[2], 10);
-    const month = parseInt(parts[1], 10) - 1;
-    const year = parseInt(parts[0], 10);
+function renderGcalMiniCalendar() {
+    const miniTitle = $("#gcalMiniTitle");
+    const miniGrid = $("#gcalMiniGrid");
+    if (!miniGrid) return;
 
-    const titleEl = $("#agendaSelectedDayTitle");
-    if (titleEl) {
-        titleEl.textContent = `${day} de ${DP_MONTH_NAMES[month]} de ${year}`;
+    const [y, m] = gcalMiniMonth.split("-").map(Number);
+    if (miniTitle) {
+        miniTitle.textContent = `${DP_MONTH_NAMES[m - 1].slice(0, 3)} ${y}`;
     }
 
-    const dayTxs = data.transactions.filter((t) => t.date === iso);
-    const dayIncome = dayTxs.filter((t) => t.type === "receita").reduce((sum, t) => sum + t.amount, 0);
-    const dayExpenses = dayTxs.filter((t) => t.type === "despesa").reduce((sum, t) => sum + t.amount, 0);
-    const dayBalance = dayIncome - dayExpenses;
+    miniGrid.innerHTML = "";
+    const firstDayIdx = new Date(y, m - 1, 1).getDay();
+    const daysInMonth = new Date(y, m, 0).getDate();
+    const daysInPrevMonth = new Date(y, m - 1, 0).getDate();
+    const todayStr = todayISO();
 
-    const dayIncomeEl = $("#agendaDayIncome");
-    const dayExpensesEl = $("#agendaDayExpenses");
-    const dayBalanceEl = $("#agendaDayBalance");
+    // Dias do mês anterior
+    for (let i = firstDayIdx - 1; i >= 0; i--) {
+        const d = daysInPrevMonth - i;
+        const prevM = m === 1 ? 12 : m - 1;
+        const prevY = m === 1 ? y - 1 : y;
+        const iso = `${prevY}-${String(prevM).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
-    if (dayIncomeEl) dayIncomeEl.textContent = money(dayIncome);
-    if (dayExpensesEl) dayExpensesEl.textContent = money(dayExpenses);
-    if (dayBalanceEl) dayBalanceEl.textContent = money(dayBalance);
+        const cell = document.createElement("div");
+        cell.className = "gcal-mini-day other-month";
+        cell.textContent = d;
+        cell.addEventListener("click", () => {
+            selectAgendaDate(iso);
+        });
+        miniGrid.appendChild(cell);
+    }
 
-    const listEl = $("#agendaDayList");
-    if (!listEl) return;
+    // Dias do mês atual
+    for (let d = 1; d <= daysInMonth; d++) {
+        const iso = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+        const cell = document.createElement("div");
+        cell.className = "gcal-mini-day";
+        if (iso === todayStr) cell.classList.add("today");
+        if (iso === agendaSelectedDate) cell.classList.add("selected");
+        cell.textContent = d;
+        cell.addEventListener("click", () => {
+            selectAgendaDate(iso);
+        });
+        miniGrid.appendChild(cell);
+    }
 
-    if (!dayTxs.length) {
-        listEl.innerHTML = `
-            <div class="empty-state" style="padding: 24px 10px;">
-                <p>Nenhuma movimentação para este dia.</p>
-                <p><a href="lancamentos.html" class="text-button">+ Fazer lançamento neste dia</a></p>
+    // Dias do próximo mês
+    const totalSlots = firstDayIdx + daysInMonth > 35 ? 42 : 35;
+    const remaining = totalSlots - (firstDayIdx + daysInMonth);
+    for (let d = 1; d <= remaining; d++) {
+        const nextM = m === 12 ? 1 : m + 1;
+        const nextY = m === 12 ? y + 1 : y;
+        const iso = `${nextY}-${String(nextM).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+
+        const cell = document.createElement("div");
+        cell.className = "gcal-mini-day other-month";
+        cell.textContent = d;
+        cell.addEventListener("click", () => {
+            selectAgendaDate(iso);
+        });
+        miniGrid.appendChild(cell);
+    }
+}
+
+function selectAgendaDate(isoDate) {
+    agendaSelectedDate = isoDate;
+    const mStr = isoDate.slice(0, 7);
+    sessionStorage.setItem("meuFinanceiro.date", isoDate);
+    sessionStorage.setItem("meuFinanceiro.month", mStr);
+    gcalMiniMonth = mStr;
+
+    const dashInput = $("#dashboardMonth");
+    if (dashInput) dashInput.value = isoDate;
+    syncDatePicker();
+    renderAll();
+}
+
+/* 1. Modo Mês Google Agenda */
+function renderGoogleMonthView(container, y, m) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "gcal-month-view";
+
+    // Cabeçalho de dias da semana
+    const weekdaysEl = document.createElement("div");
+    weekdaysEl.className = "gcal-month-weekdays";
+    ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].forEach((name) => {
+        const span = document.createElement("span");
+        span.textContent = name;
+        weekdaysEl.appendChild(span);
+    });
+    wrapper.appendChild(weekdaysEl);
+
+    // Grade do Mês
+    const gridEl = document.createElement("div");
+    gridEl.className = "gcal-month-grid";
+    gridEl.id = "agendaCalendarGrid";
+
+    const firstDayIdx = new Date(y, m - 1, 1).getDay();
+    const daysInMonth = new Date(y, m, 0).getDate();
+    const daysInPrevMonth = new Date(y, m - 1, 0).getDate();
+    const todayStr = todayISO();
+
+    function createDayCell(dNum, iso, isOtherMonth) {
+        const cell = document.createElement("div");
+        cell.className = `gcal-month-day agenda-day ${isOtherMonth ? "other-month" : ""}`;
+        if (iso === todayStr) cell.classList.add("today");
+        if (iso === agendaSelectedDate) cell.classList.add("selected");
+        cell.dataset.date = iso;
+
+        const evts = getAgendaEventsForDate(iso, iso.slice(0, 7));
+
+        // Calcular saldo líquido do dia
+        let dayNet = 0;
+        evts.forEach((e) => {
+            if (e.type === "income") dayNet += e.amount;
+            else dayNet -= e.amount;
+        });
+
+        // Topo da célula (número do dia e saldo)
+        const topEl = document.createElement("div");
+        topEl.className = "gcal-day-top agenda-day-header";
+        topEl.innerHTML = `
+            <span class="gcal-day-num agenda-day-num ${iso === todayStr ? "today-circle" : ""}">${dNum}</span>
+            ${dayNet !== 0 ? `<span class="gcal-day-balance-badge ${dayNet > 0 ? "pos" : "neg"}">${dayNet > 0 ? "+" : "−"}${formatChipMoney(Math.abs(dayNet))}</span>` : ""}
+        `;
+        cell.appendChild(topEl);
+
+        // Lista de chips de eventos (máximo 3 visíveis no estilo Google)
+        const listEl = document.createElement("div");
+        listEl.className = "gcal-day-events-list agenda-day-chips";
+
+        const maxVisible = 3;
+        const visibleEvts = evts.slice(0, maxVisible);
+        const remaining = evts.length - maxVisible;
+
+        visibleEvts.forEach((evt) => {
+            const chip = document.createElement("div");
+            chip.className = `gcal-chip agenda-chip type-${evt.type}`;
+            const icon = CATEGORY_ICONS[evt.category] || (evt.type === "income" ? "💰" : "📦");
+
+            chip.innerHTML = `
+                <div class="gcal-chip-left">
+                    <span>${icon}</span>
+                    <span class="gcal-chip-title chip-title">${escapeHTML(evt.title)}</span>
+                </div>
+                <span class="gcal-chip-val chip-val">${evt.type === "income" ? "+" : "−"}${formatChipMoney(evt.amount)}</span>
+            `;
+            chip.addEventListener("click", (e) => {
+                e.stopPropagation();
+                openGcalDetailModal(evt);
+            });
+            listEl.appendChild(chip);
+        });
+
+        if (remaining > 0) {
+            const moreBtn = document.createElement("button");
+            moreBtn.type = "button";
+            moreBtn.className = "gcal-chip-more agenda-chip chip-more";
+            moreBtn.textContent = `+${remaining} mais`;
+            moreBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                openGcalMorePopover(evts, moreBtn, iso);
+            });
+            listEl.appendChild(moreBtn);
+        }
+
+        cell.appendChild(listEl);
+
+        cell.addEventListener("click", () => {
+            selectAgendaDate(iso);
+        });
+
+        cell.addEventListener("dblclick", () => {
+            openGcalQuickModal(iso);
+        });
+
+        return cell;
+    }
+
+    // Dias do mês anterior
+    for (let i = firstDayIdx - 1; i >= 0; i--) {
+        const d = daysInPrevMonth - i;
+        const prevM = m === 1 ? 12 : m - 1;
+        const prevY = m === 1 ? y - 1 : y;
+        const iso = `${prevY}-${String(prevM).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+        gridEl.appendChild(createDayCell(d, iso, true));
+    }
+
+    // Dias do mês atual
+    for (let d = 1; d <= daysInMonth; d++) {
+        const iso = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+        gridEl.appendChild(createDayCell(d, iso, false));
+    }
+
+    // Dias do próximo mês
+    const totalSlots = firstDayIdx + daysInMonth > 35 ? 42 : 35;
+    const remaining = totalSlots - (firstDayIdx + daysInMonth);
+    for (let d = 1; d <= remaining; d++) {
+        const nextM = m === 12 ? 1 : m + 1;
+        const nextY = m === 12 ? y + 1 : y;
+        const iso = `${nextY}-${String(nextM).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+        gridEl.appendChild(createDayCell(d, iso, true));
+    }
+
+    wrapper.appendChild(gridEl);
+    container.appendChild(wrapper);
+}
+
+/* 2. Modo Semana Google Agenda */
+function renderGoogleWeekView(container) {
+    const curDate = new Date(`${agendaSelectedDate}T12:00:00`);
+    const dayOfWeek = (curDate.getDay() + 6) % 7;
+    const monday = new Date(curDate);
+    monday.setDate(curDate.getDate() - dayOfWeek);
+
+    const weekWrapper = document.createElement("div");
+    weekWrapper.className = "gcal-week-view";
+
+    const daysNames = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+    const todayStr = todayISO();
+
+    for (let i = 0; i < 7; i++) {
+        const curDay = new Date(monday);
+        curDay.setDate(monday.getDate() + i);
+        const iso = toISODate(curDay);
+        const evts = getAgendaEventsForDate(iso);
+
+        const col = document.createElement("div");
+        col.className = `gcal-week-col ${iso === todayStr ? "today" : ""}`;
+
+        // Topo da Coluna
+        col.innerHTML = `
+            <div class="gcal-week-col-header">
+                <span class="gcal-week-col-name">${daysNames[i]}</span>
+                <span class="gcal-week-col-num">${curDay.getDate()}</span>
             </div>
         `;
-    } else {
-        listEl.innerHTML = dayTxs.map((t) => {
-            const isIncome = t.type === "receita";
-            const icon = CATEGORY_ICONS[t.category] || "📦";
-            return `
-                <div class="transaction-item">
-                    <div class="transaction-icon">${icon}</div>
-                    <div class="transaction-info">
-                        <h3>${escapeHTML(t.description)}</h3>
-                        <p>${escapeHTML(t.category)} · ${formatDate(t.date)}</p>
+
+        const eventsContainer = document.createElement("div");
+        eventsContainer.className = "gcal-week-col-events";
+
+        if (!evts.length) {
+            eventsContainer.innerHTML = `<p style="font-size: 11px; color: var(--muted); text-align: center; margin: 20px 0;">Sem eventos</p>`;
+        } else {
+            evts.forEach((evt) => {
+                const icon = CATEGORY_ICONS[evt.category] || "📦";
+                const card = document.createElement("div");
+                card.className = "gcal-week-event-card";
+                card.style.borderLeftColor = evt.type === "income" ? "#10b981" : (evt.type === "paid" ? "#3b82f6" : (evt.type === "pending" ? "#f59e0b" : "#ef4444"));
+
+                card.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px;">
+                        <span>${icon} <strong>${escapeHTML(evt.title)}</strong></span>
+                        <span class="${evt.type === "income" ? "income-text" : "expense-text"}">${evt.type === "income" ? "+" : "−"}${money(evt.amount)}</span>
                     </div>
-                    <div class="transaction-right">
-                        <div class="transaction-amount ${isIncome ? "income-text" : "expense-text"}">
-                            ${isIncome ? "+" : "−"}${money(t.amount)}
-                        </div>
-                        <div class="transaction-actions">
-                            <button type="button" class="btn-action edit" data-action="edit" data-id="${t.id}" title="Editar">✎</button>
-                            <button type="button" class="btn-action delete" data-action="delete" data-id="${t.id}" title="Excluir">🗑</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join("");
+                    <small style="color: var(--muted); font-size: 10px;">${escapeHTML(evt.category)} · ${evt.isPaid ? "Paga" : "A vencer"}</small>
+                `;
+                card.addEventListener("click", () => {
+                    openGcalDetailModal(evt);
+                });
+                eventsContainer.appendChild(card);
+            });
+        }
+
+        col.appendChild(eventsContainer);
+
+        const addBtn = document.createElement("button");
+        addBtn.type = "button";
+        addBtn.className = "gcal-week-add-btn";
+        addBtn.textContent = "+ Novo lançamento";
+        addBtn.addEventListener("click", () => {
+            openGcalQuickModal(iso);
+        });
+        col.appendChild(addBtn);
+
+        weekWrapper.appendChild(col);
     }
 
-    // Contas fixas / recorrentes que vencem neste dia
-    const recurringEl = $("#agendaDayRecurring");
-    if (recurringEl) {
-        const mStr = `${year}-${String(month + 1).padStart(2, "0")}`;
-        const dayBills = (data.recurringBills || []).filter((b) => {
-            return getBillOccurrencesInMonth(b, mStr).includes(iso);
-        });
-        if (!dayBills.length) {
-            recurringEl.innerHTML = "";
-        } else {
-            recurringEl.innerHTML = `
-                <div class="agenda-recurring-header">
-                    <h4>🔔 Contas com vencimento neste dia (${dayBills.length})</h4>
+    container.appendChild(weekWrapper);
+}
+
+/* 3. Modo Dia Google Agenda */
+function renderGoogleDayView(container) {
+    const iso = agendaSelectedDate;
+    const parts = iso.split("-").map(Number);
+    const dObj = new Date(parts[0], parts[1] - 1, parts[2]);
+    const daysNames = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+
+    const evts = getAgendaEventsForDate(iso);
+
+    let incTotal = 0;
+    let expTotal = 0;
+    evts.forEach((e) => {
+        if (e.type === "income") incTotal += e.amount;
+        else expTotal += e.amount;
+    });
+    const netBal = incTotal - expTotal;
+
+    const dayViewEl = document.createElement("div");
+    dayViewEl.className = "gcal-day-view";
+
+    dayViewEl.innerHTML = `
+        <div class="gcal-day-view-header">
+            <div>
+                <p class="eyebrow" style="margin-bottom: 2px;">VISUALIZAÇÃO DO DIA</p>
+                <h3 class="gcal-day-view-title" id="agendaSelectedDayTitle">${daysNames[dObj.getDay()]}, ${parts[2]} de ${DP_MONTH_NAMES[parts[1] - 1]} de ${parts[0]}</h3>
+            </div>
+            <button type="button" class="button button-primary" id="btnGcalAddDay">+ Adicionar para este dia</button>
+        </div>
+
+        <div class="gcal-day-kpis">
+            <div class="gcal-day-kpi-card">
+                <span class="gcal-day-kpi-label">Entradas do dia</span>
+                <strong class="gcal-day-kpi-val income-text" id="agendaDayIncome">${money(incTotal)}</strong>
+            </div>
+            <div class="gcal-day-kpi-card">
+                <span class="gcal-day-kpi-label">Saídas do dia</span>
+                <strong class="gcal-day-kpi-val expense-text" id="agendaDayExpenses">${money(expTotal)}</strong>
+            </div>
+            <div class="gcal-day-kpi-card">
+                <span class="gcal-day-kpi-label">Saldo líquido</span>
+                <strong class="gcal-day-kpi-val" id="agendaDayBalance" style="color: ${netBal >= 0 ? "var(--green)" : "var(--red)"};">${money(netBal)}</strong>
+            </div>
+        </div>
+
+        <div class="gcal-day-timeline">
+            ${!evts.length ? `
+                <div class="empty-state" style="padding: 36px 12px;">
+                    <div style="font-size: 32px; margin-bottom: 8px;">📅</div>
+                    <p>Nenhuma movimentação registrada para este dia.</p>
                 </div>
-                ${dayBills.map((b) => {
-                    const isPaid = isBillOccurrencePaid(b, iso);
-                    const icon = CATEGORY_ICONS[b.category] || "📄";
-                    const freqName = getFrequencyLabel(b.frequency);
+            ` : evts.map((e) => {
+                const icon = CATEGORY_ICONS[e.category] || "📦";
+                const isInc = e.type === "income";
+                return `
+                    <div class="gcal-schedule-card" style="border-left-color: ${isInc ? "#10b981" : (e.type === "paid" ? "#3b82f6" : (e.type === "pending" ? "#f59e0b" : "#ef4444"))};" data-id="${e.id}">
+                        <div class="gcal-schedule-info">
+                            <span class="gcal-schedule-icon">${icon}</span>
+                            <div>
+                                <div class="gcal-schedule-title">${escapeHTML(e.title)}</div>
+                                <div class="gcal-schedule-sub">${escapeHTML(e.category)} · ${e.kind === "recurring" ? "Conta fixa" : (isInc ? "Receita" : "Despesa")} · ${e.isPaid ? "✓ Paga" : "⏳ A vencer"}</div>
+                            </div>
+                        </div>
+                        <div class="gcal-schedule-right">
+                            <div class="gcal-schedule-amount ${isInc ? "income-text" : "expense-text"}">
+                                ${isInc ? "+" : "−"}${money(e.amount)}
+                            </div>
+                            <div style="margin-top: 6px; display: flex; gap: 6px; justify-content: flex-end;">
+                                ${e.kind === "recurring" ? `
+                                    <button type="button" class="btn-action ${e.isPaid ? "" : "income"}" data-action="toggle-bill" data-id="${e.id}" data-date="${e.date}" title="${e.isPaid ? "Desfazer pagamento" : "Marcar como paga"}">
+                                        ${e.isPaid ? "Desfazer" : "✓ Pagar"}
+                                    </button>
+                                ` : (e.kind === "transaction" ? `
+                                    <button type="button" class="btn-action edit" data-action="edit-tx" data-id="${e.id}" title="Editar">✎</button>
+                                    <button type="button" class="btn-action delete" data-action="delete-tx" data-id="${e.id}" title="Excluir">🗑</button>
+                                ` : "")}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join("")}
+        </div>
+    `;
+
+    // Eventos de clique nos botões do modo Dia
+    const addDayBtn = dayViewEl.querySelector("#btnGcalAddDay");
+    if (addDayBtn) {
+        addDayBtn.addEventListener("click", () => {
+            openGcalQuickModal(iso);
+        });
+    }
+
+    dayViewEl.querySelectorAll("[data-action='toggle-bill']").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const bId = btn.dataset.id;
+            const bDate = btn.dataset.date;
+            const bill = (data.recurringBills || []).find((b) => b.id === bId);
+            if (bill) {
+                if (isBillOccurrencePaid(bill, bDate)) {
+                    unpayRecurringBill(bId, bDate);
+                } else {
+                    payRecurringBill(bId, bDate);
+                }
+            }
+        });
+    });
+
+    dayViewEl.querySelectorAll("[data-action='edit-tx']").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            editTransaction(btn.dataset.id);
+        });
+    });
+
+    dayViewEl.querySelectorAll("[data-action='delete-tx']").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            deleteTransaction(btn.dataset.id);
+        });
+    });
+
+    container.appendChild(dayViewEl);
+}
+
+/* 4. Modo Programação Google Agenda (Schedule Stream) */
+function renderGoogleScheduleView(container, currentM) {
+    const [y, m] = currentM.split("-").map(Number);
+    const daysInMonth = new Date(y, m, 0).getDate();
+
+    const scheduleWrapper = document.createElement("div");
+    scheduleWrapper.className = "gcal-schedule-view";
+
+    let hasAnyEvents = false;
+    const daysNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+    for (let d = 1; d <= daysInMonth; d++) {
+        const iso = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+        const evts = getAgendaEventsForDate(iso, currentM);
+        if (!evts.length) continue;
+
+        hasAnyEvents = true;
+        const dObj = new Date(y, m - 1, d);
+
+        const groupEl = document.createElement("div");
+        groupEl.className = "gcal-schedule-group";
+
+        groupEl.innerHTML = `
+            <div class="gcal-schedule-date-badge">
+                <span class="gcal-schedule-date-num">${d}</span>
+                <span class="gcal-schedule-date-weekday">${daysNames[dObj.getDay()]}</span>
+            </div>
+            <div class="gcal-schedule-items">
+                ${evts.map((e) => {
+                    const icon = CATEGORY_ICONS[e.category] || "📦";
+                    const isInc = e.type === "income";
                     return `
-                        <div class="agenda-recurring-item">
-                            <div class="agenda-recurring-info">
-                                <span style="font-size: 20px;">${icon}</span>
+                        <div class="gcal-schedule-card" style="border-left-color: ${isInc ? "#10b981" : (e.type === "paid" ? "#3b82f6" : (e.type === "pending" ? "#f59e0b" : "#ef4444"))};">
+                            <div class="gcal-schedule-info">
+                                <span class="gcal-schedule-icon">${icon}</span>
                                 <div>
-                                    <div class="agenda-recurring-title">${escapeHTML(b.name)}</div>
-                                    <div class="agenda-recurring-sub">${escapeHTML(b.category)} · ${freqName} · <strong>${money(b.amount)}</strong></div>
+                                    <div class="gcal-schedule-title">${escapeHTML(e.title)}</div>
+                                    <div class="gcal-schedule-sub">${escapeHTML(e.category)} · ${e.kind === "recurring" ? "Conta fixa" : (isInc ? "Receita" : "Despesa")} · ${e.isPaid ? "✓ Paga" : "⏳ A vencer"}</div>
                                 </div>
                             </div>
-                            <div>
-                                ${isPaid ? `
-                                    <div style="display: flex; align-items: center; gap: 6px;">
-                                        <span class="recurring-status-badge status-paid">✓ Paga</span>
-                                        <button type="button" class="mini-button btn-unpay-recurring" data-action="unpay-recurring" data-id="${b.id}" data-date="${iso}" title="Desmarcar pagamento desta data" style="padding: 3px 8px; font-size: 11px;">
-                                            Desfazer
-                                        </button>
-                                    </div>
-                                ` : `
-                                    <button type="button" class="btn-pay-recurring" data-action="pay-recurring" data-id="${b.id}" data-date="${iso}">
-                                        ✓ Pagar
-                                    </button>
-                                `}
+                            <div class="gcal-schedule-right">
+                                <div class="gcal-schedule-amount ${isInc ? "income-text" : "expense-text"}">
+                                    ${isInc ? "+" : "−"}${money(e.amount)}
+                                </div>
                             </div>
                         </div>
                     `;
                 }).join("")}
-            `;
+            </div>
+        `;
+
+        // Clique no card abre o detalhe
+        groupEl.querySelectorAll(".gcal-schedule-card").forEach((card, idx) => {
+            card.addEventListener("click", () => {
+                openGcalDetailModal(evts[idx]);
+            });
+        });
+
+        scheduleWrapper.appendChild(groupEl);
+    }
+
+    if (!hasAnyEvents) {
+        scheduleWrapper.innerHTML = `
+            <div class="empty-state" style="padding: 40px 10px;">
+                <div style="font-size: 36px; margin-bottom: 8px;">🗓️</div>
+                <p>Nenhuma movimentação programada para ${DP_MONTH_NAMES[m - 1]} de ${y}.</p>
+                <button type="button" class="button button-primary" id="btnScheduleQuickAdd" style="margin-top: 10px;">+ Criar movimentação</button>
+            </div>
+        `;
+        const qAddBtn = scheduleWrapper.querySelector("#btnScheduleQuickAdd");
+        if (qAddBtn) {
+            qAddBtn.addEventListener("click", () => {
+                openGcalQuickModal(todayISO());
+            });
         }
     }
+
+    container.appendChild(scheduleWrapper);
+}
+
+/* =========================================
+   MODAIS E INTERATIVIDADE DO GOOGLE AGENDAS
+========================================= */
+
+let activeGcalModalType = "despesa"; // "despesa" | "receita" | "recorrente"
+
+function setupGcalQuickModal() {
+    const modal = $("#gcalQuickModal");
+    const closeBtn = $("#gcalQuickModalClose");
+    const cancelBtn = $("#gcalQuickModalCancel");
+    const form = $("#gcalQuickForm");
+
+    if (!modal || !form) return;
+
+    if (closeBtn) closeBtn.addEventListener("click", () => modal.classList.add("hidden"));
+    if (cancelBtn) cancelBtn.addEventListener("click", () => modal.classList.add("hidden"));
+
+    // Tabs de tipo no modal
+    modal.querySelectorAll(".gcal-type-tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+            modal.querySelectorAll(".gcal-type-tab").forEach((t) => t.classList.remove("active"));
+            tab.classList.add("active");
+            activeGcalModalType = tab.dataset.type || "despesa";
+
+            const freqGroup = $("#gcalRecurringFreqGroup");
+            if (freqGroup) {
+                freqGroup.classList.toggle("hidden", activeGcalModalType !== "recorrente");
+            }
+        });
+    });
+
+    // Salvar movimentação diretamente da agenda
+    form.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        const desc = String($("#gcalQuickDesc")?.value || "").trim();
+        const amt = Number($("#gcalQuickAmount")?.value || 0);
+        const dt = String($("#gcalQuickDate")?.value || "").trim() || todayISO();
+        const cat = String($("#gcalQuickCategory")?.value || "Outros");
+        const notes = String($("#gcalQuickNotes")?.value || "").trim();
+        const freq = String($("#gcalQuickFrequency")?.value || "monthly");
+
+        if (!desc) {
+            showToast("Informe o título ou descrição.");
+            return;
+        }
+        if (amt <= 0) {
+            showToast("Informe um valor válido maior que zero.");
+            return;
+        }
+
+        if (activeGcalModalType === "recorrente") {
+            const newBill = {
+                id: createId(),
+                name: desc,
+                amount: amt,
+                startDate: dt,
+                dueDay: parseInt(dt.slice(8, 10), 10) || 1,
+                frequency: freq,
+                category: cat,
+                paidDates: [],
+                paidMonths: []
+            };
+            data.recurringBills.push(newBill);
+            saveData();
+            showToast(`Conta fixa "${desc}" adicionada à agenda!`);
+        } else {
+            const newTx = {
+                id: createId(),
+                type: activeGcalModalType,
+                description: desc,
+                amount: amt,
+                category: cat,
+                date: dt,
+                notes
+            };
+            data.transactions.push(newTx);
+            saveData();
+            showToast(`Lançamento "${desc}" adicionado à agenda!`);
+        }
+
+        modal.classList.add("hidden");
+        form.reset();
+        renderAll();
+    });
+}
+
+function openGcalQuickModal(dateISO) {
+    const modal = $("#gcalQuickModal");
+    if (!modal) return;
+
+    const dateInput = $("#gcalQuickDate");
+    if (dateInput) {
+        dateInput.value = dateISO || agendaSelectedDate || todayISO();
+    }
+
+    modal.classList.remove("hidden");
+    const descInput = $("#gcalQuickDesc");
+    if (descInput) {
+        descInput.focus();
+    }
+}
+
+let activeDetailEvent = null;
+
+function setupGcalDetailModal() {
+    const modal = $("#gcalDetailModal");
+    const closeBtn = $("#gcalDetailModalClose");
+    const togglePaidBtn = $("#gcalDetailTogglePaidBtn");
+    const editBtn = $("#gcalDetailEditBtn");
+    const deleteBtn = $("#gcalDetailDeleteBtn");
+
+    if (!modal) return;
+
+    if (closeBtn) closeBtn.addEventListener("click", () => modal.classList.add("hidden"));
+
+    if (togglePaidBtn) {
+        togglePaidBtn.addEventListener("click", () => {
+            if (!activeDetailEvent || activeDetailEvent.kind !== "recurring") return;
+            const b = activeDetailEvent.bill;
+            const d = activeDetailEvent.date;
+            if (isBillOccurrencePaid(b, d)) {
+                unpayRecurringBill(b.id, d);
+            } else {
+                payRecurringBill(b.id, d);
+            }
+            modal.classList.add("hidden");
+        });
+    }
+
+    if (editBtn) {
+        editBtn.addEventListener("click", () => {
+            if (!activeDetailEvent) return;
+            modal.classList.add("hidden");
+            if (activeDetailEvent.kind === "transaction") {
+                window.location.href = `lancamentos.html?edit=${encodeURIComponent(activeDetailEvent.id)}`;
+            } else if (activeDetailEvent.kind === "recurring") {
+                window.location.href = "contas-fixas.html";
+            }
+        });
+    }
+
+    if (deleteBtn) {
+        deleteBtn.addEventListener("click", async () => {
+            if (!activeDetailEvent) return;
+            const evt = activeDetailEvent;
+            modal.classList.add("hidden");
+
+            if (evt.kind === "transaction") {
+                await deleteTransaction(evt.id);
+            } else if (evt.kind === "recurring") {
+                await deleteRecurringBill(evt.id);
+            }
+        });
+    }
+}
+
+function openGcalDetailModal(evt) {
+    activeDetailEvent = evt;
+    const modal = $("#gcalDetailModal");
+    if (!modal) return;
+
+    const colorBar = $("#gcalDetailColorBar");
+    const iconEl = $("#gcalDetailIcon");
+    const titleEl = $("#gcalDetailTitle");
+    const subtitleEl = $("#gcalDetailSubtitle");
+    const amtEl = $("#gcalDetailAmount");
+    const statusBadge = $("#gcalDetailStatusBadge");
+    const metaEl = $("#gcalDetailMeta");
+    const togglePaidBtn = $("#gcalDetailTogglePaidBtn");
+    const editBtn = $("#gcalDetailEditBtn");
+    const deleteBtn = $("#gcalDetailDeleteBtn");
+
+    const isInc = evt.type === "income";
+    const color = isInc ? "#10b981" : (evt.type === "paid" ? "#3b82f6" : (evt.type === "pending" ? "#f59e0b" : "#ef4444"));
+
+    if (colorBar) colorBar.style.background = color;
+    if (iconEl) iconEl.textContent = CATEGORY_ICONS[evt.category] || "📦";
+    if (titleEl) titleEl.textContent = evt.title;
+    if (subtitleEl) subtitleEl.textContent = `${evt.category} · ${formatDate(evt.date)}`;
+    if (amtEl) {
+        amtEl.textContent = `${isInc ? "+" : "−"}${money(evt.amount)}`;
+        amtEl.style.color = isInc ? "var(--green)" : "var(--red)";
+    }
+
+    if (statusBadge) {
+        statusBadge.textContent = evt.isPaid ? "✓ Paga" : "⏳ A vencer";
+        statusBadge.className = `status-badge ${evt.isPaid ? "paid" : "pending"}`;
+    }
+
+    if (metaEl) {
+        metaEl.innerHTML = `
+            <p><strong>Tipo:</strong> ${evt.kind === "recurring" ? "Conta fixa recorrente" : (isInc ? "Receita extra" : "Despesa avulsa")}</p>
+            ${evt.frequency ? `<p><strong>Frequência:</strong> ${getFrequencyLabel(evt.frequency)}</p>` : ""}
+            ${evt.notes ? `<p><strong>Observações:</strong> ${escapeHTML(evt.notes)}</p>` : ""}
+        `;
+    }
+
+    // Botões de ação contextual
+    if (togglePaidBtn) {
+        if (evt.kind === "recurring") {
+            togglePaidBtn.style.display = "";
+            togglePaidBtn.textContent = evt.isPaid ? "Desfazer pagamento" : "✓ Marcar como paga";
+        } else {
+            togglePaidBtn.style.display = "none";
+        }
+    }
+
+    if (editBtn) {
+        editBtn.style.display = evt.kind === "salary" ? "none" : "";
+    }
+    if (deleteBtn) {
+        deleteBtn.style.display = evt.kind === "salary" ? "none" : "";
+    }
+
+    modal.classList.remove("hidden");
+}
+
+function openGcalMorePopover(events, targetEl, dateISO) {
+    const popover = $("#gcalMorePopover");
+    if (!popover || !targetEl) return;
+
+    const dayTitle = $("#gcalMoreDayTitle");
+    const list = $("#gcalMoreList");
+
+    if (dayTitle) dayTitle.textContent = formatDate(dateISO);
+    if (list) {
+        list.innerHTML = events.map((e) => {
+            const icon = CATEGORY_ICONS[e.category] || "📦";
+            const isInc = e.type === "income";
+            return `
+                <div class="gcal-chip agenda-chip type-${e.type}" data-id="${e.id}" style="cursor: pointer;">
+                    <div class="gcal-chip-left">
+                        <span>${icon}</span>
+                        <span class="gcal-chip-title chip-title">${escapeHTML(e.title)}</span>
+                    </div>
+                    <span class="gcal-chip-val chip-val">${isInc ? "+" : "−"}${formatChipMoney(e.amount)}</span>
+                </div>
+            `;
+        }).join("");
+
+        list.querySelectorAll(".gcal-chip").forEach((chip, idx) => {
+            chip.addEventListener("click", () => {
+                popover.classList.add("hidden");
+                openGcalDetailModal(events[idx]);
+            });
+        });
+    }
+
+    // Posicionar popover sobre o elemento clicado
+    const rect = targetEl.getBoundingClientRect();
+    const top = Math.min(rect.bottom + 6, window.innerHeight - 300);
+    const left = Math.min(rect.left, window.innerWidth - 270);
+
+    popover.style.top = `${Math.max(10, top)}px`;
+    popover.style.left = `${Math.max(10, left)}px`;
+    popover.classList.remove("hidden");
 }
 
 /* =========================================
@@ -4475,23 +5174,22 @@ function setupTransactionsPage() {
 
     if (btnToggle && form) {
         btnToggle.addEventListener("click", () => {
-            const isHidden = form.classList.toggle("hidden");
-            if (!isHidden) {
-                const descInput = $("#description");
-                if (descInput) descInput.focus();
-                const dateInput = $("#transactionDate");
-                if (dateInput && !dateInput.value) {
-                    dateInput.value = todayISO();
-                }
-                syncDatePicker();
+            const descInput = $("#description");
+            if (descInput) {
+                descInput.focus();
+                descInput.scrollIntoView({ behavior: "smooth", block: "center" });
             }
+            const dateInput = $("#transactionDate");
+            if (dateInput && !dateInput.value) {
+                dateInput.value = todayISO();
+            }
+            syncDatePicker();
         });
     }
 
     if (btnCancel && form) {
         btnCancel.addEventListener("click", () => {
             resetTransactionForm();
-            form.classList.add("hidden");
         });
     }
 }
