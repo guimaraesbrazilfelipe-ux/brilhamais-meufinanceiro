@@ -219,35 +219,40 @@ function getSalaryForMonth(monthStr) {
     return 0;
 }
 
-function getSalaryNextDepositCalculation() {
-    const config = data.salaryConfig;
-    if (!config || !config.amount) {
-        const curM = selectedMonth();
-        const fallbackSal = Number(data.salaries[curM] || 0);
-        if (fallbackSal > 0) {
-            return {
-                amount: fallbackSal,
-                day: 5,
-                curPaydayISO: `${curM}-05`,
-                nextPaydayISO: addCycleToDate(`${curM}-05`, "monthly", 1),
-                targetPaydayISO: `${curM}-05`,
-                targetPaydayFormatted: formatDate(`${curM}-05`),
-                diffDays: 0,
-                isToday: false,
-                isNextMonth: false
-            };
+function getSalaryNextDepositCalculation(previewAmount = null, previewDate = null) {
+    const salaryInput = $("#salary");
+    const salaryDateInput = $("#salaryDate");
+
+    let amount = previewAmount !== null ? Number(previewAmount) : null;
+    if (amount === null || !Number.isFinite(amount) || amount <= 0) {
+        if (salaryInput && Number(salaryInput.value) > 0) {
+            amount = Number(salaryInput.value);
+        } else if (data.salaryConfig && Number(data.salaryConfig.amount) > 0) {
+            amount = Number(data.salaryConfig.amount);
+        } else {
+            const curM = selectedMonth();
+            amount = Number(data.salaries[curM] || 0);
         }
+    }
+
+    if (!amount || amount <= 0) {
         return null;
     }
 
     const today = todayISO();
-    const salaryDay = Number(config.day || (config.date ? parseInt(config.date.slice(8, 10), 10) : 5)) || 5;
-
     const [curY, curM, curD] = today.split("-").map(Number);
+
+    let dateVal = previewDate || (salaryDateInput ? salaryDateInput.value : "") || data.salaryConfig?.date || today;
+    if (!dateVal || dateVal.length !== 10) dateVal = today;
+
+    const salaryDay = parseInt(dateVal.slice(8, 10), 10) || data.salaryConfig?.day || curD || 5;
+
+    // Data do pagamento no mês atual
     const daysInCurMonth = new Date(curY, curM, 0).getDate();
     const actualCurDay = Math.min(salaryDay, daysInCurMonth);
     const curPaydayISO = `${curY}-${String(curM).padStart(2, "0")}-${String(actualCurDay).padStart(2, "0")}`;
 
+    // Data do pagamento no próximo mês
     const nextMonthDate = new Date(curY, curM, 1);
     const nextY = nextMonthDate.getFullYear();
     const nextM = nextMonthDate.getMonth() + 1;
@@ -276,12 +281,13 @@ function getSalaryNextDepositCalculation() {
     const diffDays = Math.max(0, Math.round(diffTime / (1000 * 60 * 60 * 24)));
 
     return {
-        amount: Number(config.amount),
+        amount,
         day: salaryDay,
         curPaydayISO,
         nextPaydayISO,
         targetPaydayISO,
         targetPaydayFormatted: `${String(tD).padStart(2, "0")}/${String(tM).padStart(2, "0")}/${tY}`,
+        nextPaydayFormatted: `${String(actualNextDay).padStart(2, "0")}/${String(nextM).padStart(2, "0")}/${nextY}`,
         diffDays,
         isToday,
         isNextMonth
@@ -1216,7 +1222,7 @@ function renderSettings() {
         ? data.salaryConfig.amount
         : (data.salaries[selectedMonth()] || "");
 
-    if (salaryInput) {
+    if (salaryInput && !salaryInput.value) {
         salaryInput.value = currentSalVal || "";
     }
 
@@ -1224,8 +1230,7 @@ function renderSettings() {
         if (data.salaryConfig && data.salaryConfig.date) {
             salaryDateInput.value = data.salaryConfig.date;
         } else if (!salaryDateInput.value) {
-            const m = selectedMonth();
-            salaryDateInput.value = `${m}-05`;
+            salaryDateInput.value = todayISO();
         }
         syncDatePicker();
     }
@@ -1272,7 +1277,7 @@ function renderSalaryCalculationCard(container) {
             <div class="salary-calc-item">
                 <span class="salary-calc-label">Próximo Salário no Site</span>
                 <strong class="salary-calc-value ${calc.isToday ? "green-text" : "purple-text"}">
-                    ${calc.isToday ? "🎉 Cai Hoje!" : calc.targetPaydayFormatted}
+                    ${calc.isToday ? `🎉 Cai Hoje (${calc.targetPaydayFormatted})!` : calc.targetPaydayFormatted}
                 </strong>
                 <small>${calc.isToday ? "Salário já disponível hoje no site!" : (calc.diffDays === 1 ? "Cai amanhã!" : `Cai em exatamente ${calc.diffDays} dias`)}</small>
             </div>
@@ -1280,7 +1285,7 @@ function renderSalaryCalculationCard(container) {
             <div class="salary-calc-item">
                 <span class="salary-calc-label">Previsão Mês que Vem (${nextMName})</span>
                 <strong class="salary-calc-value green-text">${money(calc.amount)}</strong>
-                <small>Creditado automaticamente sem digitação</small>
+                <small>Cai em ${calc.nextPaydayFormatted} (automático)</small>
             </div>
         </div>
 
@@ -3749,7 +3754,7 @@ function openGcalMorePopover(events, targetEl, dateISO) {
    HISTÓRICO & RELATÓRIOS POR DIA, MÊS E ANO
 ========================================= */
 
-let historyFilterMode = "day"; // 'day', 'month', 'year', 'all'
+let historyFilterMode = "month"; // 'month', 'day', 'year', 'all'
 
 function setupHistoricalReports() {
     const tabs = document.querySelectorAll(".period-tab-btn");
@@ -3759,7 +3764,7 @@ function setupHistoricalReports() {
         tab.addEventListener("click", () => {
             tabs.forEach((t) => t.classList.remove("active"));
             tab.classList.add("active");
-            historyFilterMode = tab.dataset.mode || "day";
+            historyFilterMode = tab.dataset.mode || "month";
             renderHistoricalReports();
         });
     });
@@ -4018,14 +4023,17 @@ function renderHistoricalReports() {
         const incomeItems = [];
 
         // Salário configurado/efetivo do período
+        const salDay = String(data.salaryConfig?.day || (data.salaryConfig?.date ? parseInt(data.salaryConfig.date.slice(8, 10), 10) : 5)).padStart(2, "0");
+        const salDate = historyFilterMode === "day" ? currentD : (historyFilterMode === "month" ? `${currentM}-${salDay}` : `${currentY}-01-${salDay}`);
+
         if (summary.salary > 0) {
             incomeItems.push({
                 isSalary: true,
-                title: "Salário do período",
+                title: "Salário Mensal (Depósito Automático)",
                 category: "Salário",
-                date: (historyFilterMode === "day" ? currentD : (historyFilterMode === "month" ? `${currentM}-05` : (historyFilterMode === "year" ? `${currentY}-01-05` : ""))),
+                date: salDate,
                 amount: summary.salary,
-                notes: "Entrada principal configurada"
+                notes: "Entrada principal configurada com depósito automático"
             });
         }
 
@@ -4063,7 +4071,10 @@ function renderHistoricalReports() {
                     <div class="transaction-item">
                         <div class="transaction-icon">${icon}</div>
                         <div class="transaction-info">
-                            <h3>${escapeHTML(item.title)}</h3>
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <h3>${escapeHTML(item.title)}</h3>
+                                ${item.isSalary ? `<span class="status-badge paid" style="font-size: 10px; padding: 1px 7px;">Depósito Ativo</span>` : ""}
+                            </div>
                             <p>${escapeHTML(item.category)}${item.date ? ` · ${formatDate(item.date)}` : ""}${item.notes ? ` · <span style="opacity:0.8">${escapeHTML(item.notes)}</span>` : ""}</p>
                         </div>
                         <div class="transaction-right">
@@ -4077,13 +4088,31 @@ function renderHistoricalReports() {
         }
     }
 
-    // Filter transactions list with search and type
+    // Filter transactions list with search and type (incluindo o salário configurado)
     const searchInput = $("#searchTransactions");
     const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
     const typeFilter = $("#typeFilter");
     const type = typeFilter ? typeFilter.value : "todos";
 
-    let visible = filteredTxs.filter((t) => {
+    const salDay = String(data.salaryConfig?.day || (data.salaryConfig?.date ? parseInt(data.salaryConfig.date.slice(8, 10), 10) : 5)).padStart(2, "0");
+    const salDate = historyFilterMode === "day" ? currentD : (historyFilterMode === "month" ? `${currentM}-${salDay}` : `${currentY}-01-${salDay}`);
+    const hasManualSalaryInFiltered = filteredTxs.some((t) => t.category === "Salário" && t.type === "receita");
+
+    const allPeriodTxs = [...filteredTxs];
+    if (summary.salary > 0 && !hasManualSalaryInFiltered) {
+        allPeriodTxs.push({
+            id: `salary-hist-${currentM}`,
+            isSalary: true,
+            type: "receita",
+            description: "Salário Mensal (Depósito Automático)",
+            category: "Salário",
+            amount: summary.salary,
+            date: salDate,
+            notes: "Depósito automático ativo"
+        });
+    }
+
+    let visible = allPeriodTxs.filter((t) => {
         const matchesQuery = !query || t.description.toLowerCase().includes(query) || t.category.toLowerCase().includes(query);
         const matchesType = type === "todos" || t.type === type;
         return matchesQuery && matchesType;
@@ -4108,21 +4137,28 @@ function renderHistoricalReports() {
         } else {
             listEl.innerHTML = visible.map((t) => {
                 const isIncome = t.type === "receita";
-                const icon = CATEGORY_ICONS[t.category] || "📦";
+                const icon = CATEGORY_ICONS[t.category] || (t.isSalary ? "💰" : "📦");
                 return `
-                    <div class="transaction-item">
+                    <div class="transaction-item ${t.isSalary ? "salary-item" : ""}">
                         <div class="transaction-icon">${icon}</div>
                         <div class="transaction-info">
-                            <h3>${escapeHTML(t.description)}</h3>
-                            <p>${escapeHTML(t.category)} · ${formatDate(t.date)}</p>
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <h3>${escapeHTML(t.description)}</h3>
+                                ${t.isSalary ? `<span class="status-badge paid" style="font-size: 10px; padding: 2px 7px;">Depósito Ativo</span>` : ""}
+                            </div>
+                            <p>${escapeHTML(t.category)} · ${formatDate(t.date)}${t.notes ? ` · <span style="opacity:0.8">${escapeHTML(t.notes)}</span>` : ""}</p>
                         </div>
                         <div class="transaction-right">
                             <div class="transaction-amount ${isIncome ? "income-text" : "expense-text"}">
                                 ${isIncome ? "+" : "−"}${money(t.amount)}
                             </div>
                             <div class="transaction-actions">
-                                <button type="button" class="btn-action edit" data-action="edit" data-id="${t.id}" title="Editar">✎</button>
-                                <button type="button" class="btn-action delete" data-action="delete" data-id="${t.id}" title="Excluir">🗑</button>
+                                ${t.isSalary ? `
+                                    <a href="configuracoes.html" class="btn-action edit" title="Gerenciar salário nas configurações" style="text-decoration: none;">⚙️</a>
+                                ` : `
+                                    <button type="button" class="btn-action edit" data-action="edit" data-id="${t.id}" title="Editar">✎</button>
+                                    <button type="button" class="btn-action delete" data-action="delete" data-id="${t.id}" title="Excluir">🗑</button>
+                                `}
                             </div>
                         </div>
                     </div>
@@ -5263,6 +5299,17 @@ function init() {
     const settingsForm = $("#settingsForm");
     if (settingsForm) {
         settingsForm.addEventListener("submit", handleSalarySubmit);
+        const salaryInput = $("#salary");
+        const salaryDateInput = $("#salaryDate");
+        const salaryCard = $("#salaryCalculationCard");
+        if (salaryInput && salaryCard) {
+            salaryInput.addEventListener("input", () => renderSalaryCalculationCard(salaryCard));
+            salaryInput.addEventListener("change", () => renderSalaryCalculationCard(salaryCard));
+        }
+        if (salaryDateInput && salaryCard) {
+            salaryDateInput.addEventListener("change", () => renderSalaryCalculationCard(salaryCard));
+            salaryDateInput.addEventListener("input", () => renderSalaryCalculationCard(salaryCard));
+        }
     }
 
     const budgetForm = $("#budgetForm");

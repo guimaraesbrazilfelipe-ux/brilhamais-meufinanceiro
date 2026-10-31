@@ -5948,6 +5948,11 @@ body.privacy-mode .breakdown-val {
    CONFIGURAÇÃO DE SALÁRIO COM DATA E DEPÓSITO AUTOMÁTICO
    ========================================= */
 
+#settingsForm {
+    position: relative;
+    z-index: 100;
+}
+
 .settings-form-grid {
     display: grid;
     grid-template-columns: 1.15fr 1.15fr auto;
@@ -5971,6 +5976,25 @@ body.privacy-mode .breakdown-val {
     margin: 0;
 }
 
+#settingsForm .custom-datepicker {
+    position: relative;
+    width: 100%;
+}
+
+#settingsForm .custom-datepicker.open {
+    z-index: 20005 !important;
+}
+
+#settingsForm .custom-datepicker.open .datepicker-dropdown {
+    z-index: 20006 !important;
+    background: #131d2e !important;
+    border: 1px solid rgba(124, 93, 250, 0.4) !important;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(124, 93, 250, 0.25) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
 .settings-form-grid input[type="number"],
 .settings-form-grid .datepicker-trigger {
     height: 42px !important;
@@ -5990,6 +6014,20 @@ body.privacy-mode .breakdown-val {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
+}
+
+.settings-submit-field {
+    display: flex;
+    align-items: flex-end;
+}
+
+.settings-submit-field label,
+.settings-submit-field .sr-only {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 .settings-submit-field .button {
@@ -6032,6 +6070,8 @@ body.privacy-mode .breakdown-val {
 
 /* Card de Cálculo Exato e Status do Salário */
 .salary-calc-card {
+    position: relative;
+    z-index: 10;
     background: linear-gradient(145deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%);
     border: 1px solid rgba(124, 93, 250, 0.25);
     border-radius: 14px;
