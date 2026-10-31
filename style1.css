@@ -5723,51 +5723,68 @@ body.privacy-mode .breakdown-val {
 
 .report-toolbar {
     display: flex !important;
+    flex-direction: row !important;
     justify-content: space-between !important;
     align-items: center !important;
-    gap: 20px !important;
+    gap: 16px !important;
     background: var(--panel, #131d2e);
     border: 1px solid var(--border, #24344d);
     border-radius: var(--radius, 14px);
-    padding: 14px 20px !important;
-    margin: 24px 0 20px !important;
-    flex-wrap: wrap;
+    padding: 12px 18px !important;
+    margin: 22px 0 20px !important;
+    flex-wrap: wrap !important;
 }
 
 .report-toolbar .toolbar-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+    flex-shrink: 0 !important;
 }
 
 .report-toolbar .toolbar-item:last-child {
-    justify-content: flex-end;
+    justify-content: flex-end !important;
 }
 
 .report-toolbar .toolbar-item label {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--muted, #9ca9bd);
-    white-space: nowrap;
-    margin: 0;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: var(--muted, #9ca9bd) !important;
+    white-space: nowrap !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+    flex-shrink: 0 !important;
+    display: inline-block !important;
 }
 
-.report-toolbar .custom-datepicker,
-.report-toolbar .report-period-picker {
-    min-width: 250px;
+.report-toolbar .custom-datepicker {
+    min-width: 230px !important;
+    width: auto !important;
     position: relative;
+    flex-shrink: 0 !important;
+}
+
+.report-toolbar .report-period-picker {
+    min-width: 190px !important;
+    width: auto !important;
+    position: relative;
+    flex-shrink: 0 !important;
 }
 
 .report-toolbar .datepicker-trigger,
 .report-toolbar .category-picker-button {
-    height: 42px !important;
-    min-height: 42px !important;
-    max-height: 42px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
     padding: 0 14px !important;
     border-radius: 9px !important;
     font-size: 13px !important;
     font-weight: 600 !important;
     box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
 }
 
 .report-period-picker .frequency-drawer {
