@@ -144,6 +144,7 @@ function defaultData() {
     return {
         transactions: [],
         salaries: {},
+        salaryConfig: { amount: 0, date: "", day: 5, autoDeposit: true },
         budgets: {},
         goals: {},
         recurringBills: []
@@ -167,6 +168,7 @@ function loadData() {
         return {
             transactions: (data.transactions || []).filter((t) => !t.recurringBillId),
             salaries: data.salaries || {},
+            salaryConfig: data.salaryConfig || { amount: 0, date: "", day: 5, autoDeposit: true },
             budgets: data.budgets || {},
             goals: data.goals || {},
             recurringBills: Array.isArray(data.recurringBills) ? data.recurringBills : []
@@ -202,6 +204,88 @@ function saveData() {
 
         return false;
     }
+}
+
+function getSalaryForMonth(monthStr) {
+    if (data.salaries && data.salaries[monthStr] !== undefined && Number(data.salaries[monthStr]) > 0) {
+        return Number(data.salaries[monthStr]);
+    }
+    if (data.salaryConfig && Number(data.salaryConfig.amount) > 0) {
+        const startMonth = (data.salaryConfig.date || "").slice(0, 7);
+        if (!startMonth || monthStr >= startMonth) {
+            return Number(data.salaryConfig.amount);
+        }
+    }
+    return 0;
+}
+
+function getSalaryNextDepositCalculation() {
+    const config = data.salaryConfig;
+    if (!config || !config.amount) {
+        const curM = selectedMonth();
+        const fallbackSal = Number(data.salaries[curM] || 0);
+        if (fallbackSal > 0) {
+            return {
+                amount: fallbackSal,
+                day: 5,
+                curPaydayISO: `${curM}-05`,
+                nextPaydayISO: addCycleToDate(`${curM}-05`, "monthly", 1),
+                targetPaydayISO: `${curM}-05`,
+                targetPaydayFormatted: formatDate(`${curM}-05`),
+                diffDays: 0,
+                isToday: false,
+                isNextMonth: false
+            };
+        }
+        return null;
+    }
+
+    const today = todayISO();
+    const salaryDay = Number(config.day || (config.date ? parseInt(config.date.slice(8, 10), 10) : 5)) || 5;
+
+    const [curY, curM, curD] = today.split("-").map(Number);
+    const daysInCurMonth = new Date(curY, curM, 0).getDate();
+    const actualCurDay = Math.min(salaryDay, daysInCurMonth);
+    const curPaydayISO = `${curY}-${String(curM).padStart(2, "0")}-${String(actualCurDay).padStart(2, "0")}`;
+
+    const nextMonthDate = new Date(curY, curM, 1);
+    const nextY = nextMonthDate.getFullYear();
+    const nextM = nextMonthDate.getMonth() + 1;
+    const daysInNextMonth = new Date(nextY, nextM, 0).getDate();
+    const actualNextDay = Math.min(salaryDay, daysInNextMonth);
+    const nextPaydayISO = `${nextY}-${String(nextM).padStart(2, "0")}-${String(actualNextDay).padStart(2, "0")}`;
+
+    let targetPaydayISO = "";
+    let isToday = false;
+    let isNextMonth = false;
+
+    if (curPaydayISO === today) {
+        targetPaydayISO = curPaydayISO;
+        isToday = true;
+    } else if (curPaydayISO > today) {
+        targetPaydayISO = curPaydayISO;
+    } else {
+        targetPaydayISO = nextPaydayISO;
+        isNextMonth = true;
+    }
+
+    const [tY, tM, tD] = targetPaydayISO.split("-").map(Number);
+    const targetDate = new Date(tY, tM - 1, tD);
+    const todayDate = new Date(curY, curM - 1, curD);
+    const diffTime = targetDate.getTime() - todayDate.getTime();
+    const diffDays = Math.max(0, Math.round(diffTime / (1000 * 60 * 60 * 24)));
+
+    return {
+        amount: Number(config.amount),
+        day: salaryDay,
+        curPaydayISO,
+        nextPaydayISO,
+        targetPaydayISO,
+        targetPaydayFormatted: `${String(tD).padStart(2, "0")}/${String(tM).padStart(2, "0")}/${tY}`,
+        diffDays,
+        isToday,
+        isNextMonth
+    };
 }
 
 function selectedMonth() {
@@ -256,16 +340,29 @@ function getPeriodSummary(periodType = "month", value = null) {
     if (periodType === "day") {
         const targetDate = value || currentD;
         transactions = transactionsForDate(targetDate).filter((t) => !t.recurringBillId);
-        salaryConfig = 0;
+        const salaryDay = String(data.salaryConfig?.day || (data.salaryConfig?.date ? parseInt(data.salaryConfig.date.slice(8, 10), 10) : 5)).padStart(2, "0");
+        if (targetDate && targetDate.slice(8, 10) === salaryDay) {
+            salaryConfig = getSalaryForMonth(targetDate.slice(0, 7));
+        } else {
+            salaryConfig = 0;
+        }
     } else if (periodType === "year") {
         const targetYear = String(value || (currentD ? currentD.slice(0, 4) : new Date().getFullYear()));
         transactions = transactionsForYear(targetYear).filter((t) => !t.recurringBillId);
-        salaryConfig = Object.entries(data.salaries)
-            .filter(([m]) => m.startsWith(targetYear))
-            .reduce((sum, [, val]) => sum + Number(val || 0), 0);
+        let yearSalarySum = 0;
+        for (let mon = 1; mon <= 12; mon++) {
+            const mStr = `${targetYear}-${String(mon).padStart(2, "0")}`;
+            yearSalarySum += getSalaryForMonth(mStr);
+        }
+        salaryConfig = yearSalarySum;
     } else if (periodType === "all") {
         transactions = (data.transactions || []).filter((t) => !t.recurringBillId);
-        salaryConfig = Object.values(data.salaries || {}).reduce((sum, val) => sum + Number(val || 0), 0);
+        const salaryMap = { ...(data.salaries || {}) };
+        if (data.salaryConfig && data.salaryConfig.amount > 0) {
+            const curM = selectedMonth();
+            if (!salaryMap[curM]) salaryMap[curM] = data.salaryConfig.amount;
+        }
+        salaryConfig = Object.values(salaryMap).reduce((sum, val) => sum + Number(val || 0), 0);
     }
 
     // Evita duplicar salário se foi lançado manualmente como 'Salário'
@@ -348,7 +445,7 @@ function sumTransactions(transactions, type) {
 function getMonthlySummary(month) {
     const rawTransactions = transactionsForMonth(month);
     const transactions = rawTransactions.filter((t) => !t.recurringBillId);
-    const salaryConfig = Number(data.salaries[month] || 0);
+    const salaryConfig = getSalaryForMonth(month);
 
     // Evita o bug de duplicar o salário se o usuário lançar na categoria 'Salário' e também salvar nas Configurações
     const salaryFromTransactions = transactions
@@ -1112,9 +1209,88 @@ function renderPlanning() {
 
 function renderSettings() {
     const salaryInput = $("#salary");
+    const salaryDateInput = $("#salaryDate");
+    const salaryCard = $("#salaryCalculationCard");
+
+    const currentSalVal = (data.salaryConfig && Number(data.salaryConfig.amount) > 0)
+        ? data.salaryConfig.amount
+        : (data.salaries[selectedMonth()] || "");
+
     if (salaryInput) {
-        salaryInput.value = data.salaries[selectedMonth()] || "";
+        salaryInput.value = currentSalVal || "";
     }
+
+    if (salaryDateInput) {
+        if (data.salaryConfig && data.salaryConfig.date) {
+            salaryDateInput.value = data.salaryConfig.date;
+        } else if (!salaryDateInput.value) {
+            const m = selectedMonth();
+            salaryDateInput.value = `${m}-05`;
+        }
+        syncDatePicker();
+    }
+
+    if (salaryCard) {
+        renderSalaryCalculationCard(salaryCard);
+    }
+}
+
+function renderSalaryCalculationCard(container) {
+    if (!container) return;
+    const calc = getSalaryNextDepositCalculation();
+
+    if (!calc || !calc.amount) {
+        container.innerHTML = `
+            <div class="salary-calc-empty">
+                <span style="font-size: 24px;">💡</span>
+                <p style="margin: 0;">Informe o valor e a data em que seu salário cai acima. O sistema calculará os dias restantes e lançará o salário automaticamente no mês que vem e em todos os próximos meses sem você precisar lançar manualmente.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const nextMNum = parseInt(calc.nextPaydayISO.slice(5, 7), 10);
+    const nextMName = (typeof DP_MONTH_NAMES !== "undefined" && DP_MONTH_NAMES[nextMNum - 1]) ? DP_MONTH_NAMES[nextMNum - 1] : "próximo mês";
+    const nextMY = calc.nextPaydayISO.slice(0, 4);
+
+    container.innerHTML = `
+        <div class="salary-calc-header">
+            <div class="salary-calc-badge">
+                <span class="salary-pulse-dot"></span>
+                <span>Depósito Automático Ativo</span>
+            </div>
+            <span class="salary-tag">Todo dia ${String(calc.day).padStart(2, "0")} de cada mês</span>
+        </div>
+
+        <div class="salary-calc-grid">
+            <div class="salary-calc-item">
+                <span class="salary-calc-label">Salário Base Mensal</span>
+                <strong class="salary-calc-value green-text">${money(calc.amount)}</strong>
+                <small>Disponibilizado todo mês no site</small>
+            </div>
+
+            <div class="salary-calc-item">
+                <span class="salary-calc-label">Próximo Salário no Site</span>
+                <strong class="salary-calc-value ${calc.isToday ? "green-text" : "purple-text"}">
+                    ${calc.isToday ? "🎉 Cai Hoje!" : calc.targetPaydayFormatted}
+                </strong>
+                <small>${calc.isToday ? "Salário já disponível hoje no site!" : (calc.diffDays === 1 ? "Cai amanhã!" : `Cai em exatamente ${calc.diffDays} dias`)}</small>
+            </div>
+
+            <div class="salary-calc-item">
+                <span class="salary-calc-label">Previsão Mês que Vem (${nextMName})</span>
+                <strong class="salary-calc-value green-text">${money(calc.amount)}</strong>
+                <small>Creditado automaticamente sem digitação</small>
+            </div>
+        </div>
+
+        <div class="salary-calc-footer">
+            <span class="salary-calc-info-icon" style="font-size: 16px;">ℹ️</span>
+            <p>
+                Calculado com precisão a partir do dia marcado (<strong>dia ${String(calc.day).padStart(2, "0")}</strong>): no próximo mês (<strong>${nextMName} de ${nextMY}</strong>), o seu salário de <strong>${money(calc.amount)}</strong> já cairá automaticamente no site na sua renda mensal, no resumo financeiro, nos orçamentos e na agenda sem você precisar cadastrar todo mês.
+            </p>
+        </div>
+    `;
 }
 
 /* =========================================
@@ -2305,9 +2481,10 @@ function getAgendaEventsForDate(dayIso, monthStr) {
         });
     });
 
-    // 2. Salário mensal configurado (registrado simbolicamente no dia 05)
-    if (agendaFilters.income && dayIso.slice(8, 10) === "05") {
-        const salaryVal = Number((data.salaries && data.salaries[mStr]) || 0);
+    // 2. Salário mensal configurado (cai no dia exato configurado pelo usuário)
+    const salaryTargetDay = String(data.salaryConfig?.day || (data.salaryConfig?.date ? parseInt(data.salaryConfig.date.slice(8, 10), 10) : 5)).padStart(2, "0");
+    if (agendaFilters.income && dayIso.slice(8, 10) === salaryTargetDay) {
+        const salaryVal = getSalaryForMonth(mStr);
         const hasManualSalary = dayTxs.some((t) => t.category === "Salário" && t.type === "receita");
         if (salaryVal > 0 && !hasManualSalary) {
             evts.unshift({
@@ -2319,7 +2496,7 @@ function getAgendaEventsForDate(dayIso, monthStr) {
                 amount: salaryVal,
                 date: dayIso,
                 isPaid: true,
-                notes: "Entrada principal configurada",
+                notes: "Entrada principal configurada com depósito automático",
                 raw: null
             });
         }
@@ -4562,36 +4739,49 @@ function handleTransactionSubmit(event) {
 function handleSalarySubmit(event) {
     event.preventDefault();
 
-    const raw = String($("#salary").value || "").trim().replace("R$", "").trim();
+    const raw = String($("#salary")?.value || "").trim().replace("R$", "").trim();
     const normalized = raw.includes(",") ? raw.replace(/\./g, "").replace(",", ".") : raw;
     const salary = Number(normalized);
-    const month = selectedMonth();
+    const dateInput = String($("#salaryDate")?.value || "").trim() || todayISO();
+    const salaryDay = parseInt(dateInput.slice(8, 10), 10) || 5;
+    const currentM = selectedMonth();
 
-    if (
-        !Number.isFinite(salary) ||
-        salary < 0 ||
-        salary > 100000000
-    ) {
+    if (!Number.isFinite(salary) || salary < 0 || salary > 100000000) {
         showToast("Informe um salário válido.");
         return;
     }
 
-    const previous = data.salaries[month];
+    const previousConfig = data.salaryConfig;
+    const previousMonthSalary = data.salaries[currentM];
 
-    data.salaries[month] = salary;
+    data.salaryConfig = {
+        amount: salary,
+        date: dateInput,
+        day: salaryDay,
+        autoDeposit: true
+    };
+
+    // Propaga automaticamente para este mês e para o próximo mês
+    data.salaries[currentM] = salary;
+    const [y, m] = currentM.split("-").map(Number);
+    const nextDate = new Date(y, m, 1);
+    const nextM = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, "0")}`;
+    data.salaries[nextM] = salary;
 
     if (!saveData()) {
-        if (previous === undefined) {
-            delete data.salaries[month];
+        data.salaryConfig = previousConfig;
+        if (previousMonthSalary === undefined) {
+            delete data.salaries[currentM];
         } else {
-            data.salaries[month] = previous;
+            data.salaries[currentM] = previousMonthSalary;
         }
-
         return;
     }
 
     renderAll();
-    showToast("Salário mensal salvo!");
+    const calc = getSalaryNextDepositCalculation();
+    const daysMsg = calc && calc.diffDays > 0 ? ` (Faltam ${calc.diffDays} dias para o próximo depósito)` : "";
+    showToast(`Salário de ${money(salary)} salvo e ativado para o mês que vem!${daysMsg}`);
 }
 
 function handleBudgetSubmit(event) {
@@ -4831,6 +5021,7 @@ async function importBackup(file) {
         data = {
             transactions: importedData.transactions,
             salaries: importedData.salaries,
+            salaryConfig: importedData.salaryConfig || { amount: 0, date: "", day: 5, autoDeposit: true },
             budgets: importedData.budgets,
             goals: importedData.goals,
             recurringBills: Array.isArray(importedData.recurringBills) ? importedData.recurringBills : []

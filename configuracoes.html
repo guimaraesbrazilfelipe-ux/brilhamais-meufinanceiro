@@ -125,20 +125,87 @@
             <section class="panel settings-panel" style="margin: 24px 0 30px;">
                 <div class="panel-heading">
                     <div>
-                        <h2>Renda mensal</h2>
-                        <p>Informe sua renda fixa mensal para o período selecionado.</p>
+                        <h2>Renda e Salário Mensal Automático</h2>
+                        <p>Defina o valor e a data em que seu salário cai. O sistema calculará os dias restantes e lançará automaticamente o salário no mês que vem e nos seguintes, sem você precisar lançar manualmente.</p>
                     </div>
                 </div>
 
-                <form id="settingsForm" class="settings-form">
-                    <div class="field">
-                        <label for="salary">Salário mensal (R$)</label>
-                        <input type="number" id="salary" min="0" max="100000000"
-                            step="0.01" placeholder="Ex.: 2500,00" required>
-                        <small>O salário será considerado no mês de referência selecionado acima.</small>
+                <form id="settingsForm" class="settings-form" novalidate>
+                    <div class="settings-form-grid">
+                        <div class="field">
+                            <label for="salary">Salário mensal (R$)</label>
+                            <input type="number" id="salary" min="0" max="100000000"
+                                step="0.01" placeholder="Ex.: 2500,00" required>
+                        </div>
+
+                        <div class="field">
+                            <label for="salaryDatePickerTrigger">Data em que o salário cai</label>
+                            <div class="custom-datepicker" id="salaryDatePickerContainer">
+                                <input id="salaryDate" type="date" required class="datepicker-native-input" tabindex="-1" aria-hidden="true">
+                                <button type="button" class="datepicker-trigger" id="salaryDatePickerTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="salaryDatePickerDropdown">
+                                    <span class="datepicker-trigger-left">
+                                        <span class="datepicker-icon" aria-hidden="true">📅</span>
+                                        <span class="datepicker-text" id="salaryDatePickerText">Selecione uma data</span>
+                                    </span>
+                                    <span class="datepicker-chevron" aria-hidden="true">⌄</span>
+                                </button>
+
+                                <div class="datepicker-backdrop" aria-hidden="true"></div>
+
+                                <div class="datepicker-dropdown" id="salaryDatePickerDropdown" role="dialog" aria-modal="true" aria-label="Seletor de data de pagamento do salário" aria-hidden="true">
+                                    <div class="dp-header">
+                                        <button type="button" class="dp-btn-view" title="Alternar para seleção de mês e ano">
+                                            <span class="dp-current-month-year">Outubro de 2026</span>
+                                            <span class="dp-view-chevron" aria-hidden="true">▾</span>
+                                        </button>
+                                        <div class="dp-nav-group">
+                                            <button type="button" class="dp-nav-btn dp-prev-btn" aria-label="Mês anterior">‹</button>
+                                            <button type="button" class="dp-nav-btn dp-next-btn" aria-label="Próximo mês">›</button>
+                                            <button type="button" class="dp-close-btn" aria-label="Fechar calendário">✕</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="dp-shortcuts">
+                                        <button type="button" class="dp-shortcut-btn dp-today-btn">Hoje</button>
+                                        <button type="button" class="dp-shortcut-btn dp-yesterday-btn">Ontem</button>
+                                    </div>
+
+                                    <div class="dp-days-view">
+                                        <div class="dp-weekdays">
+                                            <span>Dom</span>
+                                            <span>Seg</span>
+                                            <span>Ter</span>
+                                            <span>Qua</span>
+                                            <span>Qui</span>
+                                            <span>Sex</span>
+                                            <span>Sáb</span>
+                                        </div>
+                                        <div class="dp-grid"></div>
+                                    </div>
+
+                                    <div class="dp-months-view hidden">
+                                        <div class="dp-year-selector">
+                                            <button type="button" class="dp-nav-btn dp-prev-year-btn" aria-label="Ano anterior">‹</button>
+                                            <span class="dp-year-display">2026</span>
+                                            <button type="button" class="dp-nav-btn dp-next-year-btn" aria-label="Próximo ano">›</button>
+                                        </div>
+                                        <div class="dp-months-grid"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field settings-submit-field">
+                            <label class="sr-only" for="btnSaveSalary">Salvar salário</label>
+                            <button type="submit" class="button button-primary" id="btnSaveSalary">
+                                💾 Salvar salário e ativar cálculo
+                            </button>
+                        </div>
                     </div>
-                    <button type="submit" class="button button-primary">Salvar salário</button>
                 </form>
+
+                <!-- Card de Cálculo Exato e Contagem até o Próximo Salário -->
+                <div id="salaryCalculationCard" class="salary-calc-card" style="margin-top: 18px;"></div>
 
                 <div class="settings-actions">
                     <div>
