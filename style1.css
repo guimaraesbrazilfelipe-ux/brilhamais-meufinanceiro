@@ -5041,7 +5041,7 @@ body.privacy-mode .breakdown-val {
 
 .recurring-form-grid {
     display: grid;
-    grid-template-columns: 1.6fr 1fr 1.35fr 1.35fr;
+    grid-template-columns: 1.4fr 0.9fr 1.15fr 0.95fr 1.15fr;
     gap: 14px;
     align-items: flex-start;
     margin-bottom: 16px;
@@ -5064,9 +5064,10 @@ body.privacy-mode .breakdown-val {
     text-overflow: ellipsis;
 }
 
-/* Alinhamento perfeito e altura consistente de 42px para todos os 4 campos */
+/* Alinhamento perfeito e altura consistente de 42px para todos os campos */
 .recurring-form-grid input[type="text"],
 .recurring-form-grid input[type="number"],
+.recurring-form-grid input[type="time"],
 .recurring-form-grid .datepicker-trigger,
 .recurring-form-grid .category-picker-button {
     height: 42px !important;
@@ -5082,6 +5083,43 @@ body.privacy-mode .breakdown-val {
     background: #182438 !important;
     border: 1px solid var(--border) !important;
     color: var(--text) !important;
+}
+
+.recurring-form-grid input[type="time"],
+.field-time-input {
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    padding: 0 12px !important;
+    border-radius: 9px !important;
+    font-size: 13px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    background: #182438 !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
+    font-family: inherit !important;
+    outline: none !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.recurring-form-grid input[type="time"]:focus,
+.field-time-input:focus {
+    border-color: var(--purple, #7c5dfa) !important;
+    box-shadow: 0 0 0 3px rgba(124, 93, 250, 0.25) !important;
+}
+
+.recurring-form-grid input[type="time"]::-webkit-calendar-picker-indicator,
+.field-time-input::-webkit-calendar-picker-indicator {
+    filter: invert(0.8) sepia(100%) saturate(300%) hue-rotate(220deg);
+    cursor: pointer;
+    opacity: 0.85;
+    transition: opacity 0.18s ease;
+}
+
+.recurring-form-grid input[type="time"]::-webkit-calendar-picker-indicator:hover,
+.field-time-input::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
 }
 
 .recurring-form-grid .datepicker-trigger {
@@ -5165,7 +5203,7 @@ body.privacy-mode .breakdown-val {
     gap: 6px !important;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1080px) {
     .recurring-form-grid {
         grid-template-columns: 1fr 1fr;
         gap: 12px;

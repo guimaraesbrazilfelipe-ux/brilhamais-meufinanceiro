@@ -1254,16 +1254,18 @@ function getNextUnpaidOccurrence(bill) {
 function getRecurringBillStatus(bill, month) {
     const occurrences = getBillOccurrencesInMonth(bill, month);
     const today = todayISO();
+    const timeStr = bill.subscriptionTime || "12:00";
 
     if (occurrences.length === 0) {
         const nextOcc = getNextUnpaidOccurrence(bill);
         return {
             status: "pending",
-            label: `Próximo: ${formatDate(nextOcc)}`,
+            label: `Próximo: ${formatDate(nextOcc)}${bill.subscriptionTime ? ` às ${bill.subscriptionTime}` : ""}`,
             className: "status-pending",
             icon: "📅",
             isPaid: false,
-            nextDueDate: nextOcc
+            nextDueDate: nextOcc,
+            dueTime: timeStr
         };
     }
 
@@ -1280,51 +1282,100 @@ function getRecurringBillStatus(bill, month) {
             icon: "✓",
             isPaid: true,
             lastPaidDate: lastPaid,
-            nextDueDate: nextAfterMonth
+            nextDueDate: nextAfterMonth,
+            dueTime: timeStr
         };
     }
 
     const nextTarget = unpaid[0];
-    const targetDateObj = new Date(nextTarget + "T12:00:00");
-    const todayDateObj = new Date(today + "T12:00:00");
-    const diffDays = Math.round((targetDateObj - todayDateObj) / 86400000);
+    const now = new Date();
+    const [tY, tM, tD] = nextTarget.split("-").map(Number);
+    const [tH, tMin] = timeStr.split(":").map(Number);
+    const targetDateTime = new Date(tY, (tM || 1) - 1, tD || 1, tH || 0, tMin || 0, 0);
+
+    const diffMs = targetDateTime.getTime() - now.getTime();
+    const diffMinutes = Math.round(diffMs / 60000);
+    const diffHours = Math.round(diffMs / 3600000);
 
     if (nextTarget < today) {
         return {
             status: "overdue",
-            label: `Venceu dia ${formatDate(nextTarget)}`,
+            label: `Venceu dia ${formatDate(nextTarget)}${bill.subscriptionTime ? ` às ${bill.subscriptionTime}` : ""}`,
             className: "status-overdue",
             icon: "⚠️",
             isPaid: false,
-            nextDueDate: nextTarget
+            nextDueDate: nextTarget,
+            dueTime: timeStr
         };
     } else if (nextTarget === today) {
-        return {
-            status: "today",
-            label: `Vence Hoje! (${formatDate(nextTarget)})`,
-            className: "status-today",
-            icon: "🚨",
-            isPaid: false,
-            nextDueDate: nextTarget
-        };
-    } else if (diffDays <= 3) {
-        return {
-            status: "soon",
-            label: `Vence em ${diffDays} ${diffDays === 1 ? "dia" : "dias"} (${formatDate(nextTarget)})`,
-            className: "status-soon",
-            icon: "⏳",
-            isPaid: false,
-            nextDueDate: nextTarget
-        };
+        // Vence HOJE: cálculo exato do horário da assinatura
+        if (diffMs > 0) {
+            let remText = "";
+            if (diffMinutes < 60) {
+                remText = `em ${Math.max(1, diffMinutes)} min`;
+            } else {
+                const remH = Math.floor(diffMinutes / 60);
+                const remM = diffMinutes % 60;
+                remText = `em ${remH}h${remM > 0 ? ` ${remM}m` : ""}`;
+            }
+            return {
+                status: "today",
+                label: `Vence Hoje às ${timeStr} (${remText})`,
+                className: "status-today",
+                icon: "🚨",
+                isPaid: false,
+                nextDueDate: nextTarget,
+                dueTime: timeStr
+            };
+        } else {
+            const passedMin = Math.abs(diffMinutes);
+            let passedText = "";
+            if (passedMin < 60) {
+                passedText = `há ${Math.max(1, passedMin)} min`;
+            } else {
+                const pH = Math.floor(passedMin / 60);
+                const pM = passedMin % 60;
+                passedText = `há ${pH}h${pM > 0 ? ` ${pM}m` : ""}`;
+            }
+            return {
+                status: "overdue",
+                label: `Venceu Hoje às ${timeStr} (${passedText})`,
+                className: "status-overdue",
+                icon: "⚠️",
+                isPaid: false,
+                nextDueDate: nextTarget,
+                dueTime: timeStr
+            };
+        }
     } else {
-        return {
-            status: "pending",
-            label: `Vence dia ${formatDate(nextTarget)}`,
-            className: "status-pending",
-            icon: "📅",
-            isPaid: false,
-            nextDueDate: nextTarget
-        };
+        if (diffHours <= 72) {
+            let remText = "";
+            if (diffHours < 24) {
+                remText = `em ${Math.max(1, diffHours)}h`;
+            } else {
+                const days = Math.ceil(diffHours / 24);
+                remText = `em ${days} ${days === 1 ? "dia" : "dias"}`;
+            }
+            return {
+                status: "soon",
+                label: `Vence ${remText} (${formatDate(nextTarget)}${bill.subscriptionTime ? ` às ${bill.subscriptionTime}` : ""})`,
+                className: "status-soon",
+                icon: "⏳",
+                isPaid: false,
+                nextDueDate: nextTarget,
+                dueTime: timeStr
+            };
+        } else {
+            return {
+                status: "pending",
+                label: `Vence dia ${formatDate(nextTarget)}${bill.subscriptionTime ? ` às ${bill.subscriptionTime}` : ""}`,
+                className: "status-pending",
+                icon: "📅",
+                isPaid: false,
+                nextDueDate: nextTarget,
+                dueTime: timeStr
+            };
+        }
     }
 }
 
@@ -1477,6 +1528,7 @@ function renderRecurringBills() {
                 const icon = CATEGORY_ICONS[bill.category] || "📄";
                 const freqName = getFrequencyLabel(bill.frequency);
                 const targetDueFormatted = statusInfo.nextDueDate ? formatDate(statusInfo.nextDueDate) : `Dia ${bill.dueDay}`;
+                const dueWithTime = `${targetDueFormatted}${bill.subscriptionTime ? ` às ${bill.subscriptionTime}` : ""}`;
 
                 return `
                     <article class="recurring-card ${statusInfo.isPaid ? "paid" : ""}">
@@ -1485,15 +1537,16 @@ function renderRecurringBills() {
                                 <div class="recurring-card-icon">${icon}</div>
                                 <div class="recurring-card-title">
                                     <h4>${escapeHTML(bill.name)}</h4>
-                                    <span style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                                    <span style="display: flex; align-items: center; gap: 6px; margin-top: 2px; flex-wrap: wrap;">
                                         <span>${icon} ${escapeHTML(bill.category)}</span>
                                         <span class="recurring-frequency-badge">${freqName}</span>
+                                        ${bill.subscriptionTime ? `<span class="recurring-frequency-badge" style="background: rgba(148, 117, 255, 0.15); color: #c4b5fd;">⏰ Assinado às ${bill.subscriptionTime}</span>` : ""}
                                     </span>
                                 </div>
                             </div>
                             <div class="recurring-card-amount">
                                 <strong>${money(bill.amount)}</strong>
-                                <span class="recurring-due-tag">Vence: ${targetDueFormatted}</span>
+                                <span class="recurring-due-tag">Vence: ${dueWithTime}</span>
                             </div>
                         </div>
 
@@ -1512,7 +1565,7 @@ function renderRecurringBills() {
                                     </button>
                                 ` : `
                                     <button type="button" class="btn-pay-recurring" data-action="pay-recurring" data-id="${bill.id}" data-date="${statusInfo.nextDueDate || ""}">
-                                        ✓ Pagar (${targetDueFormatted})
+                                        ✓ Pagar (${dueWithTime})
                                     </button>
                                 `}
                             </div>
@@ -1572,6 +1625,7 @@ function renderRecurringRowsList() {
             const icon = CATEGORY_ICONS[bill.category] || "📄";
             const freqName = getFrequencyLabel(bill.frequency);
             const targetDueFormatted = statusInfo.nextDueDate ? formatDate(statusInfo.nextDueDate) : `Dia ${bill.dueDay}`;
+            const dueWithTime = `${targetDueFormatted}${bill.subscriptionTime ? ` às ${bill.subscriptionTime}` : ""}`;
 
             return `
                 <div class="transaction-item recurring-row-item ${statusInfo.isPaid ? "paid" : ""}">
@@ -1591,7 +1645,8 @@ function renderRecurringRowsList() {
                             <span>·</span>
                             <span class="recurring-frequency-badge" style="font-size: 10px; padding: 1px 6px;">${freqName}</span>
                             <span>·</span>
-                            <span>Vence: <strong style="color: var(--text);">${targetDueFormatted}</strong></span>
+                            <span>Vence: <strong style="color: var(--text);">${dueWithTime}</strong></span>
+                            ${bill.subscriptionTime ? `<span>·</span><span>⏰ Assinado às ${bill.subscriptionTime}</span>` : ""}
                         </p>
                     </div>
 
@@ -3228,8 +3283,12 @@ function setupGcalQuickModal() {
             activeGcalModalType = tab.dataset.type || "despesa";
 
             const freqGroup = $("#gcalRecurringFreqGroup");
+            const timeGroup = $("#gcalRecurringTimeGroup");
             if (freqGroup) {
                 freqGroup.classList.toggle("hidden", activeGcalModalType !== "recorrente");
+            }
+            if (timeGroup) {
+                timeGroup.classList.toggle("hidden", activeGcalModalType !== "recorrente");
             }
 
             renderGcalCategoryOptions(activeGcalModalType);
@@ -3247,6 +3306,7 @@ function setupGcalQuickModal() {
         const cat = String($("#gcalQuickCategory")?.value || "Outros");
         const notes = String($("#gcalQuickNotes")?.value || "").trim();
         const freq = String($("#gcalQuickFrequency")?.value || "monthly");
+        const subscriptionTime = String($("#gcalQuickTime")?.value || "").trim() || "12:00";
 
         if (!desc) {
             showToast("Informe o título ou descrição.");
@@ -3263,6 +3323,7 @@ function setupGcalQuickModal() {
                 name: desc,
                 amount: amt,
                 startDate: dt,
+                subscriptionTime,
                 dueDay: parseInt(dt.slice(8, 10), 10) || 1,
                 frequency: freq,
                 category: cat,
@@ -3309,6 +3370,14 @@ function openGcalQuickModal(dateISO) {
     });
     const freqGroup = $("#gcalRecurringFreqGroup");
     if (freqGroup) freqGroup.classList.add("hidden");
+    const timeGroup = $("#gcalRecurringTimeGroup");
+    if (timeGroup) timeGroup.classList.add("hidden");
+
+    const timeInput = $("#gcalQuickTime");
+    if (timeInput) {
+        const now = new Date();
+        timeInput.value = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    }
 
     const dateInput = $("#gcalQuickDate");
     if (dateInput) {
@@ -3417,7 +3486,8 @@ function openGcalDetailModal(evt) {
     if (colorBar) colorBar.style.background = color;
     if (iconEl) iconEl.textContent = CATEGORY_ICONS[evt.category] || "📦";
     if (titleEl) titleEl.textContent = evt.title;
-    if (subtitleEl) subtitleEl.textContent = `${evt.category} · ${formatDate(evt.date)}`;
+    const subTime = evt.bill?.subscriptionTime || evt.raw?.subscriptionTime || "";
+    if (subtitleEl) subtitleEl.textContent = `${evt.category} · ${formatDate(evt.date)}${subTime ? ` às ${subTime}` : ""}`;
     if (amtEl) {
         amtEl.textContent = `${isInc ? "+" : "−"}${money(evt.amount)}`;
         amtEl.style.color = isInc ? "var(--green)" : "var(--red)";
@@ -3432,6 +3502,7 @@ function openGcalDetailModal(evt) {
         metaEl.innerHTML = `
             <p><strong>Tipo:</strong> ${evt.kind === "recurring" ? "Conta fixa recorrente" : (isInc ? "Receita extra" : "Despesa avulsa")}</p>
             ${evt.frequency ? `<p><strong>Frequência:</strong> ${getFrequencyLabel(evt.frequency)}</p>` : ""}
+            ${subTime ? `<p><strong>Horário de renovação:</strong> ⏰ ${subTime}</p>` : ""}
             ${evt.notes ? `<p><strong>Observações:</strong> ${escapeHTML(evt.notes)}</p>` : ""}
         `;
     }
@@ -5413,6 +5484,12 @@ function setupRecurringBills() {
     const form = $("#recurringForm");
     const btnCancel = $("#btnCancelRecurring");
 
+    const initialTimeInput = $("#recurringTime");
+    if (initialTimeInput) {
+        const now = new Date();
+        initialTimeInput.value = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    }
+
     setupRecurringCategoryPicker();
     setupRecurringFrequencyPicker();
 
@@ -5426,6 +5503,11 @@ function setupRecurringBills() {
                 if (dateInput && !dateInput.value) {
                     dateInput.value = todayISO();
                 }
+                const timeInput = $("#recurringTime");
+                if (timeInput) {
+                    const now = new Date();
+                    timeInput.value = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+                }
                 syncDatePicker();
             }
         });
@@ -5434,6 +5516,11 @@ function setupRecurringBills() {
     if (btnCancel && form) {
         btnCancel.addEventListener("click", () => {
             form.reset();
+            const timeInput = $("#recurringTime");
+            if (timeInput) {
+                const now = new Date();
+                timeInput.value = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+            }
             syncDatePicker();
             if (syncRecurringFrequencyPicker) syncRecurringFrequencyPicker("monthly");
             form.classList.add("hidden");
@@ -5448,6 +5535,7 @@ function setupRecurringBills() {
             const normalized = rawAmount.includes(",") ? rawAmount.replace(/\./g, "").replace(",", ".") : rawAmount;
             const amount = Number(normalized);
             const startDate = String($("#recurringDate")?.value || "").trim();
+            const subscriptionTime = String($("#recurringTime")?.value || "").trim() || "12:00";
             const frequency = String($("#recurringFrequency")?.value || "monthly");
             const customCategory = String($("#recurringCustomCategory")?.value || "").trim();
             const category = customCategory || String($("#recurringCategory")?.value || "Assinaturas");
@@ -5477,6 +5565,7 @@ function setupRecurringBills() {
                 amount,
                 startDate,
                 dueDay,
+                subscriptionTime,
                 frequency,
                 category,
                 paidDates: [],
@@ -5487,6 +5576,11 @@ function setupRecurringBills() {
             saveData();
 
             form.reset();
+            const timeInput = $("#recurringTime");
+            if (timeInput) {
+                const now = new Date();
+                timeInput.value = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+            }
             syncDatePicker();
             if (syncRecurringFrequencyPicker) syncRecurringFrequencyPicker("monthly");
             form.classList.add("hidden");
