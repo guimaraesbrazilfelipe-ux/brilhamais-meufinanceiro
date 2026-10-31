@@ -63,8 +63,8 @@
                 </div>
             </header>
 
-            <section class="month-toolbar">
-                <div>
+            <section class="month-toolbar report-toolbar" aria-label="Filtros de data e período">
+                <div class="toolbar-item">
                     <label for="datePickerTrigger">Data de referência</label>
                     <div class="custom-datepicker" id="customDatePicker">
                         <input type="date" id="dashboardMonth" class="datepicker-native-input" tabindex="-1" aria-hidden="true">
@@ -122,7 +122,7 @@
                 </div>
 
                 <!-- Seletor Moderno de Período dos Relatórios (Estilo Contas Fixas) -->
-                <div class="report-period-control">
+                <div class="toolbar-item report-period-control">
                     <label for="reportPeriodPickerButton">Período de análise</label>
                     <div class="category-picker frequency-picker report-period-picker" id="reportPeriodPicker">
                         <select id="reportPeriodSelect" class="category-native-select" aria-hidden="true" tabindex="-1">
@@ -209,48 +209,65 @@
                 </article>
             </section>
 
-            <!-- Detalhamento de Despesas e Receitas em Relatórios -->
+            <!-- Detalhamento de Despesas e Receitas em Relatórios (Organizado por Fluxo Financeiro) -->
             <div class="report-breakdown-kpis">
-                <div class="report-breakdown-card highlight-expense">
-                    <div class="breakdown-icon">💸</div>
-                    <div class="breakdown-info">
-                        <span class="breakdown-label">Total de despesas gastas</span>
-                        <strong class="breakdown-val expense-text" id="reportTotalExpensesSpent">R$ 0,00</strong>
-                    </div>
-                </div>
-                <div class="report-breakdown-card highlight-income">
-                    <div class="breakdown-icon">💰</div>
-                    <div class="breakdown-info">
-                        <span class="breakdown-label">Total de receitas extras</span>
-                        <strong class="breakdown-val income-text" id="reportManualIncomeVal">R$ 0,00</strong>
-                    </div>
-                </div>
-                <div class="report-breakdown-card highlight-expense">
-                    <div class="breakdown-icon">🧾</div>
-                    <div class="breakdown-info">
-                        <span class="breakdown-label">Lançamentos avulsos gastos</span>
-                        <strong class="breakdown-val" id="reportManualExpensesVal">R$ 0,00</strong>
-                    </div>
-                </div>
-                <div class="report-breakdown-card highlight-income">
-                    <div class="breakdown-icon">💎</div>
-                    <div class="breakdown-info">
-                        <span class="breakdown-label">Contas fixas pagas no mês</span>
-                        <strong class="breakdown-val" id="reportRecurringPaidVal">R$ 0,00</strong>
-                    </div>
-                </div>
-                <div class="report-breakdown-card highlight-pending">
-                    <div class="breakdown-icon">⏳</div>
-                    <div class="breakdown-info">
-                        <span class="breakdown-label">Contas fixas a vencer</span>
-                        <strong class="breakdown-val" id="reportRecurringPendingVal">R$ 0,00</strong>
-                    </div>
-                </div>
+                <!-- 1. Salário base (Macro Entrada Fixa - Roxinho) -->
                 <div class="report-breakdown-card highlight-total">
-                    <div class="breakdown-icon">💵</div>
+                    <div class="breakdown-icon" aria-hidden="true">💵</div>
                     <div class="breakdown-info">
                         <span class="breakdown-label">Salário base do mês</span>
                         <strong class="breakdown-val" id="reportSalaryBaseVal">R$ 0,00</strong>
+                        <span class="breakdown-sub">Renda mensal fixa</span>
+                    </div>
+                </div>
+
+                <!-- 2. Receitas extras (Entradas variáveis - Verde) -->
+                <div class="report-breakdown-card highlight-income">
+                    <div class="breakdown-icon" aria-hidden="true">💰</div>
+                    <div class="breakdown-info">
+                        <span class="breakdown-label">Total de receitas extras</span>
+                        <strong class="breakdown-val income-text" id="reportManualIncomeVal">R$ 0,00</strong>
+                        <span class="breakdown-sub">Freelance, bicos e extras</span>
+                    </div>
+                </div>
+
+                <!-- 3. Total de despesas gastas (Consolidado de saídas - Vermelho) -->
+                <div class="report-breakdown-card highlight-expense">
+                    <div class="breakdown-icon" aria-hidden="true">💸</div>
+                    <div class="breakdown-info">
+                        <span class="breakdown-label">Total de despesas gastas</span>
+                        <strong class="breakdown-val expense-text" id="reportTotalExpensesSpent">R$ 0,00</strong>
+                        <span class="breakdown-sub">Saídas e contas quitadas</span>
+                    </div>
+                </div>
+
+                <!-- 4. Contas fixas pagas (Já quitadas - Verde) -->
+                <div class="report-breakdown-card highlight-income">
+                    <div class="breakdown-icon" aria-hidden="true">💎</div>
+                    <div class="breakdown-info">
+                        <span class="breakdown-label">Contas fixas pagas no mês</span>
+                        <strong class="breakdown-val" id="reportRecurringPaidVal">R$ 0,00</strong>
+                        <span class="breakdown-sub">Compromissos quitados</span>
+                    </div>
+                </div>
+
+                <!-- 5. Contas fixas a vencer (Pendentes - Amarelo/Laranja) -->
+                <div class="report-breakdown-card highlight-pending">
+                    <div class="breakdown-icon" aria-hidden="true">⏳</div>
+                    <div class="breakdown-info">
+                        <span class="breakdown-label">Contas fixas a vencer</span>
+                        <strong class="breakdown-val" id="reportRecurringPendingVal">R$ 0,00</strong>
+                        <span class="breakdown-sub">Compromissos pendentes</span>
+                    </div>
+                </div>
+
+                <!-- 6. Lançamentos avulsos gastos (Saídas avulsas - Vermelho) -->
+                <div class="report-breakdown-card highlight-expense">
+                    <div class="breakdown-icon" aria-hidden="true">🧾</div>
+                    <div class="breakdown-info">
+                        <span class="breakdown-label">Lançamentos avulsos gastos</span>
+                        <strong class="breakdown-val" id="reportManualExpensesVal">R$ 0,00</strong>
+                        <span class="breakdown-sub">Gastos variáveis do dia a dia</span>
                     </div>
                 </div>
             </div>
