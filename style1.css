@@ -2867,34 +2867,22 @@ textarea::placeholder {
 
 
 
-/* Barra de rolagem estilizada e elegante */
+/* Ocultar barra de rolagem do dashboard inteiro em todas as abas (mantendo a rolagem ativa) */
 html,
-body {
-    scrollbar-width: thin;
-    scrollbar-color: #3b4b66 #111b2b;
+body,
+.app,
+.main-content {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
 }
 
 html::-webkit-scrollbar,
-body::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-html::-webkit-scrollbar-track,
-body::-webkit-scrollbar-track {
-    background: #111b2b;
-}
-
-html::-webkit-scrollbar-thumb,
-body::-webkit-scrollbar-thumb {
-    background: #2a3850;
-    border-radius: 8px;
-    border: 2px solid #111b2b;
-}
-
-html::-webkit-scrollbar-thumb:hover,
-body::-webkit-scrollbar-thumb:hover {
-    background: var(--purple);
+body::-webkit-scrollbar,
+.app::-webkit-scrollbar,
+.main-content::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
 }
 
 /* Modo Privacidade (ocultar saldos) */
