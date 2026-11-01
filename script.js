@@ -4583,7 +4583,7 @@ function editTransaction(id) {
     window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function showConfirmDialog({ title, message, confirmLabel = "Excluir", danger = true }) {
+function showConfirmDialog({ title, message, confirmLabel = "Excluir", cancelLabel = null, danger = true }) {
     const dialog = $("#confirmDialog");
     if (!dialog) {
         return Promise.resolve(confirm(message));
@@ -4592,18 +4592,23 @@ function showConfirmDialog({ title, message, confirmLabel = "Excluir", danger = 
     const titleElement = $("#confirmDialogTitle");
     const messageElement = $("#confirmDialogMessage");
     const confirmButton = $("#confirmDialogConfirm");
+    const cancelBtn = $("#confirmDialogCancel");
 
-    titleElement.textContent = title;
-    messageElement.textContent = message;
-    confirmButton.textContent = confirmLabel;
-    confirmButton.classList.toggle("button-danger", danger);
+    if (titleElement) titleElement.textContent = title;
+    if (messageElement) messageElement.textContent = message;
+    if (confirmButton) {
+        confirmButton.textContent = confirmLabel;
+        confirmButton.classList.toggle("button-danger", danger);
+    }
+    if (cancelBtn && cancelLabel) {
+        cancelBtn.textContent = cancelLabel;
+    }
 
     dialog.classList.add("is-open");
     dialog.setAttribute("aria-hidden", "false");
     document.body.classList.add("dialog-open");
-    confirmButton.focus();
+    if (confirmButton) confirmButton.focus();
 
-    const cancelBtn = $("#confirmDialogCancel");
     const closeBtn = $("#confirmDialogClose");
 
     return new Promise((resolve) => {
@@ -5114,6 +5119,40 @@ async function importBackup(file) {
     }
 }
 
+async function clearAllData() {
+    const confirmed = await showConfirmDialog({
+        title: "Apagar todos os dados?",
+        message: "Deseja realmente apagar todos os dados?",
+        confirmLabel: "Sim",
+        cancelLabel: "Não",
+        danger: true
+    });
+
+    if (!confirmed) return;
+
+    try {
+        localStorage.removeItem(STORAGE_KEY);
+        sessionStorage.removeItem("meuFinanceiro.date");
+        sessionStorage.removeItem("meuFinanceiro.month");
+        sessionStorage.removeItem("meuFinanceiro.historyPeriod");
+        sessionStorage.removeItem("meuFinanceiro.agendaView");
+        sessionStorage.removeItem("meuFinanceiro.agendaDate");
+        sessionStorage.removeItem("meuFinanceiro.reportPeriod");
+
+        data = defaultData();
+        saveData();
+
+        showToast("Todos os dados foram apagados com sucesso!");
+
+        setTimeout(() => {
+            window.location.reload();
+        }, 700);
+    } catch (error) {
+        console.error("Erro ao limpar dados:", error);
+        showToast("Não foi possível apagar os dados.");
+    }
+}
+
 /* ==============================
    NAVEGAÇÃO E VALIDAÇÃO
 ================================ */
@@ -5528,6 +5567,11 @@ function init() {
         importFile.addEventListener("change", (event) => {
             importBackup(event.target.files[0]);
         });
+    }
+
+    const clearAllDataBtn = $("#clearAllDataBtn");
+    if (clearAllDataBtn) {
+        clearAllDataBtn.addEventListener("click", clearAllData);
     }
 
     setupNavigation();

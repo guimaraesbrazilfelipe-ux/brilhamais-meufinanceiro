@@ -257,6 +257,19 @@
                     </div>
                 </div>
 
+                <!-- Zona de Perigo / Limpar Tudo -->
+                <div class="settings-actions settings-danger-zone">
+                    <div>
+                        <h3 class="danger-title">Reiniciar todos os dados</h3>
+                        <p>Apague todas as informações salvas no navegador para reiniciar tudo do zero.</p>
+                    </div>
+                    <div class="button-group">
+                        <button id="clearAllDataBtn" type="button" class="button button-danger" style="display: inline-flex; align-items: center; gap: 6px;">
+                            🗑️ Limpar tudo
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Cartão Informativo de Privacidade e Armazenamento Local-First -->
                 <article class="settings-info-card">
                     <div class="settings-info-card-header">
@@ -298,6 +311,22 @@
                 <p>Organize hoje. Conquiste amanhã. ✨</p>
             </footer>
         </main>
+    </div>
+
+    <!-- Diálogo de confirmação -->
+    <div id="confirmDialog" class="confirm-dialog" role="dialog" aria-modal="true"
+        aria-labelledby="confirmDialogTitle" aria-describedby="confirmDialogMessage" aria-hidden="true">
+        <div class="confirm-dialog-card">
+            <button type="button" id="confirmDialogClose" class="confirm-dialog-close" aria-label="Fechar janela">×</button>
+            <div class="confirm-dialog-icon" aria-hidden="true">🗑️</div>
+            <p class="confirm-dialog-eyebrow">CONFIRMAÇÃO</p>
+            <h2 id="confirmDialogTitle">Apagar todos os dados?</h2>
+            <p id="confirmDialogMessage" class="confirm-dialog-message">Deseja realmente apagar todos os dados?</p>
+            <div class="confirm-dialog-actions">
+                <button type="button" id="confirmDialogCancel" class="button button-secondary">Não</button>
+                <button type="button" id="confirmDialogConfirm" class="button button-danger">Sim</button>
+            </div>
+        </div>
     </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
