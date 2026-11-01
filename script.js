@@ -1211,9 +1211,7 @@ function renderPlanning() {
                 `Você ultrapassou o limite em ${money(spent - budget)}.`;
         } else {
             budgetStatus.textContent =
-                `${money(budget - spent)} disponíveis de ${money(budget)} (${budgetPercent.toLocaleString("pt-BR", {
-                    maximumFractionDigits: 1
-                })}% utilizado).`;
+                `${money(budget - spent)} disponíveis de ${money(budget)} (${formatPercent(budgetPercent)} utilizado).`;
         }
     }
 
