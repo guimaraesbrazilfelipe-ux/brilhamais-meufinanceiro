@@ -111,6 +111,14 @@ function money(value) {
     });
 }
 
+function formatPercent(value, decimals = 1) {
+    const num = Number(value) || 0;
+    return `${num.toLocaleString("pt-BR", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+    })}%`;
+}
+
 function monthLabel(month) {
     const [year, number] = month.split("-").map(Number);
     const date = new Date(year, number - 1, 1, 12);
@@ -542,9 +550,7 @@ function renderSummary() {
         expensesElement.textContent = money(summary.expenses);
     }
     if (savingsElement) {
-        savingsElement.textContent = `${summary.savingsRate.toLocaleString("pt-BR", {
-            maximumFractionDigits: 1
-        })}%`;
+        savingsElement.textContent = formatPercent(summary.savingsRate);
     }
     if (txCountPill) {
         txCountPill.textContent = `${monthTx.length} lançamento${monthTx.length !== 1 ? "s" : ""}`;
@@ -750,6 +756,30 @@ function renderMonthlyChart() {
             }
         }
     });
+
+    const hasData = incomeValues.some((v) => v > 0) || expenseValues.some((v) => v > 0);
+    const parentContainer = canvas.parentElement;
+    if (parentContainer) {
+        let emptyOverlay = parentContainer.querySelector(".chart-empty-overlay");
+        if (!hasData) {
+            if (!emptyOverlay) {
+                emptyOverlay = document.createElement("div");
+                emptyOverlay.className = "chart-empty-overlay";
+                parentContainer.style.position = "relative";
+                parentContainer.appendChild(emptyOverlay);
+            }
+            emptyOverlay.innerHTML = `
+                <div class="chart-empty-state">
+                    <span class="chart-empty-icon">📈</span>
+                    <p>Nenhuma movimentação registrada para este período.</p>
+                    <a href="lancamentos.html" class="button button-primary empty-state-cta">+ Fazer lançamento</a>
+                </div>
+            `;
+            emptyOverlay.style.display = "flex";
+        } else if (emptyOverlay) {
+            emptyOverlay.style.display = "none";
+        }
+    }
 }
 
 let currentReportPeriod = "this_month"; // "this_week" | "this_month" | "this_year" | "last_2_years"
@@ -1005,9 +1035,13 @@ function renderCategoryChart() {
     if (!legend) return;
 
     if (!entries.length) {
-        legend.innerHTML =
-            '<p class="empty-state">Adicione despesas para visualizar suas categorias.</p>';
-
+        legend.innerHTML = `
+            <div class="chart-empty-state">
+                <span class="chart-empty-icon">🍰</span>
+                <p>Nenhuma despesa registrada para o período selecionado.</p>
+                <a href="lancamentos.html" class="button button-primary empty-state-cta">+ Fazer lançamento</a>
+            </div>
+        `;
         return;
     }
 
@@ -1023,9 +1057,7 @@ function renderCategoryChart() {
             <span class="legend-value">${money(value)}</span>
 
             <span class="legend-name">
-                ${total ? (value / total * 100).toLocaleString("pt-BR", {
-                    maximumFractionDigits: 1
-                }) : 0}%
+                ${formatPercent(total ? (value / total * 100) : 0)}
             </span>
         </div>
     `).join("");
@@ -2216,9 +2248,9 @@ function initSingleDatePicker(container) {
         else if (info.val === yesterdayStr) suffix = " (Ontem)";
 
         if (container.id === "recurringDatePickerContainer") {
-            label.textContent = `${info.day} de ${DP_MONTH_NAMES_SHORT[info.month]} ${info.year}${suffix}`;
+            label.textContent = `${info.day} de ${DP_MONTH_NAMES[info.month].toLowerCase()} de ${info.year}${suffix}`;
         } else {
-            label.textContent = `${info.day} de ${DP_MONTH_NAMES[info.month]} de ${info.year}${suffix}`;
+            label.textContent = `${info.day} de ${DP_MONTH_NAMES[info.month].toLowerCase()} de ${info.year}${suffix}`;
         }
         renderDays();
     }
@@ -2783,7 +2815,7 @@ function renderGcalMiniCalendar() {
 
     const [y, m] = gcalMiniMonth.split("-").map(Number);
     if (miniTitle) {
-        miniTitle.textContent = `${DP_MONTH_NAMES[m - 1].slice(0, 3)} ${y}`;
+        miniTitle.textContent = `${DP_MONTH_NAMES[m - 1]} de ${y}`;
     }
 
     miniGrid.innerHTML = "";
@@ -3821,7 +3853,7 @@ function renderHistoricalReports() {
     }
     if (incEl) incEl.textContent = money(summary.income);
     if (expEl) expEl.textContent = money(summary.expenses);
-    if (savEl) savEl.textContent = `${summary.savingsRate.toFixed(1)}%`;
+    if (savEl) savEl.textContent = formatPercent(summary.savingsRate);
 
     // Category Breakdown Report (Despesas)
     const breakdownContainer = $("#historyCategoryBreakdown");
@@ -3877,7 +3909,7 @@ function renderHistoricalReports() {
                     <div class="breakdown-item">
                         <div class="breakdown-info">
                             <span>${icon} <strong>${escapeHTML(cat)}</strong></span>
-                            <span>${money(amt)} <small style="color: var(--muted);">(${pct.toFixed(1)}%)</small></span>
+                            <span>${money(amt)} <small style="color: var(--muted);">(${formatPercent(pct)})</small></span>
                         </div>
                         <div class="breakdown-bar-bg">
                             <div class="breakdown-bar-fill" style="width: ${pct}%; background: ${color};"></div>
@@ -3916,7 +3948,7 @@ function renderHistoricalReports() {
                     <div class="breakdown-item">
                         <div class="breakdown-info">
                             <span>${icon} <strong>${escapeHTML(cat)}</strong></span>
-                            <span>${money(amt)} <small style="color: var(--muted);">(${pct.toFixed(1)}%)</small></span>
+                            <span>${money(amt)} <small style="color: var(--muted);">(${formatPercent(pct)})</small></span>
                         </div>
                         <div class="breakdown-bar-bg">
                             <div class="breakdown-bar-fill" style="width: ${pct}%; background: ${color};"></div>
@@ -4280,7 +4312,7 @@ function renderReports() {
     }
     if (monthIncEl) monthIncEl.textContent = money(summary.income);
     if (monthExpEl) monthExpEl.textContent = money(summary.expenses);
-    if (savingsEl) savingsEl.textContent = `${summary.savingsRate.toFixed(1)}%`;
+    if (savingsEl) savingsEl.textContent = formatPercent(summary.savingsRate);
 
     // 2. Atualizar KPIs de detalhamento em relatórios
     const totalExpEl = $("#reportTotalExpensesSpent");
@@ -4473,11 +4505,11 @@ function resetTransactionForm() {
     const title = $("#formTitle");
     if (title) title.textContent = "Novo lançamento";
 
-    const saveBtn = $("#saveBtn");
+    const saveBtn = $("#saveBtn") || $("#saveTransactionBtn");
     if (saveBtn) saveBtn.textContent = "Salvar lançamento";
 
     const cancelBtn = $("#cancelEditBtn");
-    if (cancelBtn && !form.classList.contains("recurring-form")) {
+    if (cancelBtn) {
         cancelBtn.classList.add("hidden");
     }
 
@@ -4542,7 +4574,7 @@ function editTransaction(id) {
     const formTitle = $("#formTitle");
     if (formTitle) formTitle.textContent = "Editar lançamento";
 
-    const saveBtn = $("#saveBtn");
+    const saveBtn = $("#saveBtn") || $("#saveTransactionBtn");
     if (saveBtn) saveBtn.textContent = "Salvar alterações";
 
     const cancelBtn = $("#cancelEditBtn");
@@ -5275,7 +5307,7 @@ function init() {
 
     const todayText = $("#todayText");
     if (todayText) {
-        todayText.textContent = new Date().toLocaleDateString(
+        const rawToday = new Date().toLocaleDateString(
             "pt-BR",
             {
                 weekday: "long",
@@ -5284,6 +5316,7 @@ function init() {
                 year: "numeric"
             }
         );
+        todayText.textContent = rawToday.charAt(0).toUpperCase() + rawToday.slice(1);
     }
 
     const currentYear = $("#currentYear");
@@ -5710,7 +5743,10 @@ function setupTransactionsPage() {
         });
     }
 
-    if (btnCancel && form) {
+    if (btnCancel) {
+        if (!$("#editId")?.value) {
+            btnCancel.classList.add("hidden");
+        }
         btnCancel.addEventListener("click", () => {
             resetTransactionForm();
         });

@@ -206,6 +206,35 @@
                 <!-- Card de Cálculo Exato e Contagem até o Próximo Salário -->
                 <div id="salaryCalculationCard" class="salary-calc-card" style="margin-top: 18px;"></div>
 
+                <!-- Guia Explicativo do Salário Automático -->
+                <article class="settings-info-card">
+                    <div class="settings-info-card-header">
+                        <div class="info-icon">💡</div>
+                        <div>
+                            <h3>Como funciona o Salário Automático</h3>
+                            <p>Tire suas dúvidas sobre projeções mensais, receitas extras e cálculo de saldo</p>
+                        </div>
+                    </div>
+                    <div class="settings-faq-grid">
+                        <div class="settings-faq-item">
+                            <h4>📅 Projeção mês a mês automática</h4>
+                            <p>Ao definir seu salário e o dia de recebimento, o sistema projeta e inclui essa receita automaticamente em todos os meses futuros, sem você precisar lançar todo mês manualmente.</p>
+                        </div>
+                        <div class="settings-faq-item">
+                            <h4>🔄 Alteração e ajustes a qualquer hora</h4>
+                            <p>Teve aumento ou mudou a data de pagamento? Basta atualizar os campos acima e clicar em salvar. Todos os cálculos de saldo e relatórios se ajustarão imediatamente.</p>
+                        </div>
+                        <div class="settings-faq-item">
+                            <h4>✨ Salário Base vs. Receitas Extras</h4>
+                            <p>O Salário Base é a renda mensal fixa. Rendimentos extras, freelas e comissões devem ser adicionados na aba <strong>Lançamentos</strong> como <em>Receita extra</em>.</p>
+                        </div>
+                        <div class="settings-faq-item">
+                            <h4>🛡️ Proteção contra lançamentos duplicados</h4>
+                            <p>Se você cadastrar um lançamento manual com a categoria "Salário", o sistema reconhece a duplicidade e não soma duas vezes na visão geral do mês nem no histórico.</p>
+                        </div>
+                    </div>
+                </article>
+
                 <div class="settings-actions">
                     <div>
                         <h3>Backup dos seus dados</h3>
@@ -227,6 +256,41 @@
                         <input id="importFile" type="file" accept=".json,application/json" hidden>
                     </div>
                 </div>
+
+                <!-- Cartão Informativo de Privacidade e Armazenamento Local-First -->
+                <article class="settings-info-card">
+                    <div class="settings-info-card-header">
+                        <div class="info-icon">🔒</div>
+                        <div>
+                            <h3>Privacidade Total & Armazenamento Local-First</h3>
+                            <p>Entenda onde suas finanças são guardadas e como manter seus dados protegidos</p>
+                        </div>
+                    </div>
+                    <div class="settings-faq-grid">
+                        <div class="settings-faq-item">
+                            <h4>💾 Armazenamento local permanente (localStorage)</h4>
+                            <p>Seus dados ficam gravados diretamente no armazenamento permanente do seu navegador. Eles <strong>não se perdem</strong> ao fechar a aba, reiniciar o navegador ou desligar o aparelho.</p>
+                        </div>
+                        <div class="settings-faq-item">
+                            <h4>🛡️ Zero servidores externos e 100% privado</h4>
+                            <p>Nenhuma informação sua, extrato ou valor é transmitido para servidores na internet. Seus dados financeiros pertencem única e exclusivamente a você.</p>
+                        </div>
+                        <div class="settings-faq-item">
+                            <h4>📲 Sincronização entre dispositivos</h4>
+                            <p>Por ser 100% local e sem nuvem, seus dados não sincronizam automaticamente entre aparelhos (ex.: do PC para o celular). Para migrar seus dados, utilize a ferramenta de <strong>Backup JSON</strong> acima.</p>
+                        </div>
+                        <div class="settings-faq-item">
+                            <h4>📁 Exportação e recuperação a qualquer momento</h4>
+                            <p>Exporte cópias regulares em <strong>Excel (CSV)</strong> para planilhas ou guarde um arquivo <strong>JSON</strong> para restaurar suas informações em qualquer novo navegador com 1 clique.</p>
+                        </div>
+                    </div>
+                    <div class="settings-privacy-badges">
+                        <span class="privacy-badge">✓ 100% Local-First</span>
+                        <span class="privacy-badge">✓ Sem envio para servidores</span>
+                        <span class="privacy-badge">✓ Armazenamento permanente no navegador</span>
+                        <span class="privacy-badge">✓ Backup livre em JSON e CSV</span>
+                    </div>
+                </article>
             </section>
 
             <footer class="main-footer">
