@@ -164,6 +164,12 @@
                 </article>
             </section>
 
+            <!-- Diagnóstico Contextual Neutro (Item 2) -->
+            <div id="contextInsightCard" class="context-insight-card"></div>
+
+            <!-- Bloco Disponível Após Despesas Cadastradas & Distribuição por Categoria (Item 6) -->
+            <div id="dashboardBudgetBreakdown"></div>
+
             <section class="content-grid">
                 <article class="panel chart-panel">
                     <div class="panel-heading">
@@ -399,6 +405,130 @@
                     <span class="tutorial-help-hint">Você pode rever este tutorial a qualquer momento no menu "Como usar".</span>
                 </div>
             </footer>
+        </div>
+    </div>
+
+    <!-- Modal de Orientação para o Primeiro Uso / Configuração Rápida (Item 1) -->
+    <div id="quickStartModal" class="wizard-modal" role="dialog" aria-modal="true" aria-labelledby="wizardTitle" aria-hidden="true">
+        <div class="wizard-card">
+            <div class="wizard-header">
+                <span class="wizard-badge" id="wizardStepBadge">Passo 1 de 4</span>
+                <button type="button" class="wizard-close" id="btnWizardClose" aria-label="Fechar assistente">✕</button>
+            </div>
+
+            <div class="wizard-progress-bar" aria-hidden="true">
+                <div class="wizard-progress-fill" id="wizardProgressFill" style="width: 25%;"></div>
+            </div>
+
+            <!-- Passo 1: Renda Líquida Recebida -->
+            <div class="wizard-step active" id="wizardStep1" data-step="1">
+                <h3 class="wizard-title" id="wizardTitle">Quanto você recebe líquido por mês?</h3>
+                <p class="wizard-desc">Informe o valor líquido que efetivamente entra na sua conta bancária. É ele que servirá de base para o seu orçamento.</p>
+
+                <div class="field" style="margin-bottom: 14px;">
+                    <label for="wizardNetSalary">Salário Líquido Mensal (R$) <span style="color: var(--red);">*</span></label>
+                    <input type="number" id="wizardNetSalary" step="0.01" min="0" placeholder="Ex.: 1621,00" style="font-size: 16px; font-weight: 700; width: 100%; padding: 10px 14px; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: var(--text);">
+                </div>
+
+                <div class="field" style="margin-bottom: 14px;">
+                    <label for="wizardSalaryDay">Dia do mês em que cai o salário</label>
+                    <input type="number" id="wizardSalaryDay" min="1" max="31" value="5" placeholder="Ex.: 5" style="width: 100%; padding: 8px 12px; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: var(--text);">
+                </div>
+
+                <div style="background: rgba(124, 93, 250, 0.08); border: 1px solid rgba(124, 93, 250, 0.2); border-radius: 8px; padding: 10px 12px; font-size: 11px; color: #cbd5e1; line-height: 1.45;">
+                    💡 <strong>Salário bruto e benefícios:</strong> Descontos do holerite e benefícios como Vale-Refeição/Transporte podem ser anotados depois nas Configurações e não contam como dinheiro disponível no banco.
+                </div>
+            </div>
+
+            <!-- Passo 2: Despesas Essenciais -->
+            <div class="wizard-step" id="wizardStep2" data-step="2">
+                <h3 class="wizard-title">Adicione suas despesas essenciais</h3>
+                <p class="wizard-desc">Selecione ou edite as contas fixas básicas que você tem todo mês para calcular seu saldo previsto:</p>
+
+                <div class="wizard-chips-grid">
+                    <div class="wizard-chip selected" data-cat="Moradia" data-desc="Aluguel / Moradia">
+                        <span class="wizard-chip-title">🏠 Aluguel / Condomínio</span>
+                        <span class="wizard-chip-sub">Gasto com moradia</span>
+                        <input type="number" class="wizard-chip-val" placeholder="R$ 0,00" value="800">
+                    </div>
+                    <div class="wizard-chip selected" data-cat="Contas da casa" data-desc="Luz e Água">
+                        <span class="wizard-chip-title">💡 Luz, Água e Gás</span>
+                        <span class="wizard-chip-sub">Contas da casa</span>
+                        <input type="number" class="wizard-chip-val" placeholder="R$ 0,00" value="220">
+                    </div>
+                    <div class="wizard-chip selected" data-cat="Alimentação" data-desc="Supermercado mensal">
+                        <span class="wizard-chip-title">🛒 Supermercado</span>
+                        <span class="wizard-chip-sub">Alimentação básica</span>
+                        <input type="number" class="wizard-chip-val" placeholder="R$ 0,00" value="500">
+                    </div>
+                    <div class="wizard-chip selected" data-cat="Comunicação" data-desc="Internet e Celular">
+                        <span class="wizard-chip-title">📱 Internet / Celular</span>
+                        <span class="wizard-chip-sub">Comunicação</span>
+                        <input type="number" class="wizard-chip-val" placeholder="R$ 0,00" value="120">
+                    </div>
+                </div>
+
+                <p style="font-size: 12px; color: var(--muted); margin: 0;">Você poderá alterar ou excluir qualquer uma destas despesas a qualquer momento.</p>
+            </div>
+
+            <!-- Passo 3: Revisão do Saldo Previsto -->
+            <div class="wizard-step" id="wizardStep3" data-step="3">
+                <h3 class="wizard-title">Conferência do Saldo Previsto</h3>
+                <p class="wizard-desc">Veja a estimativa de fluxo mensal com base nos valores informados:</p>
+
+                <div class="wizard-summary-box">
+                    <div class="wizard-summary-row">
+                        <span>Renda líquida cadastrada:</span>
+                        <strong id="wizardSumIncome" style="color: #34d399;">R$ 0,00</strong>
+                    </div>
+                    <div class="wizard-summary-row">
+                        <span>Despesas essenciais cadastradas:</span>
+                        <strong id="wizardSumExpenses" style="color: #f87171;">R$ 0,00</strong>
+                    </div>
+                    <div class="wizard-summary-row">
+                        <span>Percentual comprometido:</span>
+                        <strong id="wizardSumCompromised">0,0%</strong>
+                    </div>
+                    <div class="wizard-summary-row highlight" id="wizardSumHighlight">
+                        <span>Saldo restante previsto:</span>
+                        <strong id="wizardSumBalance">R$ 0,00</strong>
+                    </div>
+                </div>
+
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 8px; padding: 10px 12px; font-size: 11px; color: #94a3b8; line-height: 1.45;">
+                    ℹ️ <strong>Transparência:</strong> Este resumo é apenas uma estimativa inicial. Ele será atualizado automaticamente conforme você registrar novos gastos no dia a dia.
+                </div>
+            </div>
+
+            <!-- Passo 4: Conclusão -->
+            <div class="wizard-step" id="wizardStep4" data-step="4">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 44px; margin-bottom: 8px;">🎉</div>
+                    <h3 class="wizard-title" style="font-size: 20px;">Tudo pronto para começar!</h3>
+                    <p class="wizard-desc" style="max-width: 440px; margin: 0 auto 16px;">
+                        Sua renda e despesas essenciais foram organizadas. Agora sua Visão Geral já exibe seus indicadores reais e seu saldo disponível.
+                    </p>
+                </div>
+
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 12px; padding: 14px 16px; margin-bottom: 20px; font-size: 12px; color: #cbd5e1; line-height: 1.5;">
+                    <p style="margin: 0 0 6px;"><strong>O que fazer agora?</strong></p>
+                    <ul style="margin: 0; padding-left: 18px; color: #94a3b8;">
+                        <li>Acesse <strong>Lançamentos</strong> sempre que fizer um gasto no dia a dia.</li>
+                        <li>Consulte a <strong>Agenda</strong> para ver o calendário completo do mês.</li>
+                        <li>Ajuste sua renda ou adicione benefícios em <strong>Configurações</strong>.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Rodapé com Ações do Wizard -->
+            <div class="wizard-footer-actions">
+                <button type="button" class="wizard-btn-skip" id="btnWizardSkip">Continuar depois / Pular</button>
+                <div class="wizard-nav-btns">
+                    <button type="button" class="button button-secondary" id="btnWizardPrev" style="display: none;">Voltar</button>
+                    <button type="button" class="button button-primary" id="btnWizardNext">Avançar →</button>
+                    <button type="button" class="button button-primary" id="btnWizardFinish" style="display: none;">Ir para a Visão Geral 🚀</button>
+                </div>
+            </div>
         </div>
     </div>
 </body>

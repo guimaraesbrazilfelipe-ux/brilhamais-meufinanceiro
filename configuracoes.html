@@ -133,9 +133,10 @@
                 <form id="settingsForm" class="settings-form" novalidate>
                     <div class="settings-form-grid">
                         <div class="field">
-                            <label for="salary">Salário mensal (R$)</label>
+                            <label for="salary">Salário líquido mensal (R$) <span style="color: var(--red);">*</span></label>
                             <input type="number" id="salary" min="0" max="100000000"
                                 step="0.01" placeholder="Ex.: 2500,00" required>
+                            <small class="field-hint" style="color: var(--muted); font-size: 11px; margin-top: 4px; display: block;">Valor líquido que efetivamente cai na sua conta bancária. É o valor oficial usado para o cálculo do saldo e orçamento.</small>
                         </div>
 
                         <div class="field">
@@ -195,7 +196,22 @@
                             </div>
                         </div>
 
-                        <div class="field settings-submit-field">
+                        <!-- Campos Opcionais de Salário Bruto e Benefícios (Item 4) -->
+                        <div class="field">
+                            <label for="salaryGross">Salário bruto mensal (opcional)</label>
+                            <input type="number" id="salaryGross" min="0" max="100000000"
+                                step="0.01" placeholder="Ex.: 3200,00">
+                            <small class="field-hint" style="color: var(--muted); font-size: 11px; margin-top: 4px; display: block;">Apenas informativo para referência de holerite e descontos. Não altera o saldo orçamentário.</small>
+                        </div>
+
+                        <div class="field">
+                            <label for="salaryBenefits">Benefícios mensais (opcional - VR, VA, VT)</label>
+                            <input type="number" id="salaryBenefits" min="0" max="100000000"
+                                step="0.01" placeholder="Ex.: 650,00">
+                            <small class="field-hint" style="color: var(--muted); font-size: 11px; margin-top: 4px; display: block;">Vales específicos não somam ao saldo bancário disponível em dinheiro na conta.</small>
+                        </div>
+
+                        <div class="field settings-submit-field" style="grid-column: 1 / -1;">
                             <button type="submit" class="button button-primary" id="btnSaveSalary">
                                 💾 Salvar salário e ativar cálculo
                             </button>
@@ -252,6 +268,9 @@
                         </button>
                         <a href="index.html?tutorial=true" class="button button-secondary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
                             📖 Rever tutorial
+                        </a>
+                        <a href="index.html?wizard=true" class="button button-secondary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+                            🚀 Iniciar configuração rápida
                         </a>
                         <input id="importFile" type="file" accept=".json,application/json" hidden>
                     </div>

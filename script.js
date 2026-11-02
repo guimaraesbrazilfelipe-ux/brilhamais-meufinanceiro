@@ -11,15 +11,18 @@ const COLORS = [
 ];
 
 const EXPENSE_CATEGORIES = [
-    { name: "Alimentação", icon: "🍽️" },
+    { name: "Alimentação", icon: "🛒" },
     { name: "Moradia", icon: "🏠" },
-    { name: "Água e luz", icon: "💡" },
+    { name: "Contas da casa", icon: "💡" },
     { name: "Transporte", icon: "🚗" },
     { name: "Saúde", icon: "💊" },
+    { name: "Comunicação", icon: "📱" },
+    { name: "Dívidas & Empréstimos", icon: "💳" },
     { name: "Educação", icon: "📚" },
     { name: "Lazer", icon: "🎮" },
     { name: "Compras", icon: "🛍️" },
-    { name: "Assinaturas", icon: "📱" },
+    { name: "Cuidados Pessoais", icon: "✂️" },
+    { name: "Assinaturas", icon: "📲" },
     { name: "Investimentos", icon: "📈" },
     { name: "Outros", icon: "📦" }
 ];
@@ -38,15 +41,21 @@ const INCOME_CATEGORIES = [
 
 const CATEGORY_ICONS = {
     // Categorias de Despesas
-    "Alimentação": "🍽️",
+    "Alimentação": "🛒",
     "Moradia": "🏠",
+    "Contas da casa": "💡",
     "Água e luz": "💡",
     "Transporte": "🚗",
     "Saúde": "💊",
+    "Comunicação": "📱",
+    "Dívidas & Empréstimos": "💳",
+    "Dívidas": "💳",
+    "Empréstimos": "💳",
     "Educação": "📚",
     "Lazer": "🎮",
     "Compras": "🛍️",
-    "Assinaturas": "📱",
+    "Cuidados Pessoais": "✂️",
+    "Assinaturas": "📲",
     "Investimentos": "📈",
     // Categorias de Receitas Extras
     "Freelance / Bico": "💻",
@@ -64,8 +73,79 @@ const CATEGORY_ICONS = {
     "Aluguel / Locação": "🔑",
     "Prestação de serviços": "🛠️",
     "Serviços": "🛠️",
+    "Salário": "💰",
     "Outros": "📦"
 };
+
+const CATEGORY_KEYWORDS = [
+    {
+        category: "Alimentação",
+        keywords: ["mercado", "supermercado", "padaria", "acougue", "açougue", "feira", "sacolao", "sacolão", "almoco", "almoço", "jantar", "lanche", "ifood", "restaurante", "mcdonald", "burger", "pao", "pão", "cafe", "café", "pizza", "comida", "hortifruti", "delivery"]
+    },
+    {
+        category: "Moradia",
+        keywords: ["aluguel", "condominio", "condomínio", "iptu", "imobiliaria", "imobiliária", "aluguer", "prestacao ap", "prestação ap"]
+    },
+    {
+        category: "Contas da casa",
+        keywords: ["luz", "energia", "enel", "cpfl", "cemig", "light", "copel", "agua", "água", "sabesp", "sanepar", "cedae", "gas", "gás", "ultragaz", "internet", "wifi", "fibra", "banda larga", "claro net", "vivo fibra"]
+    },
+    {
+        category: "Transporte",
+        keywords: ["uber", "99", "gasolina", "combustivel", "combustível", "etanol", "posto", "ipva", "estacionamento", "onibus", "ônibus", "metro", "metrô", "pedagio", "pedágio", "oficina", "mecanico", "mecânico", "troca de oleo", "troca de óleo", "passagem", "tarifa"]
+    },
+    {
+        category: "Comunicação",
+        keywords: ["celular", "recarga", "tim", "vivo", "claro", "oi", "plano celular", "telefonia", "telefone"]
+    },
+    {
+        category: "Saúde",
+        keywords: ["farmacia", "farmácia", "drogaria", "droga raia", "pacheco", "sao paulo", "remedio", "remédio", "medico", "médico", "consulta", "dentista", "exame", "hospital", "clinica", "clínica", "plano de saude", "plano de saúde", "unimed", "sulamerica", "psicologo", "psicólogo", "terapia"]
+    },
+    {
+        category: "Dívidas & Empréstimos",
+        keywords: ["cartao", "cartão", "fatura", "emprestimo", "empréstimo", "divida", "dívida", "financiamento", "parcela", "consignado", "cheque especial", "juros", "renegociacao", "renegociação", "nubank", "inter", "itau", "bradesco", "santander"]
+    },
+    {
+        category: "Educação",
+        keywords: ["curso", "faculdade", "escola", "livro", "mensalidade", "idiomas", "ingles", "inglês", "material escolar", "udemy", "alura", "apostila", "pos-graduacao", "pós-graduação"]
+    },
+    {
+        category: "Assinaturas",
+        keywords: ["netflix", "spotify", "amazon prime", "disney", "youtube premium", "deezer", "apple", "globo play", "hbo", "max", "paramount", "icloud", "chatgpt", "midjourney"]
+    },
+    {
+        category: "Cuidados Pessoais",
+        keywords: ["cabelo", "barbearia", "barba", "salao", "salão", "cabeleireiro", "manicure", "pedicure", "depilacao", "depilação", "cosmetico", "cosmético", "perfume", "boticario", "boticário", "natura", "maquiagem", "academia", "smart fit", "bluefit"]
+    },
+    {
+        category: "Lazer",
+        keywords: ["cinema", "filme", "show", "ingresso", "viagem", "hotel", "pousada", "praia", "passeio", "bar", "balada", "churrasco", "cerveja", "chopp", "steam", "playstation", "xbox", "game"]
+    },
+    {
+        category: "Compras",
+        keywords: ["shopee", "mercado livre", "shein", "roupa", "calcado", "calçado", "tenis", "tênis", "eletronico", "eletrônico", "presente", "loja", "magazine", "amazon"]
+    },
+    {
+        category: "Investimentos",
+        keywords: ["investimento", "tesouro", "cdb", "acoes", "ações", "fii", "cripto", "bitcoin", "poupanca", "poupança", "reserva"]
+    }
+];
+
+function suggestCategoryFromText(text) {
+    if (!text || typeof text !== "string") return null;
+    const clean = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    for (const group of CATEGORY_KEYWORDS) {
+        for (const kw of group.keywords) {
+            const cleanKw = kw.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const regex = new RegExp(`\\b${cleanKw}\\b`, "i");
+            if (regex.test(clean) || (cleanKw.length >= 4 && clean.includes(cleanKw))) {
+                return group.category;
+            }
+        }
+    }
+    return null;
+}
 
 const CATEGORY_OPTIONS = [
     ...EXPENSE_CATEGORIES.map((c) => c.name),
@@ -152,7 +232,7 @@ function defaultData() {
     return {
         transactions: [],
         salaries: {},
-        salaryConfig: { amount: 0, date: "", day: 5, autoDeposit: true },
+        salaryConfig: { amount: 0, grossAmount: 0, benefitsAmount: 0, date: "", day: 5, autoDeposit: true },
         budgets: {},
         goals: {},
         recurringBills: []
@@ -176,7 +256,14 @@ function loadData() {
         return {
             transactions: (data.transactions || []).filter((t) => !t.recurringBillId),
             salaries: data.salaries || {},
-            salaryConfig: data.salaryConfig || { amount: 0, date: "", day: 5, autoDeposit: true },
+            salaryConfig: {
+                amount: Number(data.salaryConfig?.amount || 0),
+                grossAmount: Number(data.salaryConfig?.grossAmount || 0),
+                benefitsAmount: Number(data.salaryConfig?.benefitsAmount || 0),
+                date: data.salaryConfig?.date || "",
+                day: Number(data.salaryConfig?.day || 5),
+                autoDeposit: data.salaryConfig?.autoDeposit !== false
+            },
             budgets: data.budgets || {},
             goals: data.goals || {},
             recurringBills: Array.isArray(data.recurringBills) ? data.recurringBills : []
@@ -565,6 +652,249 @@ function renderSummary() {
         const clampedPct = Math.max(0, Math.min(100, summary.savingsRate));
         savingsProgressBar.style.width = `${clampedPct}%`;
     }
+
+    renderContextualInsight(summary, m);
+    renderDashboardBudgetBreakdown(summary, m);
+}
+
+function renderContextualInsight(summary, m) {
+    const container = $("#contextInsightCard");
+    if (!container) return;
+
+    const income = Number(summary.income || 0);
+    const expenses = Number(summary.expenses || 0);
+    const balance = Number(summary.balance || 0);
+    const savingsRate = Number(summary.savingsRate || 0);
+
+    let messageHtml = "";
+    let actionsHtml = "";
+    let stateClass = "state-neutral";
+
+    if (income === 0 && expenses === 0) {
+        stateClass = "state-empty";
+        messageHtml = `
+            <div class="insight-msg">
+                <span class="insight-icon">👋</span>
+                <div>
+                    <strong>Comece seu planejamento para ${monthLabel(m)}</strong>
+                    <p>Ainda não há receitas ou despesas cadastradas para este mês. Cadastre sua renda líquida e primeiras contas para calcular o saldo previsto.</p>
+                </div>
+            </div>
+        `;
+        actionsHtml = `
+            <a href="index.html?wizard=true" class="button button-primary insight-btn">🚀 Iniciar configuração rápida</a>
+            <a href="configuracoes.html" class="button button-secondary insight-btn">💵 Cadastrar renda</a>
+            <a href="lancamentos.html" class="button button-secondary insight-btn">+ Novo lançamento</a>
+        `;
+    } else if (income === 0 && expenses > 0) {
+        stateClass = "state-warning";
+        messageHtml = `
+            <div class="insight-msg">
+                <span class="insight-icon">ℹ️</span>
+                <div>
+                    <strong>Resultado parcial do mês</strong>
+                    <p>Seus gastos cadastrados somam <strong>${money(expenses)}</strong>, mas nenhuma renda líquida foi cadastrada para este mês. Cadastre sua renda para saber seu saldo real.</p>
+                </div>
+            </div>
+        `;
+        actionsHtml = `
+            <a href="configuracoes.html" class="button button-primary insight-btn">💵 Cadastrar salário líquido</a>
+            <a href="lancamentos.html?type=receita" class="button button-secondary insight-btn">+ Receita extra</a>
+        `;
+    } else if (balance < 0) {
+        stateClass = "state-danger";
+        messageHtml = `
+            <div class="insight-msg">
+                <span class="insight-icon">⚠️</span>
+                <div>
+                    <strong>Seus gastos cadastrados superam a receita em ${money(Math.abs(balance))} neste mês</strong>
+                    <p>Suas despesas cadastradas totalizam ${money(expenses)} contra ${money(income)} de receitas. Você pode revisar seus lançamentos ou adicionar entradas extras para equilibrar o mês.</p>
+                </div>
+            </div>
+        `;
+        actionsHtml = `
+            <a href="lancamentos.html" class="button button-secondary insight-btn">🔍 Revisar despesas</a>
+            <a href="lancamentos.html?type=receita" class="button button-secondary insight-btn">💰 Adicionar receita extra</a>
+            <a href="contas-fixas.html" class="button button-secondary insight-btn">⟳ Conferir contas fixas</a>
+        `;
+    } else if (balance > 0) {
+        stateClass = "state-success";
+        messageHtml = `
+            <div class="insight-msg">
+                <span class="insight-icon">🎉</span>
+                <div>
+                    <strong>Você economizou ${money(balance)} (${formatPercent(savingsRate)}) neste mês</strong>
+                    <p>Suas receitas cadastradas cobriram todas as despesas com saldo positivo restante. Uma ótima oportunidade para reforçar sua reserva de emergência.</p>
+                </div>
+            </div>
+        `;
+        actionsHtml = `
+            <a href="relatorios.html" class="button button-secondary insight-btn">▥ Ver relatórios completos</a>
+            <a href="planejamento.html" class="button button-secondary insight-btn">◎ Definir meta de economia</a>
+        `;
+    } else {
+        stateClass = "state-neutral";
+        messageHtml = `
+            <div class="insight-msg">
+                <span class="insight-icon">⚖️</span>
+                <div>
+                    <strong>Receitas e despesas equilibradas</strong>
+                    <p>As entradas e saídas cadastradas para este mês estão no mesmo valor (${money(income)}).</p>
+                </div>
+            </div>
+        `;
+        actionsHtml = `
+            <a href="historico.html" class="button button-secondary insight-btn">◷ Ver histórico de movimentações</a>
+        `;
+    }
+
+    container.className = `context-insight-card ${stateClass}`;
+    container.innerHTML = `
+        <div class="insight-body">
+            ${messageHtml}
+            <div class="insight-actions">
+                ${actionsHtml}
+            </div>
+        </div>
+    `;
+}
+
+function renderDashboardBudgetBreakdown(summary, m) {
+    const container = $("#dashboardBudgetBreakdown");
+    if (!container) return;
+
+    const income = Number(summary.income || 0);
+    const monthTxs = (data.transactions || []).filter((t) => t.date.startsWith(m) && !t.recurringBillId);
+
+    const manualExpenses = monthTxs.filter((t) => t.type === "despesa").reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+    let recPaid = 0;
+    let recPending = 0;
+    const catTotals = {};
+
+    monthTxs.filter((t) => t.type === "despesa").forEach((t) => {
+        catTotals[t.category] = (catTotals[t.category] || 0) + Number(t.amount || 0);
+    });
+
+    (data.recurringBills || []).forEach((b) => {
+        const occs = getBillOccurrencesInMonth(b, m);
+        const amt = Number(b.amount || 0);
+        occs.forEach((d) => {
+            const isPaid = isBillOccurrencePaid(b, d);
+            if (isPaid) {
+                recPaid += amt;
+            } else {
+                recPending += amt;
+            }
+            const cat = b.category || "Assinaturas";
+            catTotals[cat] = (catTotals[cat] || 0) + amt;
+        });
+    });
+
+    const totalPaid = manualExpenses + recPaid;
+    const totalPending = recPending;
+    const totalExpenses = totalPaid + totalPending;
+    const available = income - totalExpenses;
+    const compromisedPct = income > 0 ? (totalExpenses / income) * 100 : (totalExpenses > 0 ? 100 : 0);
+    const clampedCompromised = Math.min(100, Math.max(0, compromisedPct));
+
+    let progressColor = "#10b981";
+    let statusBadgeText = "Orçamento saudável";
+    let badgeClass = "badge-success";
+    if (compromisedPct >= 100) {
+        progressColor = "#ef4444";
+        statusBadgeText = "Gastos superam a renda";
+        badgeClass = "badge-danger";
+    } else if (compromisedPct >= 75) {
+        progressColor = "#f59e0b";
+        statusBadgeText = "Atenção: renda muito comprometida";
+        badgeClass = "badge-warning";
+    }
+
+    const catEntries = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
+
+    container.innerHTML = `
+        <div class="budget-breakdown-card">
+            <div class="budget-breakdown-header">
+                <div>
+                    <span class="budget-tag ${badgeClass}">💰 Disponível após despesas cadastradas</span>
+                    <h3 class="budget-available-value ${available < 0 ? "negative" : ""}">${money(available)}</h3>
+                    <p class="budget-estimate-hint">
+                        ℹ️ Estimativa baseada na renda e despesas cadastradas para ${monthLabel(m)}. O saldo projetado considera contas futuras e não reflete dinheiro imediatamente liberado na conta corrente.
+                    </p>
+                </div>
+                <div class="budget-status-pill ${badgeClass}">
+                    ${statusBadgeText}
+                </div>
+            </div>
+
+            <!-- Progresso de Comprometimento da Renda -->
+            <div class="compromised-section">
+                <div class="compromised-header">
+                    <span>Comprometimento da renda líquida:</span>
+                    <strong>${formatPercent(compromisedPct)} (${money(totalExpenses)} de ${money(income)})</strong>
+                </div>
+                <div class="compromised-bar-bg">
+                    <div class="compromised-bar-fill" style="width: ${clampedCompromised}%; background: ${progressColor};"></div>
+                </div>
+            </div>
+
+            <!-- Divisão: Despesas Pagas vs Previstas a Vencer -->
+            <div class="paid-vs-pending-grid">
+                <div class="flow-kpi-item paid">
+                    <span class="flow-kpi-icon">✓</span>
+                    <div>
+                        <span class="flow-kpi-label">Despesas já pagas</span>
+                        <strong class="flow-kpi-value">${money(totalPaid)}</strong>
+                    </div>
+                </div>
+                <div class="flow-kpi-item pending">
+                    <span class="flow-kpi-icon">⏳</span>
+                    <div>
+                        <span class="flow-kpi-label">Despesas previstas a vencer</span>
+                        <strong class="flow-kpi-value">${money(totalPending)}</strong>
+                    </div>
+                </div>
+                <div class="flow-kpi-item income">
+                    <span class="flow-kpi-icon">💵</span>
+                    <div>
+                        <span class="flow-kpi-label">Renda líquida do mês</span>
+                        <strong class="flow-kpi-value">${money(income)}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Distribuição de Gastos por Categoria na Visão Inicial -->
+            <div class="dashboard-cat-distribution">
+                <div class="dashboard-cat-header">
+                    <h4>Distribuição por categorias de despesa</h4>
+                    <a href="relatorios.html" class="text-button">Ver análise completa →</a>
+                </div>
+                ${!catEntries.length ? `
+                    <p class="empty-state-text" style="font-size: 13px; color: var(--muted); margin: 6px 0 0;">Nenhuma despesa registrada para este mês ainda.</p>
+                ` : `
+                    <div class="dashboard-cat-list">
+                        ${catEntries.slice(0, 5).map(([cat, amt], idx) => {
+                            const icon = CATEGORY_ICONS[cat] || "📦";
+                            const pct = totalExpenses > 0 ? (amt / totalExpenses) * 100 : 0;
+                            const color = COLORS[idx % COLORS.length];
+                            return `
+                                <div class="dashboard-cat-row">
+                                    <div class="dashboard-cat-info">
+                                        <span>${icon} <strong>${escapeHTML(cat)}</strong></span>
+                                        <span>${money(amt)} <small>(${formatPercent(pct)})</small></span>
+                                    </div>
+                                    <div class="dashboard-cat-bar-bg">
+                                        <div class="dashboard-cat-bar-fill" style="width: ${pct}%; background: ${color};"></div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join("")}
+                    </div>
+                `}
+            </div>
+        </div>
+    `;
 }
 
 function renderMonthlyChart() {
@@ -1246,6 +1576,8 @@ function renderPlanning() {
 function renderSettings() {
     const salaryInput = $("#salary");
     const salaryDateInput = $("#salaryDate");
+    const salaryGrossInput = $("#salaryGross");
+    const salaryBenefitsInput = $("#salaryBenefits");
     const salaryCard = $("#salaryCalculationCard");
 
     const currentSalVal = (data.salaryConfig && Number(data.salaryConfig.amount) > 0)
@@ -1254,6 +1586,14 @@ function renderSettings() {
 
     if (salaryInput && !salaryInput.value) {
         salaryInput.value = currentSalVal || "";
+    }
+
+    if (salaryGrossInput && !salaryGrossInput.value && data.salaryConfig?.grossAmount) {
+        salaryGrossInput.value = data.salaryConfig.grossAmount;
+    }
+
+    if (salaryBenefitsInput && !salaryBenefitsInput.value && data.salaryConfig?.benefitsAmount) {
+        salaryBenefitsInput.value = data.salaryConfig.benefitsAmount;
     }
 
     if (salaryDateInput) {
@@ -1660,6 +2000,8 @@ async function deleteRecurringBill(billId) {
     renderAll();
 }
 
+let currentRecurringStatusFilter = "all"; // "all" | "overdue" | "pending" | "paid"
+
 function renderRecurringBills() {
     const listEl = $("#recurringBillsList");
     const month = selectedMonth();
@@ -1734,59 +2076,91 @@ function renderRecurringBills() {
         } else {
             const sorted = [...bills].sort((a, b) => (a.dueDay || 1) - (b.dueDay || 1));
 
-            listEl.innerHTML = sorted.map((bill) => {
-                const statusInfo = getRecurringBillStatus(bill, month);
-                const icon = CATEGORY_ICONS[bill.category] || "📄";
-                const freqName = getFrequencyLabel(bill.frequency);
-                const targetDueFormatted = statusInfo.nextDueDate ? formatDate(statusInfo.nextDueDate) : `Dia ${bill.dueDay}`;
-                const dueWithTime = `${targetDueFormatted}${bill.subscriptionTime ? ` às ${bill.subscriptionTime}` : ""}`;
+            // Atualiza estado visual das abas de filtro de status
+            document.querySelectorAll(".bills-status-tab").forEach((tab) => {
+                tab.classList.toggle("active", (tab.dataset.statusFilter || "all") === currentRecurringStatusFilter);
+            });
 
-                return `
-                    <article class="recurring-card ${statusInfo.isPaid ? "paid" : ""}">
-                        <div class="recurring-card-top">
-                            <div class="recurring-card-identity">
-                                <div class="recurring-card-icon">${icon}</div>
-                                <div class="recurring-card-title">
-                                    <h4>${escapeHTML(bill.name)}</h4>
-                                    <span style="display: flex; align-items: center; gap: 6px; margin-top: 2px; flex-wrap: wrap;">
-                                        <span>${icon} ${escapeHTML(bill.category)}</span>
-                                        <span class="recurring-frequency-badge">${freqName}</span>
-                                        ${bill.subscriptionTime ? `<span class="recurring-frequency-badge" style="background: rgba(148, 117, 255, 0.15); color: #c4b5fd;">⏰ Assinado às ${bill.subscriptionTime}</span>` : ""}
-                                    </span>
+            const filteredBills = sorted.filter((bill) => {
+                const statusInfo = getRecurringBillStatus(bill, month);
+                if (currentRecurringStatusFilter === "overdue") {
+                    return !statusInfo.isPaid && statusInfo.status === "overdue";
+                }
+                if (currentRecurringStatusFilter === "pending") {
+                    return !statusInfo.isPaid && (statusInfo.status === "pending" || statusInfo.status === "today");
+                }
+                if (currentRecurringStatusFilter === "paid") {
+                    return statusInfo.isPaid === true;
+                }
+                return true;
+            });
+
+            if (!filteredBills.length) {
+                const filterLabels = {
+                    overdue: "Nenhuma conta vencida encontrada neste mês! 🎉",
+                    pending: "Nenhuma conta pendente ou a vencer neste mês.",
+                    paid: "Nenhuma conta marcada como paga ainda neste mês."
+                };
+                listEl.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1; padding: 32px 16px;">
+                        <p>${filterLabels[currentRecurringStatusFilter] || "Nenhuma conta encontrada com este status."}</p>
+                    </div>
+                `;
+            } else {
+                listEl.innerHTML = filteredBills.map((bill) => {
+                    const statusInfo = getRecurringBillStatus(bill, month);
+                    const icon = CATEGORY_ICONS[bill.category] || "📄";
+                    const freqName = getFrequencyLabel(bill.frequency);
+                    const targetDueFormatted = statusInfo.nextDueDate ? formatDate(statusInfo.nextDueDate) : `Dia ${bill.dueDay}`;
+                    const dueWithTime = `${targetDueFormatted}${bill.subscriptionTime ? ` às ${bill.subscriptionTime}` : ""}`;
+
+                    return `
+                        <article class="recurring-card ${statusInfo.isPaid ? "paid" : ""}">
+                            <div class="recurring-card-top">
+                                <div class="recurring-card-identity">
+                                    <div class="recurring-card-icon">${icon}</div>
+                                    <div class="recurring-card-title">
+                                        <h4>${escapeHTML(bill.name)}</h4>
+                                        <span style="display: flex; align-items: center; gap: 6px; margin-top: 2px; flex-wrap: wrap;">
+                                            <span>${icon} ${escapeHTML(bill.category)}</span>
+                                            <span class="recurring-frequency-badge">${freqName}</span>
+                                            ${bill.subscriptionTime ? `<span class="recurring-frequency-badge" style="background: rgba(148, 117, 255, 0.15); color: #c4b5fd;">⏰ Assinado às ${bill.subscriptionTime}</span>` : ""}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="recurring-card-amount">
+                                    <strong>${money(bill.amount)}</strong>
+                                    <span class="recurring-due-tag">Vence: ${dueWithTime}</span>
                                 </div>
                             </div>
-                            <div class="recurring-card-amount">
-                                <strong>${money(bill.amount)}</strong>
-                                <span class="recurring-due-tag">Vence: ${dueWithTime}</span>
-                            </div>
-                        </div>
 
-                        <div>
-                            <span class="recurring-status-badge ${statusInfo.className}">
-                                <span>${statusInfo.icon}</span>
-                                <span>${statusInfo.label}</span>
-                            </span>
-                        </div>
-
-                        <div class="recurring-card-footer">
                             <div>
-                                ${statusInfo.isPaid ? `
-                                    <button type="button" class="btn-unpay-recurring" data-action="unpay-recurring" data-id="${bill.id}" data-date="${statusInfo.lastPaidDate || ""}" title="Desmarcar pagamento desta conta">
-                                        Desmarcar pagamento
-                                    </button>
-                                ` : `
-                                    <button type="button" class="btn-pay-recurring" data-action="pay-recurring" data-id="${bill.id}" data-date="${statusInfo.nextDueDate || ""}">
-                                        ✓ Pagar (${dueWithTime})
-                                    </button>
-                                `}
+                                <span class="recurring-status-badge ${statusInfo.className}">
+                                    <span>${statusInfo.icon}</span>
+                                    <span>${statusInfo.label}</span>
+                                </span>
                             </div>
-                            <button type="button" class="btn-delete-recurring" data-action="delete-recurring" data-id="${bill.id}" title="Excluir conta fixa">
-                                🗑️
-                            </button>
-                        </div>
-                    </article>
-                `;
-            }).join("");
+
+                            <div class="recurring-card-footer">
+                                <div>
+                                    ${statusInfo.isPaid ? `
+                                        <button type="button" class="btn-unpay-recurring" data-action="unpay-recurring" data-id="${bill.id}" data-date="${statusInfo.lastPaidDate || ""}" title="Desmarcar pagamento desta conta">
+                                            Desmarcar pagamento
+                                        </button>
+                                    ` : `
+                                        <button type="button" class="btn-pay-recurring" data-action="pay-recurring" data-id="${bill.id}" data-date="${statusInfo.nextDueDate || ""}">
+                                            ✓ Pagar (${dueWithTime})
+                                        </button>
+                                    `}
+                                </div>
+                                <button type="button" class="btn-delete-recurring" data-action="delete-recurring" data-id="${bill.id}" title="Excluir conta fixa">
+                                    🗑️
+                                </button>
+                            </div>
+                        </article>
+                    `;
+                }).join("");
+            }
         }
     }
 
@@ -2140,6 +2514,55 @@ function setupCategoryPicker() {
 
     const initialType = typeSelect ? typeSelect.value : "despesa";
     renderCategoryOptions(initialType, select.value);
+    setupCategoryAutoSuggestion();
+}
+
+function setupCategoryAutoSuggestion() {
+    const descInput = $("#description");
+    const catPicker = $("#categoryPicker");
+    const catSelect = $("#category");
+    const typeSelect = $("#type");
+
+    if (!descInput || !catPicker || !catSelect) return;
+
+    let pill = $("#categorySuggestionPill");
+    if (!pill) {
+        pill = document.createElement("div");
+        pill.id = "categorySuggestionPill";
+        pill.className = "category-suggestion-pill hidden";
+        catPicker.parentElement.insertBefore(pill, catPicker);
+    }
+
+    function checkSuggestion() {
+        const type = typeSelect ? typeSelect.value : "despesa";
+        if (type !== "despesa") {
+            pill.classList.add("hidden");
+            return;
+        }
+
+        const suggestedCat = suggestCategoryFromText(descInput.value);
+        if (suggestedCat && suggestedCat !== catSelect.value) {
+            const icon = CATEGORY_ICONS[suggestedCat] || "📦";
+            pill.innerHTML = `
+                <span class="suggestion-text">💡 Sugestão para sua descrição: <strong>${icon} ${escapeHTML(suggestedCat)}</strong></span>
+                <button type="button" class="suggestion-apply-btn" id="btnApplySuggestedCat">Aplicar</button>
+            `;
+            pill.classList.remove("hidden");
+
+            const applyBtn = pill.querySelector("#btnApplySuggestedCat");
+            if (applyBtn) {
+                applyBtn.addEventListener("click", () => {
+                    syncCategoryPicker(suggestedCat);
+                    pill.classList.add("hidden");
+                });
+            }
+        } else {
+            pill.classList.add("hidden");
+        }
+    }
+
+    descInput.addEventListener("input", checkSuggestion);
+    descInput.addEventListener("change", checkSuggestion);
 }
 
 /* =========================================
@@ -4470,6 +4893,8 @@ function renderReports() {
             }).join("");
         }
     }
+
+    renderContextualInsight(summary, currentM);
 }
 
 /* ==============================
@@ -4822,11 +5247,21 @@ function handleSalarySubmit(event) {
         return;
     }
 
+    const rawGross = String($("#salaryGross")?.value || "").trim().replace("R$", "").trim();
+    const normalizedGross = rawGross.includes(",") ? rawGross.replace(/\./g, "").replace(",", ".") : rawGross;
+    const grossSalary = Number(normalizedGross) || 0;
+
+    const rawBenefits = String($("#salaryBenefits")?.value || "").trim().replace("R$", "").trim();
+    const normalizedBenefits = rawBenefits.includes(",") ? rawBenefits.replace(/\./g, "").replace(",", ".") : rawBenefits;
+    const benefits = Number(normalizedBenefits) || 0;
+
     const previousConfig = data.salaryConfig;
     const previousMonthSalary = data.salaries[currentM];
 
     data.salaryConfig = {
         amount: salary,
+        grossAmount: grossSalary,
+        benefitsAmount: benefits,
         date: dateInput,
         day: salaryDay,
         autoDeposit: true
@@ -5583,6 +6018,7 @@ function init() {
     setupTransactionsPage();
     setupReports();
     setupWelcomeTutorial();
+    setupQuickStartWizard();
     renderAll();
 
     // Se a página de lançamentos recebeu um ID para edição via query string (?edit=...)
@@ -5926,6 +6362,15 @@ function setupRecurringBills() {
             renderRecurringRowsList();
         }
     });
+
+    const statusTabs = document.querySelectorAll(".bills-status-tab");
+    statusTabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+            currentRecurringStatusFilter = tab.dataset.statusFilter || "all";
+            statusTabs.forEach((t) => t.classList.toggle("active", t === tab));
+            renderRecurringBills();
+        });
+    });
 }
 
 /* =========================================
@@ -6119,6 +6564,192 @@ function setupWelcomeTutorial() {
 
     if (shouldShow) {
         goToStep(0);
+    }
+}
+
+/* =========================================
+   ONBOARDING GUIADO (CONFIGURAÇÃO RÁPIDA)
+========================================= */
+
+function setupQuickStartWizard() {
+    const modal = $("#quickStartModal");
+    if (!modal) return;
+
+    const btnClose = $("#btnWizardClose");
+    const btnSkip = $("#btnWizardSkip");
+    const btnPrev = $("#btnWizardPrev");
+    const btnNext = $("#btnWizardNext");
+    const btnFinish = $("#btnWizardFinish");
+    const badge = $("#wizardStepBadge");
+    const progressFill = $("#wizardProgressFill");
+
+    let currentStep = 1;
+    const totalSteps = 4;
+
+    function openWizard() {
+        modal.classList.add("is-open");
+        modal.setAttribute("aria-hidden", "false");
+
+        const netSal = $("#wizardNetSalary");
+        if (netSal) {
+            netSal.value = (data.salaryConfig && data.salaryConfig.amount) ? data.salaryConfig.amount : "";
+        }
+        const salDay = $("#wizardSalaryDay");
+        if (salDay && data.salaryConfig && data.salaryConfig.payDay) {
+            salDay.value = data.salaryConfig.payDay;
+        }
+        goToStep(1);
+    }
+
+    function closeWizard(completed = false) {
+        modal.classList.remove("is-open");
+        modal.setAttribute("aria-hidden", "true");
+        if (completed) {
+            localStorage.setItem("mf_quickstart_completed", "true");
+        }
+    }
+
+    function calculateWizardSummary() {
+        const netSalary = Number($("#wizardNetSalary")?.value || 0);
+        let expensesSum = 0;
+        document.querySelectorAll(".wizard-chip.selected").forEach((chip) => {
+            const input = chip.querySelector(".wizard-chip-val");
+            const val = Number(input?.value || 0);
+            expensesSum += val;
+        });
+
+        const sumIncomeEl = $("#wizardSumIncome");
+        const sumExpEl = $("#wizardSumExpenses");
+        const sumCompEl = $("#wizardSumCompromised");
+        const sumBalEl = $("#wizardSumBalance");
+
+        if (sumIncomeEl) sumIncomeEl.textContent = money(netSalary);
+        if (sumExpEl) sumExpEl.textContent = money(expensesSum);
+
+        const pct = netSalary > 0 ? (expensesSum / netSalary) * 100 : 0;
+        if (sumCompEl) {
+            sumCompEl.textContent = `${pct.toFixed(1).replace(".", ",")}%`;
+            sumCompEl.style.color = pct > 90 ? "#ef4444" : (pct > 70 ? "#f59e0b" : "#34d399");
+        }
+
+        const bal = netSalary - expensesSum;
+        if (sumBalEl) {
+            sumBalEl.textContent = money(bal);
+            sumBalEl.style.color = bal < 0 ? "#ef4444" : "#34d399";
+        }
+    }
+
+    function goToStep(step) {
+        currentStep = Math.max(1, Math.min(totalSteps, step));
+
+        for (let i = 1; i <= totalSteps; i++) {
+            const el = $(`#wizardStep${i}`);
+            if (el) el.classList.toggle("active", i === currentStep);
+        }
+
+        if (badge) badge.textContent = `Passo ${currentStep} de ${totalSteps}`;
+        if (progressFill) progressFill.style.width = `${(currentStep / totalSteps) * 100}%`;
+
+        if (btnPrev) btnPrev.style.display = currentStep > 1 ? "" : "none";
+        if (btnNext) btnNext.style.display = currentStep < totalSteps ? "" : "none";
+        if (btnFinish) btnFinish.style.display = currentStep === totalSteps ? "" : "none";
+        if (btnSkip) btnSkip.style.display = currentStep < totalSteps ? "" : "none";
+
+        if (currentStep === 3) {
+            calculateWizardSummary();
+        }
+    }
+
+    document.querySelectorAll(".wizard-chip").forEach((chip) => {
+        chip.addEventListener("click", (e) => {
+            if (e.target && e.target.tagName.toLowerCase() === "input") return;
+            chip.classList.toggle("selected");
+            calculateWizardSummary();
+        });
+        const input = chip.querySelector(".wizard-chip-val");
+        if (input) {
+            input.addEventListener("input", calculateWizardSummary);
+        }
+    });
+
+    if (btnClose) btnClose.addEventListener("click", () => closeWizard(false));
+    if (btnSkip) btnSkip.addEventListener("click", () => closeWizard(true));
+
+    if (btnPrev) {
+        btnPrev.addEventListener("click", () => goToStep(currentStep - 1));
+    }
+
+    if (btnNext) {
+        btnNext.addEventListener("click", () => {
+            if (currentStep === 1) {
+                const netVal = Number($("#wizardNetSalary")?.value || 0);
+                if (!netVal || netVal <= 0) {
+                    showToast("Por favor, digite seu salário líquido mensal.");
+                    return;
+                }
+            }
+            goToStep(currentStep + 1);
+        });
+    }
+
+    if (btnFinish) {
+        btnFinish.addEventListener("click", () => {
+            const netSalary = Number($("#wizardNetSalary")?.value || 0);
+            const payDay = parseInt($("#wizardSalaryDay")?.value || "5", 10) || 5;
+
+            if (netSalary > 0) {
+                if (!data.salaryConfig) data.salaryConfig = {};
+                data.salaryConfig.amount = netSalary;
+                data.salaryConfig.payDay = payDay;
+                if (!data.salaryConfig.grossAmount) data.salaryConfig.grossAmount = 0;
+                if (!data.salaryConfig.benefitsAmount) data.salaryConfig.benefitsAmount = 0;
+            }
+
+            if (!Array.isArray(data.recurringBills)) data.recurringBills = [];
+            document.querySelectorAll(".wizard-chip.selected").forEach((chip) => {
+                const cat = chip.dataset.cat || "Moradia";
+                const desc = chip.dataset.desc || "Despesa fixa";
+                const input = chip.querySelector(".wizard-chip-val");
+                const val = Number(input?.value || 0);
+                if (val > 0) {
+                    const exists = data.recurringBills.some((b) => b.name === desc);
+                    if (!exists) {
+                        data.recurringBills.push({
+                            id: createId(),
+                            name: desc,
+                            amount: val,
+                            category: cat,
+                            startDate: `${currentMonth()}-${String(payDay).padStart(2, "0")}`,
+                            dueDay: payDay,
+                            subscriptionTime: "12:00",
+                            frequency: "monthly",
+                            paidDates: [],
+                            paidMonths: []
+                        });
+                    }
+                }
+            });
+
+            saveData();
+            closeWizard(true);
+            showToast("Configuração inicial concluída com sucesso! 🎉");
+            renderAll();
+        });
+    }
+
+    document.querySelectorAll("#btnStartQuickWizard, .btn-start-wizard").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            openWizard();
+        });
+    });
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const forceOpen = urlParams.get("wizard") === "true";
+    const alreadyCompleted = localStorage.getItem("mf_quickstart_completed") === "true";
+
+    if (forceOpen || (!alreadyCompleted && (!data.salaryConfig || !data.salaryConfig.amount))) {
+        setTimeout(openWizard, 250);
     }
 }
 
