@@ -2871,7 +2871,8 @@ textarea::placeholder {
 html,
 body,
 .app,
-.main-content {
+.main-content,
+* {
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
 }
@@ -2879,7 +2880,8 @@ body,
 html::-webkit-scrollbar,
 body::-webkit-scrollbar,
 .app::-webkit-scrollbar,
-.main-content::-webkit-scrollbar {
+.main-content::-webkit-scrollbar,
+*::-webkit-scrollbar {
     display: none !important;
     width: 0 !important;
     height: 0 !important;

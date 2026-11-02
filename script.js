@@ -1599,6 +1599,12 @@ function renderSettings() {
     if (salaryDateInput) {
         if (data.salaryConfig && data.salaryConfig.date) {
             salaryDateInput.value = data.salaryConfig.date;
+        } else if (data.salaryConfig && (data.salaryConfig.day || data.salaryConfig.payDay)) {
+            const targetDay = data.salaryConfig.day || data.salaryConfig.payDay;
+            const y = new Date().getFullYear();
+            const m = String(new Date().getMonth() + 1).padStart(2, "0");
+            const d = String(targetDay).padStart(2, "0");
+            salaryDateInput.value = `${y}-${m}-${d}`;
         } else if (!salaryDateInput.value) {
             salaryDateInput.value = todayISO();
         }
@@ -2537,6 +2543,7 @@ function setupCategoryAutoSuggestion() {
         const type = typeSelect ? typeSelect.value : "despesa";
         if (type !== "despesa") {
             pill.classList.add("hidden");
+            pill.dataset.category = "";
             return;
         }
 
@@ -2547,19 +2554,22 @@ function setupCategoryAutoSuggestion() {
                 <span class="suggestion-text">💡 Sugestão para sua descrição: <strong>${icon} ${escapeHTML(suggestedCat)}</strong></span>
                 <button type="button" class="suggestion-apply-btn" id="btnApplySuggestedCat">Aplicar</button>
             `;
+            pill.dataset.category = suggestedCat;
             pill.classList.remove("hidden");
-
-            const applyBtn = pill.querySelector("#btnApplySuggestedCat");
-            if (applyBtn) {
-                applyBtn.addEventListener("click", () => {
-                    syncCategoryPicker(suggestedCat);
-                    pill.classList.add("hidden");
-                });
-            }
         } else {
             pill.classList.add("hidden");
+            pill.dataset.category = "";
         }
     }
+
+    pill.addEventListener("click", () => {
+        const cat = pill.dataset.category;
+        if (cat) {
+            syncCategoryPicker(cat);
+            pill.classList.add("hidden");
+            pill.dataset.category = "";
+        }
+    });
 
     descInput.addEventListener("input", checkSuggestion);
     descInput.addEventListener("change", checkSuggestion);
@@ -5565,6 +5575,9 @@ async function clearAllData() {
 
     try {
         localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem("mf_quickstart_completed");
+        localStorage.removeItem("meuFinanceiro.tutorialDone");
+        localStorage.removeItem("meuFinanceiro.privacyMode");
         sessionStorage.removeItem("meuFinanceiro.date");
         sessionStorage.removeItem("meuFinanceiro.month");
         sessionStorage.removeItem("meuFinanceiro.historyPeriod");
@@ -6701,6 +6714,12 @@ function setupQuickStartWizard() {
                 if (!data.salaryConfig) data.salaryConfig = {};
                 data.salaryConfig.amount = netSalary;
                 data.salaryConfig.payDay = payDay;
+                data.salaryConfig.day = payDay;
+                const curM = currentMonth();
+                data.salaryConfig.date = `${curM}-${String(payDay).padStart(2, "0")}`;
+                data.salaryConfig.autoDeposit = true;
+                if (!data.salaries) data.salaries = {};
+                data.salaries[curM] = netSalary;
                 if (!data.salaryConfig.grossAmount) data.salaryConfig.grossAmount = 0;
                 if (!data.salaryConfig.benefitsAmount) data.salaryConfig.benefitsAmount = 0;
             }
