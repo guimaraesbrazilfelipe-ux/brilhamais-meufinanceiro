@@ -1544,16 +1544,20 @@ textarea:focus {
     box-shadow: 0 3px 10px rgba(124, 93, 250, 0.35);
 }
 
-/* Mobile Modal Bottom Sheet */
+/* Mobile Modal Bottom Sheet / Central Dialog */
 @media (max-width: 650px) {
+    .custom-datepicker.open {
+        z-index: 100000 !important;
+    }
+
     .datepicker-backdrop {
         display: block;
         position: fixed;
         inset: 0;
-        background: rgba(8, 12, 20, 0.75);
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
-        z-index: 100000;
+        background: rgba(5, 8, 15, 0.78);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        z-index: 100001 !important;
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
@@ -1566,46 +1570,121 @@ textarea:focus {
         pointer-events: auto;
     }
 
-    .datepicker-dropdown {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        bottom: auto;
-        width: min(340px, 92vw);
-        background: #131d2e;
-        border: 1px solid #2e4162;
-        border-radius: 20px;
-        padding: 18px 16px;
-        box-shadow: 0 25px 55px rgba(0, 0, 0, 0.8);
-        z-index: 100001;
-        transform: translate(-50%, -46%) scale(0.95);
+    .datepicker-dropdown,
+    #settingsForm .custom-datepicker.open .datepicker-dropdown,
+    #recurringForm .custom-datepicker.open .datepicker-dropdown {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        bottom: auto !important;
+        right: auto !important;
+        width: min(340px, 92vw) !important;
+        background: #141f33 !important;
+        border: 1px solid rgba(124, 93, 250, 0.45) !important;
+        border-radius: 20px !important;
+        padding: 18px 16px !important;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(124, 93, 250, 0.25) !important;
+        z-index: 100002 !important; /* Sempre acima do backdrop (100001) */
+        transform: translate(-50%, -46%) scale(0.95) !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s !important;
     }
 
-    .custom-datepicker.open .datepicker-dropdown {
-        transform: translate(-50%, -50%) scale(1);
+    .custom-datepicker.open .datepicker-dropdown,
+    #settingsForm .custom-datepicker.open .datepicker-dropdown,
+    #recurringForm .custom-datepicker.open .datepicker-dropdown {
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        transform: translate(-50%, -50%) scale(1) !important;
     }
 
     .dp-close-btn {
-        display: grid;
-        place-items: center;
-        width: 30px;
-        height: 30px;
-        border-radius: 8px;
-        border: 1px solid #2a3a54;
-        background: rgba(255, 255, 255, 0.06);
-        color: var(--muted);
-        font-size: 14px;
-        cursor: pointer;
-        transition: all 0.15s ease;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 8px !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        background: rgba(255, 255, 255, 0.08) !important;
+        color: #f1f5f9 !important;
+        font-size: 16px !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease !important;
+        line-height: 1 !important;
+        padding: 0 !important;
     }
 
-    .dp-close-btn:hover {
-        background: rgba(255, 99, 132, 0.2);
-        color: #ff6384;
+    .dp-close-btn:hover,
+    .dp-close-btn:active {
+        background: rgba(239, 68, 68, 0.3) !important;
+        border-color: rgba(239, 68, 68, 0.6) !important;
+        color: #ffffff !important;
+    }
+
+    .dp-btn-view {
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        background: rgba(255, 255, 255, 0.06) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    }
+
+    .dp-view-chevron {
+        color: #a78bfa !important;
+    }
+
+    .dp-nav-btn {
+        color: #ffffff !important;
+        background: rgba(255, 255, 255, 0.06) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    }
+
+    .dp-nav-btn:hover,
+    .dp-nav-btn:active {
+        background: rgba(124, 93, 250, 0.3) !important;
+        border-color: #7c5dfa !important;
     }
 
     .dp-day {
-        min-height: 36px;
+        min-height: 38px !important;
+        color: #f1f5f9 !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+    }
+
+    .dp-day.selected {
+        background: #7c5dfa !important;
+        color: #ffffff !important;
+        font-weight: 800 !important;
+        box-shadow: 0 4px 14px rgba(124, 93, 250, 0.5) !important;
+    }
+
+    .dp-day.today:not(.selected) {
+        border: 1.5px solid #a78bfa !important;
+        color: #a78bfa !important;
+        font-weight: 700 !important;
+    }
+
+    .dp-day.other-month {
+        color: #64748b !important;
+        opacity: 0.5 !important;
+    }
+
+    .dp-weekdays span {
+        color: #94a3b8 !important;
+        font-weight: 800 !important;
+    }
+
+    .dp-shortcut-btn {
+        color: #c4b5fd !important;
+        background: rgba(124, 93, 250, 0.15) !important;
+        border: 1px solid rgba(124, 93, 250, 0.3) !important;
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        padding: 7px 10px !important;
     }
 }
 
@@ -6129,12 +6208,14 @@ body.privacy-mode .breakdown-val {
     position: relative;
 }
 
-#recurringForm .custom-datepicker.open {
-    z-index: 20005 !important;
-}
+@media (min-width: 651px) {
+    #recurringForm .custom-datepicker.open {
+        z-index: 20005;
+    }
 
-#recurringForm .custom-datepicker.open .datepicker-dropdown {
-    z-index: 20006 !important;
+    #recurringForm .custom-datepicker.open .datepicker-dropdown {
+        z-index: 20006;
+    }
 }
 
 .frequency-picker {
@@ -6441,18 +6522,20 @@ body.privacy-mode .breakdown-val {
     width: 100%;
 }
 
-#settingsForm .custom-datepicker.open {
-    z-index: 20005 !important;
-}
+@media (min-width: 651px) {
+    #settingsForm .custom-datepicker.open {
+        z-index: 20005;
+    }
 
-#settingsForm .custom-datepicker.open .datepicker-dropdown {
-    z-index: 20006 !important;
-    background: #131d2e !important;
-    border: 1px solid rgba(124, 93, 250, 0.4) !important;
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(124, 93, 250, 0.25) !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    pointer-events: auto !important;
+    #settingsForm .custom-datepicker.open .datepicker-dropdown {
+        z-index: 20006;
+        background: #131d2e;
+        border: 1px solid rgba(124, 93, 250, 0.4);
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(124, 93, 250, 0.25);
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
 }
 
 .settings-form-grid input[type="number"],
