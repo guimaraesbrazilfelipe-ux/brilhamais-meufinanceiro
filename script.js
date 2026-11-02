@@ -2118,48 +2118,70 @@ function renderRecurringBills() {
                     const icon = CATEGORY_ICONS[bill.category] || "📄";
                     const freqName = getFrequencyLabel(bill.frequency);
                     const targetDueFormatted = statusInfo.nextDueDate ? formatDate(statusInfo.nextDueDate) : `Dia ${bill.dueDay}`;
-                    const dueWithTime = `${targetDueFormatted}${bill.subscriptionTime ? ` às ${bill.subscriptionTime}` : ""}`;
+                    const statusClass = statusInfo.isPaid ? "paid" : (statusInfo.status === "overdue" ? "overdue" : (statusInfo.status === "today" ? "today" : ""));
+
+                    let badgeDisplay = statusInfo.label;
+                    if (statusInfo.isPaid) {
+                        badgeDisplay = statusInfo.lastPaidDate ? `✓ Paga (${formatDate(statusInfo.lastPaidDate)})` : "✓ Paga no mês";
+                    } else if (statusInfo.status === "overdue") {
+                        badgeDisplay = `⚠️ Vencida (${formatDate(statusInfo.nextDueDate)})`;
+                    } else if (statusInfo.status === "today") {
+                        badgeDisplay = statusInfo.label.startsWith("🚨") ? statusInfo.label : `🚨 ${statusInfo.label}`;
+                    } else if (statusInfo.status === "soon") {
+                        const cleanSoon = statusInfo.label.split("(")[0].trim();
+                        badgeDisplay = `⏳ ${cleanSoon}`;
+                    } else {
+                        badgeDisplay = "⏳ A vencer";
+                    }
 
                     return `
-                        <article class="recurring-card ${statusInfo.isPaid ? "paid" : ""}">
-                            <div class="recurring-card-top">
+                        <article class="recurring-card ${statusClass}">
+                            <div class="recurring-card-header">
                                 <div class="recurring-card-identity">
-                                    <div class="recurring-card-icon">${icon}</div>
-                                    <div class="recurring-card-title">
-                                        <h4>${escapeHTML(bill.name)}</h4>
-                                        <span style="display: flex; align-items: center; gap: 6px; margin-top: 2px; flex-wrap: wrap;">
-                                            <span>${icon} ${escapeHTML(bill.category)}</span>
-                                            <span class="recurring-frequency-badge">${freqName}</span>
-                                            ${bill.subscriptionTime ? `<span class="recurring-frequency-badge" style="background: rgba(148, 117, 255, 0.15); color: #c4b5fd;">⏰ Assinado às ${bill.subscriptionTime}</span>` : ""}
-                                        </span>
+                                    <div class="recurring-card-icon" aria-hidden="true">${icon}</div>
+                                    <div class="recurring-card-titles">
+                                        <h4 title="${escapeHTML(bill.name)}">${escapeHTML(bill.name)}</h4>
+                                        <div class="recurring-card-sub">
+                                            <span class="recurring-cat-tag">${icon} ${escapeHTML(bill.category)}</span>
+                                            <span class="recurring-dot" aria-hidden="true">•</span>
+                                            <span class="recurring-freq-tag">${freqName}</span>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="recurring-card-amount">
-                                    <strong>${money(bill.amount)}</strong>
-                                    <span class="recurring-due-tag">Vence: ${dueWithTime}</span>
+                                    <strong class="amount-val">${money(bill.amount)}</strong>
                                 </div>
                             </div>
 
-                            <div>
-                                <span class="recurring-status-badge ${statusInfo.className}">
-                                    <span>${statusInfo.icon}</span>
-                                    <span>${statusInfo.label}</span>
-                                </span>
+                            <div class="recurring-card-body">
+                                <div class="recurring-info-block">
+                                    <div class="recurring-info-row">
+                                        <span class="recurring-info-label">Vencimento</span>
+                                        <div class="recurring-due-val">
+                                            <span>📅 ${targetDueFormatted}</span>
+                                            ${bill.subscriptionTime ? `<span class="recurring-time-pill">⏰ às ${bill.subscriptionTime}</span>` : ""}
+                                        </div>
+                                    </div>
+                                    <div class="recurring-info-row">
+                                        <span class="recurring-info-label">Status</span>
+                                        <span class="recurring-status-badge ${statusInfo.className}">
+                                            <span>${badgeDisplay}</span>
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="recurring-card-footer">
-                                <div>
-                                    ${statusInfo.isPaid ? `
-                                        <button type="button" class="btn-unpay-recurring" data-action="unpay-recurring" data-id="${bill.id}" data-date="${statusInfo.lastPaidDate || ""}" title="Desmarcar pagamento desta conta">
-                                            Desmarcar pagamento
-                                        </button>
-                                    ` : `
-                                        <button type="button" class="btn-pay-recurring" data-action="pay-recurring" data-id="${bill.id}" data-date="${statusInfo.nextDueDate || ""}">
-                                            ✓ Pagar (${dueWithTime})
-                                        </button>
-                                    `}
-                                </div>
-                                <button type="button" class="btn-delete-recurring" data-action="delete-recurring" data-id="${bill.id}" title="Excluir conta fixa">
+                                ${statusInfo.isPaid ? `
+                                    <button type="button" class="btn-unpay-recurring" data-action="unpay-recurring" data-id="${bill.id}" data-date="${statusInfo.lastPaidDate || ""}" title="Desmarcar pagamento desta conta">
+                                        ↩ Desmarcar pagamento
+                                    </button>
+                                ` : `
+                                    <button type="button" class="btn-pay-recurring" data-action="pay-recurring" data-id="${bill.id}" data-date="${statusInfo.nextDueDate || ""}">
+                                        ✓ Marcar como paga
+                                    </button>
+                                `}
+                                <button type="button" class="btn-delete-recurring" data-action="delete-recurring" data-id="${bill.id}" title="Excluir conta fixa" aria-label="Excluir conta fixa">
                                     🗑️
                                 </button>
                             </div>

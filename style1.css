@@ -5408,36 +5408,71 @@ body.privacy-mode .breakdown-val {
 /* Lista de Cards de Contas Recorrentes */
 .recurring-cards-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+    align-items: stretch;
+}
+
+@media (max-width: 640px) {
+    .recurring-cards-container {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
 }
 
 .recurring-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: var(--border-radius-sm);
-    padding: 18px;
+    background: linear-gradient(145deg, rgba(22, 31, 49, 0.85), rgba(13, 19, 34, 0.96));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 3px solid rgba(124, 93, 250, 0.45);
+    border-radius: 16px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 14px;
-    transition: all 0.25s ease;
+    min-height: 232px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
 }
 
 .recurring-card:hover {
-    border-color: rgba(148, 117, 255, 0.3);
-    background: rgba(255, 255, 255, 0.045);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    border-color: rgba(124, 93, 250, 0.45);
+    border-top-color: var(--purple, #7c3aed);
+    background: linear-gradient(145deg, rgba(26, 36, 58, 0.9), rgba(16, 24, 42, 0.98));
+    transform: translateY(-3px);
+    box-shadow: 0 14px 30px -8px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(124, 93, 250, 0.25);
 }
 
 .recurring-card.paid {
-    border-color: rgba(69, 214, 160, 0.25);
+    border-color: rgba(16, 185, 129, 0.25);
+    border-top: 3px solid #10b981;
 }
 
-.recurring-card-top {
+.recurring-card.paid:hover {
+    border-color: rgba(16, 185, 129, 0.45);
+    border-top-color: #10b981;
+    box-shadow: 0 14px 30px -8px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(16, 185, 129, 0.2);
+}
+
+.recurring-card.overdue {
+    border-color: rgba(239, 68, 68, 0.35);
+    border-top: 3px solid #ef4444;
+}
+
+.recurring-card.overdue:hover {
+    border-color: rgba(239, 68, 68, 0.55);
+    border-top-color: #ef4444;
+    box-shadow: 0 14px 30px -8px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(239, 68, 68, 0.25);
+}
+
+.recurring-card.today {
+    border-color: rgba(245, 158, 11, 0.4);
+    border-top: 3px solid #f59e0b;
+}
+
+/* Header do Card */
+.recurring-card-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -5448,156 +5483,250 @@ body.privacy-mode .breakdown-val {
     display: flex;
     align-items: center;
     gap: 12px;
+    min-width: 0;
+    flex: 1;
 }
 
 .recurring-card-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.06);
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.09);
     display: grid;
     place-items: center;
-    font-size: 20px;
+    font-size: 22px;
     flex-shrink: 0;
 }
 
-.recurring-card-title h4 {
-    margin: 0 0 2px;
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text);
+.recurring-card-titles {
+    min-width: 0;
+    flex: 1;
 }
 
-.recurring-card-title span {
+.recurring-card-titles h4 {
+    margin: 0 0 4px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #f8fafc;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.recurring-card-sub {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-size: 12px;
-    color: var(--muted);
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.recurring-cat-tag {
+    color: #cbd5e1;
+    font-weight: 500;
+}
+
+.recurring-dot {
+    opacity: 0.4;
+    font-size: 10px;
+}
+
+.recurring-freq-tag {
+    background: rgba(255, 255, 255, 0.06);
+    padding: 1px 7px;
+    border-radius: 6px;
+    font-size: 11px;
+    color: #a78bfa;
+    font-weight: 600;
 }
 
 .recurring-card-amount {
     text-align: right;
+    flex-shrink: 0;
 }
 
-.recurring-card-amount strong {
-    font-size: 17px;
-    font-weight: 700;
-    color: var(--text);
+.recurring-card-amount .amount-val {
+    font-size: 19px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.02em;
     display: block;
 }
 
-.recurring-due-tag {
-    display: inline-block;
-    font-size: 11px;
-    padding: 2px 7px;
+/* Bloco Central de Informações (Vencimento & Status) */
+.recurring-card-body {
+    margin: 14px 0 10px;
+}
+
+.recurring-info-block {
+    background: rgba(0, 0, 0, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 11px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.recurring-info-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 24px;
+}
+
+.recurring-info-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #64748b;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.recurring-due-val {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #e2e8f0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.recurring-time-pill {
+    background: rgba(148, 117, 255, 0.12);
+    color: #c4b5fd;
+    border: 1px solid rgba(148, 117, 255, 0.25);
+    padding: 1px 7px;
     border-radius: 6px;
-    background: rgba(255, 255, 255, 0.06);
-    color: var(--muted);
-    margin-top: 3px;
+    font-size: 11px;
+    font-weight: 600;
 }
 
 /* Badges de Status */
 .recurring-status-badge {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-size: 12px;
+    gap: 5px;
+    font-size: 11.5px;
     font-weight: 600;
-    padding: 4px 10px;
+    padding: 3px 10px;
     border-radius: 999px;
     width: fit-content;
+    white-space: nowrap;
 }
 
 .recurring-status-badge.status-paid {
-    background: rgba(69, 214, 160, 0.15);
-    color: var(--green);
-    border: 1px solid rgba(69, 214, 160, 0.3);
+    background: rgba(16, 185, 129, 0.14);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .recurring-status-badge.status-overdue {
-    background: rgba(255, 116, 133, 0.15);
-    color: var(--red);
-    border: 1px solid rgba(255, 116, 133, 0.3);
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.35);
 }
 
 .recurring-status-badge.status-today {
     background: rgba(245, 158, 11, 0.2);
-    color: #f7bd62;
-    border: 1px solid rgba(245, 158, 11, 0.4);
-    box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.45);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
 }
 
-.recurring-status-badge.status-soon {
-    background: rgba(245, 158, 11, 0.12);
-    color: #f7bd62;
-    border: 1px solid rgba(245, 158, 11, 0.25);
-}
-
+.recurring-status-badge.status-soon,
 .recurring-status-badge.status-pending {
-    background: rgba(255, 255, 255, 0.06);
-    color: var(--muted);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+    border: 1px solid rgba(255, 255, 255, 0.09);
 }
 
+/* Footer com Ações */
 .recurring-card-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding-top: 10px;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    margin-top: auto;
 }
 
 .btn-pay-recurring {
-    background: rgba(69, 214, 160, 0.15);
-    color: var(--green);
-    border: 1px solid rgba(69, 214, 160, 0.35);
-    padding: 7px 13px;
-    border-radius: 8px;
-    font-size: 12px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.25));
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    padding: 8px 16px;
+    border-radius: 9px;
+    font-size: 12.5px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
 }
 
 .btn-pay-recurring:hover {
-    background: rgba(69, 214, 160, 0.28);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.32), rgba(5, 150, 105, 0.4));
+    color: #ffffff;
+    border-color: rgba(16, 185, 129, 0.6);
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
 }
 
 .btn-unpay-recurring {
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--muted);
+    background: rgba(255, 255, 255, 0.04);
+    color: #94a3b8;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 7px 12px;
-    border-radius: 8px;
+    padding: 8px 14px;
+    border-radius: 9px;
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .btn-unpay-recurring:hover {
-    color: var(--red);
-    border-color: rgba(255, 116, 133, 0.3);
+    color: #f87171;
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    transform: translateY(-1px);
 }
 
 .btn-delete-recurring {
-    background: transparent;
-    border: none;
-    color: var(--muted);
-    padding: 6px;
-    cursor: pointer;
-    border-radius: 6px;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 9px;
+    color: #94a3b8;
+    display: grid;
+    place-items: center;
     font-size: 15px;
-    line-height: 1;
-    transition: all 0.15s ease;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+    flex-shrink: 0;
 }
 
 .btn-delete-recurring:hover {
-    color: var(--red);
-    background: rgba(255, 116, 133, 0.15);
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.35);
+    color: #f87171;
+    transform: scale(1.06);
 }
 
 /* Integrado na Agenda */
@@ -6979,11 +7108,16 @@ body.privacy-mode .breakdown-val {
    ABAS DE STATUS DAS CONTAS FIXAS (ITEM 5)
 ========================================= */
 .bills-status-tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
+    display: inline-flex;
+    gap: 6px;
+    margin-bottom: 22px;
+    padding: 5px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
     overflow-x: auto;
     scrollbar-width: none;
+    max-width: 100%;
 }
 
 .bills-status-tabs::-webkit-scrollbar {
@@ -6991,27 +7125,31 @@ body.privacy-mode .breakdown-val {
 }
 
 .bills-status-tab {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: transparent;
+    border: 1px solid transparent;
     border-radius: 8px;
-    padding: 7px 14px;
-    font-size: 12px;
+    padding: 7px 15px;
+    font-size: 12.5px;
     font-weight: 600;
-    color: var(--muted);
+    color: #94a3b8;
     cursor: pointer;
     white-space: nowrap;
-    transition: all 0.15s ease;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .bills-status-tab:hover {
-    color: var(--text);
+    color: #f8fafc;
     background: rgba(255, 255, 255, 0.06);
 }
 
 .bills-status-tab.active {
-    background: var(--purple);
-    border-color: var(--purple);
-    color: #fff;
+    background: var(--purple, #7c3aed);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
 }
 
 
