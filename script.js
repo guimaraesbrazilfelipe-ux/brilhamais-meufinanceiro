@@ -1497,18 +1497,22 @@ function renderTransactions() {
                         <div class="transaction-actions">
                             <button
                                 type="button"
-                                class="mini-button"
+                                class="btn-action edit btn-edit-pill"
                                 data-action="edit"
-                                data-id="${escapeHTML(transaction.id)}">
-                                Editar
+                                data-id="${escapeHTML(transaction.id)}"
+                                title="Editar lançamento"
+                                aria-label="Editar lançamento">
+                                ✏️
                             </button>
 
                             <button
                                 type="button"
-                                class="mini-button"
+                                class="btn-action delete btn-delete-pill"
                                 data-action="delete"
-                                data-id="${escapeHTML(transaction.id)}">
-                                Excluir
+                                data-id="${escapeHTML(transaction.id)}"
+                                title="Excluir lançamento"
+                                aria-label="Excluir lançamento">
+                                🗑
                             </button>
                         </div>
                     </div>
@@ -2210,7 +2214,10 @@ function renderRecurringBills() {
                                         ✓ Marcar como paga
                                     </button>
                                 `}
-                                <button type="button" class="btn-delete-recurring" data-action="delete-recurring" data-id="${bill.id}" title="Excluir conta fixa" aria-label="Excluir conta fixa">
+                                <button type="button" class="btn-edit-bill-amount btn-edit-pill" data-action="edit-bill-amount" data-id="${bill.id}" title="Alterar valor de ${escapeHTML(bill.name)}" aria-label="Alterar valor">
+                                    ✏️
+                                </button>
+                                <button type="button" class="btn-delete-recurring btn-delete-pill" data-action="delete-recurring" data-id="${bill.id}" title="Excluir conta fixa" aria-label="Excluir conta fixa">
                                     🗑️
                                 </button>
                             </div>
@@ -2296,7 +2303,7 @@ function renderRecurringRowsList() {
                     <div class="transaction-right">
                         <div class="transaction-amount expense-text" style="font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
                             <span>−${money(billAmount)}</span>
-                            <button type="button" class="btn-edit-bill-amount" data-action="edit-bill-amount" data-id="${bill.id}" title="Alterar valor desta conta neste mês (${formatMonthName(month)})" aria-label="Alterar valor">
+                            <button type="button" class="btn-edit-bill-amount btn-edit-pill" data-action="edit-bill-amount" data-id="${bill.id}" title="Alterar valor desta conta neste mês (${formatMonthName(month)})" aria-label="Alterar valor">
                                 ✏️
                             </button>
                         </div>
@@ -2327,11 +2334,12 @@ function renderRecurringRowsList() {
 
                             <button
                                 type="button"
-                                class="mini-button btn-delete-recurring"
+                                class="btn-delete-recurring btn-action delete btn-delete-pill"
                                 data-action="delete-recurring"
                                 data-id="${bill.id}"
-                                title="Excluir conta fixa">
-                                Excluir
+                                title="Excluir conta fixa"
+                                aria-label="Excluir conta fixa">
+                                🗑
                             </button>
                         </div>
                     </div>
@@ -3642,14 +3650,14 @@ function renderGoogleDayView(container) {
                             <div class="gcal-schedule-amount ${isInc ? "income-text" : "expense-text"}">
                                 ${isInc ? "+" : "−"}${money(e.amount)}
                             </div>
-                            <div style="margin-top: 6px; display: flex; gap: 6px; justify-content: flex-end;">
+                            <div style="margin-top: 6px; display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
                                 ${e.kind === "recurring" ? `
                                     <button type="button" class="btn-action ${e.isPaid ? "" : "income"}" data-action="toggle-bill" data-id="${e.id}" data-date="${e.date}" title="${e.isPaid ? "Desfazer pagamento" : "Marcar como paga"}">
                                         ${e.isPaid ? "Desfazer" : "✓ Pagar"}
                                     </button>
                                 ` : (e.kind === "transaction" ? `
-                                    <button type="button" class="btn-action edit" data-action="edit-tx" data-id="${e.id}" title="Editar">✎</button>
-                                    <button type="button" class="btn-action delete" data-action="delete-tx" data-id="${e.id}" title="Excluir">🗑</button>
+                                    <button type="button" class="btn-action edit btn-edit-pill" data-action="edit-tx" data-id="${e.id}" title="Editar lançamento" aria-label="Editar lançamento">✏️</button>
+                                    <button type="button" class="btn-action delete btn-delete-pill" data-action="delete-tx" data-id="${e.id}" title="Excluir lançamento" aria-label="Excluir lançamento">🗑</button>
                                 ` : "")}
                             </div>
                         </div>
@@ -4673,10 +4681,10 @@ function renderHistoricalReports() {
                             </div>
                             <div class="transaction-actions">
                                 ${t.isSalary ? `
-                                    <a href="configuracoes.html" class="btn-action edit" title="Gerenciar salário nas configurações" style="text-decoration: none;">⚙️</a>
+                                    <a href="configuracoes.html" class="btn-action edit btn-edit-pill" title="Gerenciar salário nas configurações" aria-label="Gerenciar salário nas configurações" style="text-decoration: none;">⚙️</a>
                                 ` : `
-                                    <button type="button" class="btn-action edit" data-action="edit" data-id="${t.id}" title="Editar">✎</button>
-                                    <button type="button" class="btn-action delete" data-action="delete" data-id="${t.id}" title="Excluir">🗑</button>
+                                    <button type="button" class="btn-action edit btn-edit-pill" data-action="edit" data-id="${t.id}" title="Editar lançamento" aria-label="Editar lançamento">✏️</button>
+                                    <button type="button" class="btn-action delete btn-delete-pill" data-action="delete" data-id="${t.id}" title="Excluir lançamento" aria-label="Excluir lançamento">🗑</button>
                                 `}
                             </div>
                         </div>

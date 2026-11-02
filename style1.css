@@ -798,48 +798,139 @@ textarea:focus {
 }
 
 .transaction-actions {
-    display: flex;
+    display: inline-flex;
+    align-items: center;
     justify-content: flex-end;
-    gap: 7px;
-    margin-top: 6px;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+/* ============================================================
+   BOTÃO DE EDIÇÃO CÁPSULA COM LÁPIS (✏️) E BOTÕES DE AÇÃO
+   ============================================================ */
+.btn-edit-pill,
+.btn-edit-bill-amount,
+.btn-action.edit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 28px;
+    height: 24px;
+    padding: 2px 8px;
+    border-radius: 999px; /* Formato cápsula moderno e suave */
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #cbd5e1;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+    vertical-align: middle;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    text-decoration: none;
+    outline: none;
+}
+
+.btn-edit-pill:hover,
+.btn-edit-bill-amount:hover,
+.btn-action.edit:hover {
+    background: rgba(245, 158, 11, 0.22);
+    border-color: rgba(245, 158, 11, 0.55);
+    color: #ffffff;
+    transform: translateY(-1px) scale(1.08);
+    box-shadow: 0 3px 10px rgba(245, 158, 11, 0.25);
+}
+
+.btn-edit-pill:active,
+.btn-edit-bill-amount:active,
+.btn-action.edit:active {
+    transform: translateY(0) scale(0.96);
+}
+
+.btn-delete-pill,
+.btn-delete-recurring,
+.btn-action.delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 28px;
+    height: 24px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+    vertical-align: middle;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    outline: none;
+}
+
+.btn-delete-pill:hover,
+.btn-delete-recurring:hover,
+.btn-action.delete:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #ef4444;
+    transform: translateY(-1px) scale(1.08);
+    box-shadow: 0 3px 10px rgba(239, 68, 68, 0.25);
+}
+
+.btn-delete-pill:active,
+.btn-delete-recurring:active,
+.btn-action.delete:active {
+    transform: translateY(0) scale(0.96);
 }
 
 .btn-action {
-    display: inline-grid;
-    place-items: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 7px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.04);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 24px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
     color: var(--muted);
-    font-size: 13px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-action.income {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: var(--green);
+}
+
+.btn-action.income:hover {
+    background: rgba(16, 185, 129, 0.25);
+    border-color: rgba(16, 185, 129, 0.55);
+    transform: translateY(-1px) scale(1.06);
+}
+
+.mini-button {
+    padding: 2px 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 11px;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
-.btn-action.edit:hover {
-    background: rgba(148, 117, 255, 0.2);
-    color: var(--purple-light);
-    border-color: rgba(148, 117, 255, 0.4);
-}
-
-.btn-action.delete:hover {
-    background: rgba(255, 116, 133, 0.2);
-    color: var(--red);
-    border-color: rgba(255, 116, 133, 0.4);
-}
-
-.mini-button {
-    padding: 2px 0;
-    background: none;
-    border: none;
-    color: var(--muted);
-    font-size: 10px;
-}
-
 .mini-button:hover {
-    color: var(--purple-light);
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 .history-footer {
@@ -2201,10 +2292,15 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         text-align: center;
     }
 
-    .btn-action {
-        width: 32px;
-        height: 32px;
-        font-size: 14px;
+    .btn-action,
+    .btn-edit-pill,
+    .btn-delete-pill,
+    .btn-edit-bill-amount {
+        min-width: 30px;
+        height: 26px;
+        padding: 3px 8px;
+        font-size: 13px;
+        border-radius: 999px;
     }
 
     .period-tabs {
@@ -5612,10 +5708,12 @@ body.privacy-mode .breakdown-val {
 
 .btn-edit-bill-amount {
     background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
-    padding: 3px 6px;
-    font-size: 11px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    padding: 2px 8px;
+    min-width: 28px;
+    height: 24px;
+    font-size: 12px;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     display: inline-flex;
@@ -5623,13 +5721,15 @@ body.privacy-mode .breakdown-val {
     justify-content: center;
     line-height: 1;
     color: #cbd5e1;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .btn-edit-bill-amount:hover {
     background: rgba(245, 158, 11, 0.25);
-    border-color: rgba(245, 158, 11, 0.5);
+    border-color: rgba(245, 158, 11, 0.55);
     color: #ffffff;
-    transform: scale(1.12);
+    transform: translateY(-1px) scale(1.08);
+    box-shadow: 0 3px 10px rgba(245, 158, 11, 0.25);
 }
 
 .recurring-variable-badge {
