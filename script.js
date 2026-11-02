@@ -266,7 +266,11 @@ function loadData() {
             },
             budgets: data.budgets || {},
             goals: data.goals || {},
-            recurringBills: Array.isArray(data.recurringBills) ? data.recurringBills : []
+            recurringBills: (Array.isArray(data.recurringBills) ? data.recurringBills : []).map((b) => ({
+                ...b,
+                isVariable: Boolean(b.isVariable),
+                monthlyAmounts: (b.monthlyAmounts && typeof b.monthlyAmounts === "object") ? b.monthlyAmounts : {}
+            }))
         };
     } catch (error) {
         console.error("Não foi possível carregar os dados:", error);
@@ -399,6 +403,23 @@ function selectedMonth() {
     return sessionStorage.getItem("meuFinanceiro.month") || currentMonth();
 }
 
+function getBillAmount(bill, monthOrDate) {
+    if (!bill) return 0;
+    const mStr = monthOrDate ? (monthOrDate.length === 7 ? monthOrDate : monthOrDate.slice(0, 7)) : selectedMonth();
+    if (bill.monthlyAmounts && bill.monthlyAmounts[mStr] !== undefined && !isNaN(Number(bill.monthlyAmounts[mStr])) && Number(bill.monthlyAmounts[mStr]) > 0) {
+        return Number(bill.monthlyAmounts[mStr]);
+    }
+    return Number(bill.amount || 0);
+}
+
+function formatMonthName(monthStr) {
+    if (!monthStr || monthStr.length < 7) return monthStr || "";
+    const [y, m] = monthStr.slice(0, 7).split("-").map(Number);
+    const names = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    const name = names[m - 1] || "";
+    return name ? `${name} de ${y}` : monthStr;
+}
+
 function selectedDate() {
     const dateInput = $("#dashboardMonth") || $("#transactionDate");
     if (dateInput && dateInput.value && dateInput.value.length === 10) {
@@ -491,7 +512,7 @@ function getPeriodSummary(periodType = "month", value = null) {
             const mStr = targetDate.slice(0, 7);
             const occs = getBillOccurrencesInMonth(b, mStr);
             if (occs.includes(targetDate)) {
-                const amt = Number(b.amount || 0);
+                const amt = getBillAmount(b, mStr);
                 allRecurringTotal += amt;
                 if (isBillOccurrencePaid(b, targetDate)) {
                     paidRecurringTotal += amt;
@@ -503,7 +524,7 @@ function getPeriodSummary(periodType = "month", value = null) {
                 const mStr = `${targetYear}-${String(mon).padStart(2, "0")}`;
                 const occs = getBillOccurrencesInMonth(b, mStr);
                 occs.forEach((d) => {
-                    const amt = Number(b.amount || 0);
+                    const amt = getBillAmount(b, mStr);
                     allRecurringTotal += amt;
                     if (isBillOccurrencePaid(b, d)) {
                         paidRecurringTotal += amt;
@@ -511,8 +532,8 @@ function getPeriodSummary(periodType = "month", value = null) {
                 });
             }
         } else if (periodType === "all") {
-            (b.paidDates || []).forEach(() => {
-                paidRecurringTotal += Number(b.amount || 0);
+            (b.paidDates || []).forEach((pDate) => {
+                paidRecurringTotal += getBillAmount(b, pDate ? pDate.slice(0, 7) : selectedMonth());
             });
             allRecurringTotal += paidRecurringTotal;
         }
@@ -570,7 +591,7 @@ function getMonthlySummary(month) {
     (data.recurringBills || []).forEach((b) => {
         const occs = getBillOccurrencesInMonth(b, month);
         occs.forEach((d) => {
-            const amt = Number(b.amount || 0);
+            const amt = getBillAmount(b, month);
             allRecurringTotal += amt;
             if (isBillOccurrencePaid(b, d)) {
                 paidRecurringTotal += amt;
@@ -778,7 +799,7 @@ function renderDashboardBudgetBreakdown(summary, m) {
 
     (data.recurringBills || []).forEach((b) => {
         const occs = getBillOccurrencesInMonth(b, m);
-        const amt = Number(b.amount || 0);
+        const amt = getBillAmount(b, m);
         occs.forEach((d) => {
             const isPaid = isBillOccurrencePaid(b, d);
             if (isPaid) {
@@ -929,7 +950,7 @@ function renderMonthlyChart() {
             let dayExp = dayTxs.filter(t => t.type === "despesa").reduce((s, t) => s + t.amount, 0);
 
             (data.recurringBills || []).forEach(b => {
-                if (isBillOccurrencePaid(b, iso)) dayExp += Number(b.amount || 0);
+                if (isBillOccurrencePaid(b, iso)) dayExp += getBillAmount(b, iso.slice(0, 7));
             });
 
             incomeValues.push(dayInc);
@@ -1287,7 +1308,7 @@ function renderCategoryChart() {
                         getBillOccurrencesInMonth(b, k).forEach(d => {
                             if (isBillOccurrencePaid(b, d) || currentReportFilter === "contas-fixas") {
                                 const cat = b.category || "Assinaturas";
-                                totals[cat] = (totals[cat] || 0) + Number(b.amount || 0);
+                                totals[cat] = (totals[cat] || 0) + getBillAmount(b, k);
                             }
                         });
                     }
@@ -1296,7 +1317,7 @@ function renderCategoryChart() {
                 getBillOccurrencesInMonth(b, mStr).forEach(d => {
                     if (filter.matchesDate(d) && (isBillOccurrencePaid(b, d) || currentReportFilter === "contas-fixas")) {
                         const cat = b.category || "Assinaturas";
-                        totals[cat] = (totals[cat] || 0) + Number(b.amount || 0);
+                        totals[cat] = (totals[cat] || 0) + getBillAmount(b, mStr);
                     }
                 });
             } else {
@@ -1306,7 +1327,7 @@ function renderCategoryChart() {
                     const shouldInclude = (currentReportFilter === "contas-fixas") ? true : isPaid;
                     if (shouldInclude) {
                         const cat = b.category || "Assinaturas";
-                        totals[cat] = (totals[cat] || 0) + Number(b.amount || 0);
+                        totals[cat] = (totals[cat] || 0) + getBillAmount(b, mStr);
                     }
                 });
             }
@@ -2020,7 +2041,7 @@ function renderRecurringBills() {
 
     bills.forEach((b) => {
         const occs = getBillOccurrencesInMonth(b, month);
-        const amt = Number(b.amount) || 0;
+        const amt = getBillAmount(b, month);
         occs.forEach((occDate) => {
             occurrencesCount++;
             totalAmount += amt;
@@ -2134,6 +2155,8 @@ function renderRecurringBills() {
                         badgeDisplay = "⏳ A vencer";
                     }
 
+                    const billAmount = getBillAmount(bill, month);
+
                     return `
                         <article class="recurring-card ${statusClass}">
                             <div class="recurring-card-header">
@@ -2149,7 +2172,13 @@ function renderRecurringBills() {
                                     </div>
                                 </div>
                                 <div class="recurring-card-amount">
-                                    <strong class="amount-val">${money(bill.amount)}</strong>
+                                    <div class="amount-val-wrapper">
+                                        <strong class="amount-val">${money(billAmount)}</strong>
+                                        <button type="button" class="btn-edit-bill-amount" data-action="edit-bill-amount" data-id="${bill.id}" title="Alterar valor desta conta neste mês (${formatMonthName(month)})" aria-label="Alterar valor de ${escapeHTML(bill.name)}">
+                                            ✏️
+                                        </button>
+                                    </div>
+                                    ${bill.isVariable ? `<span class="recurring-variable-badge" title="Conta com valor variável todo mês">⚡ Valor variável</span>` : ""}
                                 </div>
                             </div>
 
@@ -2239,6 +2268,7 @@ function renderRecurringRowsList() {
             const freqName = getFrequencyLabel(bill.frequency);
             const targetDueFormatted = statusInfo.nextDueDate ? formatDate(statusInfo.nextDueDate) : `Dia ${bill.dueDay}`;
             const dueWithTime = `${targetDueFormatted}${bill.subscriptionTime ? ` às ${bill.subscriptionTime}` : ""}`;
+            const billAmount = getBillAmount(bill, month);
 
             return `
                 <div class="transaction-item recurring-row-item ${statusInfo.isPaid ? "paid" : ""}">
@@ -2264,9 +2294,13 @@ function renderRecurringRowsList() {
                     </div>
 
                     <div class="transaction-right">
-                        <div class="transaction-amount expense-text" style="font-size: 13px; font-weight: 700;">
-                            −${money(bill.amount)}
+                        <div class="transaction-amount expense-text" style="font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                            <span>−${money(billAmount)}</span>
+                            <button type="button" class="btn-edit-bill-amount" data-action="edit-bill-amount" data-id="${bill.id}" title="Alterar valor desta conta neste mês (${formatMonthName(month)})" aria-label="Alterar valor">
+                                ✏️
+                            </button>
                         </div>
+                        ${bill.isVariable ? `<div style="text-align: right; margin-top: 2px;"><span class="recurring-variable-badge" style="font-size: 9px; padding: 1px 5px;">⚡ Variável</span></div>` : ""}
 
                         <div class="transaction-actions" style="margin-top: 5px;">
                             ${statusInfo.isPaid ? `
@@ -2326,7 +2360,7 @@ function renderRecurringAlertBanner() {
         occs.forEach((d) => {
             if (!isBillOccurrencePaid(b, d)) {
                 pendingCount++;
-                pendingTotal += Number(b.amount || 0);
+                pendingTotal += getBillAmount(b, month);
             }
         });
     });
@@ -3006,7 +3040,7 @@ function getAgendaEventsForDate(dayIso, monthStr) {
                 type: isPaid ? "paid" : "pending",
                 title: b.name,
                 category: b.category || "Assinaturas",
-                amount: Number(b.amount || 0),
+                amount: getBillAmount(b, mStr),
                 date: dayIso,
                 isPaid,
                 frequency: b.frequency || "monthly",
@@ -4323,13 +4357,13 @@ function renderHistoricalReports() {
             if (historyFilterMode === "day") {
                 const mStr = currentD.slice(0, 7);
                 if (getBillOccurrencesInMonth(b, mStr).includes(currentD) && isBillOccurrencePaid(b, currentD)) {
-                    catTotals[cat] = (catTotals[cat] || 0) + Number(b.amount || 0);
+                    catTotals[cat] = (catTotals[cat] || 0) + getBillAmount(b, mStr);
                 }
             } else if (historyFilterMode === "month") {
                 const occs = getBillOccurrencesInMonth(b, currentM);
                 occs.forEach((d) => {
                     if (isBillOccurrencePaid(b, d)) {
-                        catTotals[cat] = (catTotals[cat] || 0) + Number(b.amount || 0);
+                        catTotals[cat] = (catTotals[cat] || 0) + getBillAmount(b, currentM);
                     }
                 });
             } else if (historyFilterMode === "year") {
@@ -4337,13 +4371,13 @@ function renderHistoricalReports() {
                     const mStr = `${currentY}-${String(mon).padStart(2, "0")}`;
                     getBillOccurrencesInMonth(b, mStr).forEach((d) => {
                         if (isBillOccurrencePaid(b, d)) {
-                            catTotals[cat] = (catTotals[cat] || 0) + Number(b.amount || 0);
+                            catTotals[cat] = (catTotals[cat] || 0) + getBillAmount(b, mStr);
                         }
                     });
                 }
             } else if (historyFilterMode === "all") {
-                (b.paidDates || []).forEach(() => {
-                    catTotals[cat] = (catTotals[cat] || 0) + Number(b.amount || 0);
+                (b.paidDates || []).forEach((pDate) => {
+                    catTotals[cat] = (catTotals[cat] || 0) + getBillAmount(b, pDate ? pDate.slice(0, 7) : selectedMonth());
                 });
             }
         });
@@ -4493,7 +4527,7 @@ function renderHistoricalReports() {
                                 ${isPaid ? "✓ Paga" : "⏳ A vencer"}
                             </span>
                             <div class="transaction-amount expense-text">
-                                ${money(bill.amount)}
+                                ${money(getBillAmount(bill, date.slice(0, 7)))}
                             </div>
                         </div>
                     </div>
@@ -4685,7 +4719,7 @@ function renderReports() {
             weekDates.forEach((iso) => {
                 const mStr = iso.slice(0, 7);
                 if (getBillOccurrencesInMonth(b, mStr).includes(iso)) {
-                    const amt = Number(b.amount || 0);
+                    const amt = getBillAmount(b, mStr);
                     allRecurringTotal += amt;
                     if (isBillOccurrencePaid(b, iso)) {
                         paidRecurringTotal += amt;
@@ -4881,7 +4915,7 @@ function renderReports() {
                                 ${isPaid ? "✓ Paga" : "⏳ A vencer"}
                             </span>
                             <div class="transaction-amount expense-text">
-                                ${money(bill.amount)}
+                                ${money(getBillAmount(bill, date.slice(0, 7)))}
                             </div>
                         </div>
                     </div>
@@ -6266,6 +6300,189 @@ function setupTransactionsPage() {
     }
 }
 
+/* =========================================
+   MODAL DE AJUSTE RÁPIDO DE PREÇO (VALOR VARIÁVEL)
+========================================= */
+
+function openEditBillAmountModal(billId) {
+    const bill = (data.recurringBills || []).find((b) => b.id === billId);
+    if (!bill) return;
+
+    let modal = $("#editBillAmountModal");
+    if (!modal) {
+        const modalHtml = `
+        <div id="editBillAmountModal" class="confirm-dialog" role="dialog" aria-modal="true"
+            aria-labelledby="editBillModalTitle" aria-hidden="true">
+            <div class="confirm-dialog-card edit-amount-dialog-card">
+                <button type="button" id="editBillModalClose" class="confirm-dialog-close" aria-label="Fechar janela">×</button>
+                <div class="confirm-dialog-icon" aria-hidden="true">⚡</div>
+                <p class="confirm-dialog-eyebrow">AJUSTAR PREÇO</p>
+                <h2 id="editBillModalTitle">Alterar valor da conta</h2>
+                <p id="editBillModalSubtitle" class="confirm-dialog-message">Defina o novo valor para este mês ou atualize o valor padrão.</p>
+
+                <form id="editBillAmountForm" class="edit-bill-amount-form">
+                    <input type="hidden" id="editBillId">
+                    <input type="hidden" id="editBillMonth">
+
+                    <div class="field" style="margin-bottom: 16px; text-align: left;">
+                        <label for="editBillNewAmount" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Novo valor (R$)</label>
+                        <input type="number" id="editBillNewAmount" step="0.01" min="0.01" required placeholder="0,00" class="field-input" style="font-size: 18px; font-weight: 700; height: 48px; padding: 0 14px; width: 100%; border-radius: 10px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: #fff;">
+                    </div>
+
+                    <div class="edit-amount-scope-options" style="text-align: left; margin-bottom: 18px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 12px;">
+                        <label class="scope-radio-label" style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin-bottom: 10px;">
+                            <input type="radio" name="editAmountScope" value="month" checked style="margin-top: 3px;">
+                            <div>
+                                <strong style="display: block; font-size: 13px; color: var(--text);">Alterar somente neste mês (<span id="editBillMonthLabel">mês atual</span>)</strong>
+                                <small style="font-size: 12px; color: var(--muted); display: block; margin-top: 2px;">Ideal para contas que variam todo mês (água, luz, gás, cartão).</small>
+                            </div>
+                        </label>
+
+                        <label class="scope-radio-label" style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin-bottom: 0;">
+                            <input type="radio" name="editAmountScope" value="all" style="margin-top: 3px;">
+                            <div>
+                                <strong style="display: block; font-size: 13px; color: var(--text);">Alterar valor padrão (todos os meses)</strong>
+                                <small style="font-size: 12px; color: var(--muted); display: block; margin-top: 2px;">Atualiza o valor base da assinatura/conta para sempre.</small>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div style="text-align: left; margin-bottom: 18px;">
+                        <label class="recurring-checkbox-card" for="editBillSetVariable" style="padding: 10px 12px;">
+                            <input type="checkbox" id="editBillSetVariable" class="recurring-checkbox-native">
+                            <span class="recurring-checkbox-custom" aria-hidden="true"></span>
+                            <div class="recurring-checkbox-info">
+                                <span class="recurring-checkbox-title" style="font-size: 13px;">Conta com valor variável</span>
+                                <span class="recurring-checkbox-desc" style="font-size: 11.5px;">Destaca a conta com o selo de valor variável e facilita novos ajustes.</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="confirm-dialog-actions">
+                        <button type="button" id="editBillModalCancel" class="button button-secondary">Cancelar</button>
+                        <button type="submit" class="button button-primary">Salvar novo valor</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        `;
+        document.body.insertAdjacentHTML("beforeend", modalHtml);
+        modal = $("#editBillAmountModal");
+    }
+
+    bindEditBillAmountModalEvents();
+
+    const curMonth = selectedMonth();
+    const curAmount = getBillAmount(bill, curMonth);
+
+    const titleEl = $("#editBillModalTitle");
+    const subEl = $("#editBillModalSubtitle");
+    const idInput = $("#editBillId");
+    const monthInput = $("#editBillMonth");
+    const amountInput = $("#editBillNewAmount");
+    const monthLabel = $("#editBillMonthLabel");
+    const variableCheck = $("#editBillSetVariable");
+
+    if (titleEl) titleEl.textContent = `Ajustar preço: ${bill.name}`;
+    if (subEl) subEl.textContent = `A conta "${bill.name}" está com valor de ${money(curAmount)} em ${formatMonthName(curMonth)}.`;
+    if (idInput) idInput.value = bill.id;
+    if (monthInput) monthInput.value = curMonth;
+    if (amountInput) {
+        amountInput.value = curAmount.toFixed(2);
+    }
+    if (monthLabel) {
+        monthLabel.textContent = formatMonthName(curMonth);
+    }
+    if (variableCheck) {
+        variableCheck.checked = Boolean(bill.isVariable);
+    }
+
+    const monthRadio = document.querySelector('input[name="editAmountScope"][value="month"]');
+    if (monthRadio) monthRadio.checked = true;
+
+    modal.classList.add("is-open");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+
+    setTimeout(() => {
+        if (amountInput) {
+            amountInput.focus();
+            amountInput.select();
+        }
+    }, 60);
+}
+
+function closeEditBillAmountModal() {
+    const modal = $("#editBillAmountModal");
+    if (!modal) return;
+    modal.classList.remove("is-open");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+}
+
+let _editBillModalEventsBound = false;
+function bindEditBillAmountModalEvents() {
+    const modal = $("#editBillAmountModal");
+    if (!modal || _editBillModalEventsBound) return;
+    _editBillModalEventsBound = true;
+
+    const closeBtn = $("#editBillModalClose");
+    const cancelBtn = $("#editBillModalCancel");
+    const form = $("#editBillAmountForm");
+
+    if (closeBtn) closeBtn.onclick = closeEditBillAmountModal;
+    if (cancelBtn) cancelBtn.onclick = closeEditBillAmountModal;
+
+    modal.onclick = (e) => {
+        if (e.target === modal) closeEditBillAmountModal();
+    };
+
+    if (form) {
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const billId = $("#editBillId")?.value;
+            const targetMonth = $("#editBillMonth")?.value || selectedMonth();
+            const rawAmount = String($("#editBillNewAmount")?.value || "").trim().replace("R$", "").trim();
+            const normalized = rawAmount.includes(",") ? rawAmount.replace(/\./g, "").replace(",", ".") : rawAmount;
+            const newAmount = Number(normalized);
+            const scope = document.querySelector('input[name="editAmountScope"]:checked')?.value || "month";
+            const isVariable = Boolean($("#editBillSetVariable")?.checked);
+
+            if (!Number.isFinite(newAmount) || newAmount <= 0) {
+                showToast("Informe um valor válido maior que zero.");
+                return;
+            }
+
+            const bill = (data.recurringBills || []).find((b) => b.id === billId);
+            if (!bill) {
+                closeEditBillAmountModal();
+                return;
+            }
+
+            bill.isVariable = isVariable || scope === "month";
+
+            if (scope === "month") {
+                if (!bill.monthlyAmounts || typeof bill.monthlyAmounts !== "object") {
+                    bill.monthlyAmounts = {};
+                }
+                bill.monthlyAmounts[targetMonth] = newAmount;
+                showToast(`Valor de "${bill.name}" atualizado para ${money(newAmount)} em ${formatMonthName(targetMonth)}!`);
+            } else {
+                bill.amount = newAmount;
+                if (!bill.monthlyAmounts || typeof bill.monthlyAmounts !== "object") {
+                    bill.monthlyAmounts = {};
+                }
+                bill.monthlyAmounts[targetMonth] = newAmount;
+                showToast(`Valor padrão de "${bill.name}" atualizado para ${money(newAmount)}!`);
+            }
+
+            saveData();
+            closeEditBillAmountModal();
+            renderAll();
+        };
+    }
+}
+
 function setupRecurringBills() {
     const btnToggle = $("#btnToggleNewRecurring");
     const form = $("#recurringForm");
@@ -6279,6 +6496,7 @@ function setupRecurringBills() {
 
     setupRecurringCategoryPicker();
     setupRecurringFrequencyPicker();
+    bindEditBillAmountModalEvents();
 
     if (btnToggle && form) {
         btnToggle.addEventListener("click", () => {
@@ -6308,6 +6526,7 @@ function setupRecurringBills() {
                 const now = new Date();
                 timeInput.value = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
             }
+            if ($("#recurringIsVariable")) $("#recurringIsVariable").checked = false;
             syncDatePicker();
             if (syncRecurringFrequencyPicker) syncRecurringFrequencyPicker("monthly");
             form.classList.add("hidden");
@@ -6326,6 +6545,7 @@ function setupRecurringBills() {
             const frequency = String($("#recurringFrequency")?.value || "monthly");
             const customCategory = String($("#recurringCustomCategory")?.value || "").trim();
             const category = customCategory || String($("#recurringCategory")?.value || "Assinaturas");
+            const isVariable = Boolean($("#recurringIsVariable")?.checked);
 
             if (!name) {
                 showToast("Informe o nome da conta ou assinatura.");
@@ -6355,6 +6575,8 @@ function setupRecurringBills() {
                 subscriptionTime,
                 frequency,
                 category,
+                isVariable,
+                monthlyAmounts: {},
                 paidDates: [],
                 paidMonths: []
             };
@@ -6368,6 +6590,7 @@ function setupRecurringBills() {
                 const now = new Date();
                 timeInput.value = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
             }
+            if ($("#recurringIsVariable")) $("#recurringIsVariable").checked = false;
             syncDatePicker();
             if (syncRecurringFrequencyPicker) syncRecurringFrequencyPicker("monthly");
             form.classList.add("hidden");
@@ -6377,11 +6600,11 @@ function setupRecurringBills() {
     }
 
     document.addEventListener("click", (e) => {
-        const btn = e.target.closest("button[data-action]");
-        if (!btn) return;
-        const action = btn.dataset.action;
-        const id = btn.dataset.id;
-        const targetDate = btn.dataset.date;
+        const trigger = e.target.closest("[data-action]");
+        if (!trigger) return;
+        const action = trigger.dataset.action;
+        const id = trigger.dataset.id;
+        const targetDate = trigger.dataset.date;
 
         if (action === "pay-recurring") {
             payRecurringBill(id, targetDate);
@@ -6389,6 +6612,9 @@ function setupRecurringBills() {
             unpayRecurringBill(id, targetDate);
         } else if (action === "delete-recurring") {
             deleteRecurringBill(id);
+        } else if (action === "edit-bill-amount") {
+            e.stopPropagation();
+            openEditBillAmountModal(id);
         }
     });
 

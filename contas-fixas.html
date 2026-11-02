@@ -326,6 +326,18 @@
                         <small class="category-help">Escolha uma categoria ou escreva uma personalizada.</small>
                     </div>
 
+                    <!-- Opção de Conta com Valor Variável -->
+                    <div class="field variable-bill-field" style="margin-top: 14px;">
+                        <label class="recurring-checkbox-card" for="recurringIsVariable">
+                            <input type="checkbox" id="recurringIsVariable" class="recurring-checkbox-native">
+                            <span class="recurring-checkbox-custom" aria-hidden="true"></span>
+                            <div class="recurring-checkbox-info">
+                                <span class="recurring-checkbox-title">⚡ Conta com valor variável todo mês (água, luz, gás, cartão)</span>
+                                <span class="recurring-checkbox-desc">Marque se o valor varia a cada fatura. Você poderá alterar o valor rapidamente sempre que consultar as contas sem alterar o histórico anterior.</span>
+                            </div>
+                        </label>
+                    </div>
+
                     <div class="recurring-form-actions">
                         <button type="submit" class="button button-primary" id="btnSaveRecurring">Salvar conta fixa</button>
                         <button type="button" class="button button-secondary" id="btnCancelRecurring">Cancelar</button>
@@ -426,6 +438,62 @@
                 <button type="button" id="confirmDialogCancel" class="button button-secondary">Manter conta</button>
                 <button type="button" id="confirmDialogConfirm" class="button button-danger">Excluir conta</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal para Ajustar Preço da Conta Fixa -->
+    <div id="editBillAmountModal" class="confirm-dialog" role="dialog" aria-modal="true"
+        aria-labelledby="editBillModalTitle" aria-hidden="true">
+        <div class="confirm-dialog-card edit-amount-dialog-card">
+            <button type="button" id="editBillModalClose" class="confirm-dialog-close" aria-label="Fechar janela">×</button>
+            <div class="confirm-dialog-icon" aria-hidden="true">⚡</div>
+            <p class="confirm-dialog-eyebrow">AJUSTAR PREÇO</p>
+            <h2 id="editBillModalTitle">Alterar valor da conta</h2>
+            <p id="editBillModalSubtitle" class="confirm-dialog-message">Defina o novo valor para este mês ou atualize o valor padrão.</p>
+
+            <form id="editBillAmountForm" class="edit-bill-amount-form">
+                <input type="hidden" id="editBillId">
+                <input type="hidden" id="editBillMonth">
+
+                <div class="field" style="margin-bottom: 16px; text-align: left;">
+                    <label for="editBillNewAmount" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Novo valor (R$)</label>
+                    <input type="number" id="editBillNewAmount" step="0.01" min="0.01" required placeholder="0,00" class="field-input" style="font-size: 18px; font-weight: 700; height: 48px; padding: 0 14px; width: 100%; border-radius: 10px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: #fff;">
+                </div>
+
+                <div class="edit-amount-scope-options" style="text-align: left; margin-bottom: 18px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 12px;">
+                    <label class="scope-radio-label" style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin-bottom: 10px;">
+                        <input type="radio" name="editAmountScope" value="month" checked style="margin-top: 3px;">
+                        <div>
+                            <strong style="display: block; font-size: 13px; color: var(--text);">Alterar somente neste mês (<span id="editBillMonthLabel">mês atual</span>)</strong>
+                            <small style="font-size: 12px; color: var(--muted); display: block; margin-top: 2px;">Ideal para contas que variam todo mês (água, luz, gás, cartão).</small>
+                        </div>
+                    </label>
+
+                    <label class="scope-radio-label" style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin-bottom: 0;">
+                        <input type="radio" name="editAmountScope" value="all" style="margin-top: 3px;">
+                        <div>
+                            <strong style="display: block; font-size: 13px; color: var(--text);">Alterar valor padrão (todos os meses)</strong>
+                            <small style="font-size: 12px; color: var(--muted); display: block; margin-top: 2px;">Atualiza o valor base da assinatura/conta para sempre.</small>
+                        </div>
+                    </label>
+                </div>
+
+                <div style="text-align: left; margin-bottom: 18px;">
+                    <label class="recurring-checkbox-card" for="editBillSetVariable" style="padding: 10px 12px;">
+                        <input type="checkbox" id="editBillSetVariable" class="recurring-checkbox-native">
+                        <span class="recurring-checkbox-custom" aria-hidden="true"></span>
+                        <div class="recurring-checkbox-info">
+                            <span class="recurring-checkbox-title" style="font-size: 13px;">Conta com valor variável</span>
+                            <span class="recurring-checkbox-desc" style="font-size: 11.5px;">Destaca a conta com o selo de valor variável e facilita novos ajustes.</span>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="confirm-dialog-actions">
+                    <button type="button" id="editBillModalCancel" class="button button-secondary">Cancelar</button>
+                    <button type="submit" class="button button-primary">Salvar novo valor</button>
+                </div>
+            </form>
         </div>
     </div>
 
