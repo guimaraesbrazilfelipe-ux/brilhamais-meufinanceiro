@@ -57,8 +57,8 @@ a {
 }
 
 .sidebar {
-    width: 250px;
-    padding: 29px 18px 20px;
+    width: 255px;
+    padding: 24px 15px 20px;
     background: var(--sidebar);
     border-right: 1px solid var(--border);
     position: fixed;
@@ -66,6 +66,7 @@ a {
     display: flex;
     flex-direction: column;
     z-index: 10;
+    transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1), padding 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Elementos exclusivos de mobile ocultados no desktop */
@@ -77,17 +78,34 @@ a {
 }
 
 .sidebar-header {
-    display: contents;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 0 0 34px 2px;
+    min-height: 40px;
 }
 
 .brand {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 11px;
-    font-size: 18px;
+    gap: 9px;
+    font-size: 17.5px;
     font-weight: 800;
     letter-spacing: -.5px;
-    margin: 0 0 42px 5px;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    color: var(--text);
+    transition: opacity 0.2s ease;
+}
+
+.brand-text {
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity 0.2s ease, max-width 0.25s ease;
+    max-width: 155px;
 }
 
 .brand-icon {
@@ -98,7 +116,61 @@ a {
     place-items: center;
     background: var(--purple);
     color: white;
-    font-size: 23px;
+    font-size: 21px;
+    flex-shrink: 0;
+}
+
+/* Botão de minimizar/encolher sidebar desktop */
+.sidebar-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    flex-shrink: 0;
+    padding: 0;
+    outline: none;
+}
+
+.sidebar-toggle-btn:hover {
+    background: rgba(124, 93, 250, 0.22);
+    border-color: rgba(124, 93, 250, 0.5);
+    color: #ffffff;
+    transform: scale(1.06);
+}
+
+.sidebar-toggle-btn:active {
+    transform: scale(0.95);
+}
+
+.sidebar-toggle-lines {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 3.5px;
+    width: 16px;
+    height: 14px;
+}
+
+.sidebar-toggle-lines .line {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: currentColor;
+    border-radius: 2px;
+    transition: all 0.22s ease;
+}
+
+.sidebar-toggle-lines .line-2 {
+    width: 70%;
+    align-self: flex-start;
 }
 
 .brand-accent {
@@ -207,9 +279,158 @@ a {
 }
 
 .main-content {
-    margin-left: 250px;
+    margin-left: 255px;
     max-width: 1700px;
     padding: 34px clamp(20px, 4vw, 56px) 20px;
+    transition: margin-left 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ============================================================
+   ESTADO MINIMIZADO / ENCOLHIDO DA BARRA LATERAL (DESKTOP)
+   ============================================================ */
+@media (min-width: 651px) {
+    html.sidebar-collapsed .sidebar,
+    body.sidebar-collapsed .sidebar {
+        width: 74px !important;
+        padding: 24px 10px 18px !important;
+        align-items: center;
+    }
+
+    html.sidebar-collapsed .main-content,
+    body.sidebar-collapsed .main-content {
+        margin-left: 74px !important;
+    }
+
+    html.sidebar-collapsed .sidebar-header,
+    body.sidebar-collapsed .sidebar-header {
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 24px;
+        width: 100%;
+    }
+
+    html.sidebar-collapsed .brand,
+    body.sidebar-collapsed .brand {
+        margin: 0;
+        justify-content: center;
+    }
+
+    html.sidebar-collapsed .brand-text,
+    body.sidebar-collapsed .brand-text {
+        opacity: 0;
+        max-width: 0;
+        pointer-events: none;
+        overflow: hidden;
+        display: none;
+    }
+
+    html.sidebar-collapsed .sidebar-toggle-lines .line-2,
+    body.sidebar-collapsed .sidebar-toggle-lines .line-2 {
+        width: 100%;
+    }
+
+    html.sidebar-collapsed .sidebar-toggle-btn,
+    body.sidebar-collapsed .sidebar-toggle-btn {
+        background: rgba(124, 93, 250, 0.18);
+        border-color: rgba(124, 93, 250, 0.4);
+        color: #c4b5fd;
+    }
+
+    html.sidebar-collapsed .sidebar > .menu-label,
+    body.sidebar-collapsed .sidebar > .menu-label {
+        opacity: 0;
+        height: 0;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        pointer-events: none;
+    }
+
+    html.sidebar-collapsed .desktop-navigation,
+    body.sidebar-collapsed .desktop-navigation {
+        width: 100%;
+        gap: 8px;
+    }
+
+    html.sidebar-collapsed .desktop-navigation .nav-link,
+    body.sidebar-collapsed .desktop-navigation .nav-link {
+        justify-content: center;
+        padding: 10px 0;
+        width: 48px;
+        height: 44px;
+        margin: 0 auto;
+        position: relative;
+    }
+
+    html.sidebar-collapsed .desktop-navigation .nav-label,
+    body.sidebar-collapsed .desktop-navigation .nav-label {
+        opacity: 0;
+        max-width: 0;
+        display: none;
+    }
+
+    html.sidebar-collapsed .desktop-navigation .nav-icon,
+    body.sidebar-collapsed .desktop-navigation .nav-icon {
+        margin: 0;
+        font-size: 19px;
+    }
+
+    html.sidebar-collapsed .sidebar-bottom,
+    body.sidebar-collapsed .sidebar-bottom {
+        opacity: 0;
+        height: 0;
+        overflow: hidden;
+        margin: 0;
+        padding: 0;
+        pointer-events: none;
+    }
+
+    /* Tooltip flutuante elegante ao passar o mouse */
+    html.sidebar-collapsed .desktop-navigation .nav-link:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: calc(100% + 12px);
+        top: 50%;
+        transform: translateY(-50%);
+        background: #182338;
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+        padding: 6px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(124, 93, 250, 0.4);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+        pointer-events: none;
+        z-index: 1000;
+        animation: tooltipFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    html.sidebar-collapsed .desktop-navigation .nav-link:hover::before {
+        content: "";
+        position: absolute;
+        left: calc(100% + 6px);
+        top: 50%;
+        transform: translateY(-50%);
+        border-width: 5px 6px 5px 0;
+        border-style: solid;
+        border-color: transparent #182338 transparent transparent;
+        z-index: 1001;
+        pointer-events: none;
+    }
+}
+
+@keyframes tooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50%) translateX(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0);
+    }
 }
 
 .topbar,
@@ -2036,7 +2257,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     /* Oculta elementos internos da barra lateral desktop quando no topo do mobile */
     .sidebar .desktop-navigation,
     .sidebar > .menu-label,
-    .sidebar > .sidebar-bottom {
+    .sidebar > .sidebar-bottom,
+    .sidebar-toggle-btn {
         display: none !important;
     }
 

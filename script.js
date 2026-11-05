@@ -5764,6 +5764,72 @@ function setupMobileMenu() {
     }
 }
 
+function setupSidebarToggle() {
+    const toggleBtn = document.getElementById("sidebarToggleBtn");
+
+    function isCollapsed() {
+        return document.documentElement.classList.contains("sidebar-collapsed") ||
+               document.body.classList.contains("sidebar-collapsed");
+    }
+
+    function setSidebarCollapsed(collapsed) {
+        if (collapsed) {
+            document.documentElement.classList.add("sidebar-collapsed");
+            document.body.classList.add("sidebar-collapsed");
+            try {
+                localStorage.setItem("meuFinanceiro_sidebarCollapsed", "true");
+            } catch (err) {}
+            if (toggleBtn) {
+                toggleBtn.setAttribute("aria-label", "Expandir menu lateral");
+                toggleBtn.setAttribute("title", "Expandir menu lateral (Ctrl+B)");
+            }
+        } else {
+            document.documentElement.classList.remove("sidebar-collapsed");
+            document.body.classList.remove("sidebar-collapsed");
+            try {
+                localStorage.setItem("meuFinanceiro_sidebarCollapsed", "false");
+            } catch (err) {}
+            if (toggleBtn) {
+                toggleBtn.setAttribute("aria-label", "Minimizar menu lateral");
+                toggleBtn.setAttribute("title", "Minimizar menu lateral (Ctrl+B)");
+            }
+        }
+
+        setTimeout(() => {
+            window.dispatchEvent(new Event("resize"));
+        }, 290);
+    }
+
+    try {
+        const stored = localStorage.getItem("meuFinanceiro_sidebarCollapsed");
+        if (stored === "true") {
+            setSidebarCollapsed(true);
+        } else if (stored === "false") {
+            setSidebarCollapsed(false);
+        } else if (isCollapsed()) {
+            setSidebarCollapsed(true);
+        }
+    } catch (err) {}
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setSidebarCollapsed(!isCollapsed());
+        });
+    }
+
+    document.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b" && !e.altKey && !e.shiftKey) {
+            const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : "";
+            if (activeTag !== "input" && activeTag !== "textarea") {
+                e.preventDefault();
+                setSidebarCollapsed(!isCollapsed());
+            }
+        }
+    });
+}
+
 function setupModernValidation() {
     let activeTooltip = null;
     let hideTimer = null;
@@ -6086,6 +6152,7 @@ function init() {
 
     setupNavigation();
     setupMobileMenu();
+    setupSidebarToggle();
     setupPrivacyMode();
     setupCategoryPicker();
     setupDatePicker();

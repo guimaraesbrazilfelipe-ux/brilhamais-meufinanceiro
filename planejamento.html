@@ -9,6 +9,13 @@
 
     <link rel="stylesheet" href="style1.css">
     <link rel="manifest" href="manifest.json">
+    <script>
+        try {
+            if (localStorage.getItem("meuFinanceiro_sidebarCollapsed") === "true") {
+                document.documentElement.classList.add("sidebar-collapsed");
+            }
+        } catch (e) {}
+    </script>
     <script src="script.js" defer></script>
 </head>
 <body>
@@ -17,8 +24,15 @@
             <div class="sidebar-header">
                 <a href="index.html" class="brand">
                     <span class="brand-icon">₿</span>
-                    <span>Meu<span class="brand-accent">Financeiro</span></span>
+                    <span class="brand-text">Meu<span class="brand-accent">Financeiro</span></span>
                 </a>
+                <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="Minimizar menu lateral" title="Minimizar menu lateral (Ctrl+B)">
+                    <span class="sidebar-toggle-lines" aria-hidden="true">
+                        <span class="line line-1"></span>
+                        <span class="line line-2"></span>
+                        <span class="line line-3"></span>
+                    </span>
+                </button>
                 <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="mobileMenuDrawer">
                     <span class="hamburger-icon" aria-hidden="true">
                         <span></span>
@@ -32,15 +46,15 @@
             <p class="menu-label">MENU PRINCIPAL</p>
 
             <nav class="navigation desktop-navigation">
-                <a href="index.html" class="nav-link"><span class="nav-icon">▦</span><span class="nav-label">Visão geral</span></a>
-                <a href="lancamentos.html" class="nav-link"><span class="nav-icon">＋</span><span class="nav-label">Novo lançamento</span></a>
-                <a href="contas-fixas.html" class="nav-link"><span class="nav-icon">⟳</span><span class="nav-label">Contas fixas</span></a>
-                <a href="agenda.html" class="nav-link"><span class="nav-icon">◫</span><span class="nav-label">Agenda</span></a>
-                <a href="relatorios.html" class="nav-link"><span class="nav-icon">▥</span><span class="nav-label">Relatórios</span></a>
-                <a href="historico.html" class="nav-link"><span class="nav-icon">◷</span><span class="nav-label">Histórico</span></a>
-                <a href="planejamento.html" class="nav-link active"><span class="nav-icon">◎</span><span class="nav-label">Planejamento</span></a>
-                <a href="configuracoes.html" class="nav-link"><span class="nav-icon">⚙</span><span class="nav-label">Configurações</span></a>
-                <a href="index.html?tutorial=true&returnUrl=planejamento.html" class="nav-link nav-link-tutorial"><span class="nav-icon">ⓘ</span><span class="nav-label">Como usar</span></a>
+                <a href="index.html" class="nav-link" data-tooltip="Visão geral"><span class="nav-icon">▦</span><span class="nav-label">Visão geral</span></a>
+                <a href="lancamentos.html" class="nav-link" data-tooltip="Novo lançamento"><span class="nav-icon">＋</span><span class="nav-label">Novo lançamento</span></a>
+                <a href="contas-fixas.html" class="nav-link" data-tooltip="Contas fixas"><span class="nav-icon">⟳</span><span class="nav-label">Contas fixas</span></a>
+                <a href="agenda.html" class="nav-link" data-tooltip="Agenda"><span class="nav-icon">◫</span><span class="nav-label">Agenda</span></a>
+                <a href="relatorios.html" class="nav-link" data-tooltip="Relatórios"><span class="nav-icon">▥</span><span class="nav-label">Relatórios</span></a>
+                <a href="historico.html" class="nav-link" data-tooltip="Histórico"><span class="nav-icon">◷</span><span class="nav-label">Histórico</span></a>
+                <a href="planejamento.html" class="nav-link active" data-tooltip="Planejamento"><span class="nav-icon">◎</span><span class="nav-label">Planejamento</span></a>
+                <a href="configuracoes.html" class="nav-link" data-tooltip="Configurações"><span class="nav-icon">⚙</span><span class="nav-label">Configurações</span></a>
+                <a href="index.html?tutorial=true&returnUrl=planejamento.html" class="nav-link nav-link-tutorial" data-tooltip="Como usar"><span class="nav-icon">ⓘ</span><span class="nav-label">Como usar</span></a>
             </nav>
 
             <div class="sidebar-bottom">
