@@ -2345,7 +2345,7 @@ function renderRecurringBills() {
                                 <div class="recurring-card-amount">
                                     <div class="amount-val-wrapper">
                                         <strong class="amount-val">${money(billAmount)}</strong>
-                                        <button type="button" class="btn-edit-bill-amount" data-action="edit-bill-amount" data-id="${bill.id}" title="Alterar valor desta conta neste mês (${formatMonthName(month)})" aria-label="Alterar valor de ${escapeHTML(bill.name)}">
+                                        <button type="button" class="btn-edit-bill-amount btn-edit-pill" data-action="edit-bill-amount" data-id="${bill.id}" title="Alterar valor desta conta neste mês (${formatMonthName(month)})" aria-label="Alterar valor de ${escapeHTML(bill.name)}">
                                             ✏️
                                         </button>
                                     </div>
@@ -2468,15 +2468,15 @@ function renderRecurringRowsList() {
                     </div>
 
                     <div class="transaction-right">
-                        <div class="transaction-amount expense-text" style="font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-                            <span>−${money(billAmount)}</span>
-                            <button type="button" class="btn-edit-bill-amount btn-edit-pill" data-action="edit-bill-amount" data-id="${bill.id}" title="Alterar valor desta conta neste mês (${formatMonthName(month)})" aria-label="Alterar valor">
+                        <div class="recurring-amount-group">
+                            ${bill.isVariable ? `<span class="recurring-variable-badge" title="Conta com valor variável todo mês">⚡ Variável</span>` : ""}
+                            <span class="recurring-amount-val expense-text">−${money(billAmount)}</span>
+                            <button type="button" class="btn-edit-bill-amount btn-edit-pill" data-action="edit-bill-amount" data-id="${bill.id}" title="Alterar valor desta conta neste mês (${formatMonthName(month)})" aria-label="Alterar valor de ${escapeHTML(bill.name)}">
                                 ✏️
                             </button>
                         </div>
-                        ${bill.isVariable ? `<div style="text-align: right; margin-top: 2px;"><span class="recurring-variable-badge" style="font-size: 9px; padding: 1px 5px;">⚡ Variável</span></div>` : ""}
 
-                        <div class="transaction-actions" style="margin-top: 5px;">
+                        <div class="recurring-actions-group transaction-actions">
                             ${statusInfo.isPaid ? `
                                 <button
                                     type="button"
