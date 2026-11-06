@@ -2339,17 +2339,12 @@ function renderRecurringBills() {
                                             <span class="recurring-cat-tag">${icon} ${escapeHTML(bill.category)}</span>
                                             <span class="recurring-dot" aria-hidden="true">•</span>
                                             <span class="recurring-freq-tag">${freqName}</span>
+                                            ${bill.isVariable ? `<span class="recurring-variable-badge" title="Conta com valor variável todo mês">⚡ Variável</span>` : ""}
                                         </div>
                                     </div>
                                 </div>
                                 <div class="recurring-card-amount">
-                                    <div class="amount-val-wrapper">
-                                        <strong class="amount-val">${money(billAmount)}</strong>
-                                        <button type="button" class="btn-edit-bill-amount btn-edit-pill" data-action="edit-bill-amount" data-id="${bill.id}" title="Alterar valor desta conta neste mês (${formatMonthName(month)})" aria-label="Alterar valor de ${escapeHTML(bill.name)}">
-                                            ✏️
-                                        </button>
-                                    </div>
-                                    ${bill.isVariable ? `<span class="recurring-variable-badge" title="Conta com valor variável todo mês">⚡ Valor variável</span>` : ""}
+                                    <strong class="amount-val">${money(billAmount)}</strong>
                                 </div>
                             </div>
 
@@ -2381,12 +2376,14 @@ function renderRecurringBills() {
                                         ✓ Marcar como paga
                                     </button>
                                 `}
-                                <button type="button" class="btn-edit-bill-amount btn-edit-pill" data-action="edit-bill-amount" data-id="${bill.id}" title="Alterar valor de ${escapeHTML(bill.name)}" aria-label="Alterar valor">
-                                    ✏️
-                                </button>
-                                <button type="button" class="btn-delete-recurring btn-delete-pill" data-action="delete-recurring" data-id="${bill.id}" title="Excluir conta fixa" aria-label="Excluir conta fixa">
-                                    🗑️
-                                </button>
+                                <div class="recurring-card-footer-actions">
+                                    <button type="button" class="btn-edit-bill-amount btn-action-pill" data-action="edit-bill-amount" data-id="${bill.id}" title="Alterar valor de ${escapeHTML(bill.name)}" aria-label="Alterar valor">
+                                        ✏️
+                                    </button>
+                                    <button type="button" class="btn-delete-recurring btn-action-pill" data-action="delete-recurring" data-id="${bill.id}" title="Excluir conta fixa" aria-label="Excluir conta fixa">
+                                        🗑️
+                                    </button>
+                                </div>
                             </div>
                         </article>
                     `;
