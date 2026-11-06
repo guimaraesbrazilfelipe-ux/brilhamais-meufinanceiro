@@ -3131,8 +3131,275 @@ function initSingleDatePicker(container) {
 }
 
 /* =========================================
-   AGENDA FINANCEIRA NO ESTILO GOOGLE AGENDAS
+   SELETOR DE HORÁRIO MODERNO (CUSTOM TIMEPICKER)
 ========================================= */
+
+function getTimePeriodInfo(hourStr, minuteStr) {
+    const h = parseInt(hourStr, 10) || 0;
+    const m = parseInt(minuteStr, 10) || 0;
+    if (h >= 0 && h < 6) return { icon: "🌙", label: "Madrugada" };
+    if (h >= 6 && h < 12) return { icon: "☀️", label: "Manhã" };
+    if (h === 12 && m === 0) return { icon: "🕛", label: "Meio-dia" };
+    if (h >= 12 && h < 18) return { icon: "☕", label: "Tarde" };
+    return { icon: "🌙", label: "Noite" };
+}
+
+function initSingleTimePicker(container) {
+    if (container._tpInitialized) {
+        if (container._syncTimePicker) container._syncTimePicker();
+        return;
+    }
+    container._tpInitialized = true;
+
+    const input = container.querySelector(".timepicker-native-input") || container.querySelector("input[type='time']");
+    const trigger = container.querySelector(".timepicker-trigger");
+    const timeDisplay = container.querySelector(".timepicker-time-display");
+    const periodTag = container.querySelector(".timepicker-period-tag");
+    const backdrop = container.querySelector(".timepicker-backdrop");
+    const popover = container.querySelector(".timepicker-popover");
+    const btnClose = container.querySelector(".tp-btn-close");
+    const hourBtn = container.querySelector(".tp-hour-btn");
+    const minuteBtn = container.querySelector(".tp-minute-btn");
+    const hourText = container.querySelector(".tp-hour-text");
+    const minuteText = container.querySelector(".tp-minute-text");
+    const previewPeriod = container.querySelector(".tp-preview-period");
+    const hoursList = container.querySelector(".tp-hours-list");
+    const minutesList = container.querySelector(".tp-minutes-list");
+    const btnNow = container.querySelector(".tp-btn-now");
+    const btnConfirm = container.querySelector(".tp-btn-confirm");
+    const presetChips = container.querySelectorAll(".tp-preset-chip");
+
+    if (!input || !trigger || !popover) return;
+
+    let currentHour = "12";
+    let currentMinute = "00";
+
+    function parseTime() {
+        const val = String(input.value || "12:00").trim();
+        const parts = val.split(":");
+        let h = parts[0] ? String(parseInt(parts[0], 10)).padStart(2, "0") : "12";
+        let m = parts[1] ? String(parseInt(parts[1], 10)).padStart(2, "0") : "00";
+        if (parseInt(h, 10) < 0 || parseInt(h, 10) > 23) h = "12";
+        if (parseInt(m, 10) < 0 || parseInt(m, 10) > 59) m = "00";
+        currentHour = h;
+        currentMinute = m;
+    }
+
+    function renderOptions() {
+        if (hoursList && !hoursList.children.length) {
+            let hHtml = "";
+            for (let i = 0; i < 24; i++) {
+                const s = String(i).padStart(2, "0");
+                hHtml += `<button type="button" class="tp-item-btn tp-hour-item" data-hour="${s}">${s}</button>`;
+            }
+            hoursList.innerHTML = hHtml;
+        }
+
+        if (minutesList && !minutesList.children.length) {
+            let mHtml = "";
+            for (let i = 0; i < 60; i++) {
+                const s = String(i).padStart(2, "0");
+                mHtml += `<button type="button" class="tp-item-btn tp-minute-item" data-minute="${s}">${s}</button>`;
+            }
+            minutesList.innerHTML = mHtml;
+        }
+    }
+
+    function updateUI(syncInput = true) {
+        const timeStr = `${currentHour}:${currentMinute}`;
+        const period = getTimePeriodInfo(currentHour, currentMinute);
+
+        if (timeDisplay) timeDisplay.textContent = timeStr;
+        if (periodTag) periodTag.textContent = `${period.icon} ${period.label}`;
+        if (hourText) hourText.textContent = currentHour;
+        if (minuteText) minuteText.textContent = currentMinute;
+        if (previewPeriod) previewPeriod.textContent = `${period.icon} ${period.label}`;
+
+        if (hoursList) {
+            hoursList.querySelectorAll(".tp-hour-item").forEach((btn) => {
+                const isSel = btn.dataset.hour === currentHour;
+                btn.classList.toggle("selected", isSel);
+            });
+        }
+
+        if (minutesList) {
+            minutesList.querySelectorAll(".tp-minute-item").forEach((btn) => {
+                const isSel = btn.dataset.minute === currentMinute;
+                btn.classList.toggle("selected", isSel);
+            });
+        }
+
+        if (syncInput && input.value !== timeStr) {
+            input.value = timeStr;
+            input.dispatchEvent(new Event("change", { bubbles: true }));
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+    }
+
+    function openPopover() {
+        parseTime();
+        renderOptions();
+        updateUI(false);
+        popover.classList.remove("hidden");
+        if (backdrop) backdrop.classList.remove("hidden");
+        trigger.classList.add("is-open");
+        trigger.setAttribute("aria-expanded", "true");
+
+        setTimeout(() => {
+            const selH = hoursList ? hoursList.querySelector(".tp-hour-item.selected") : null;
+            if (selH) selH.scrollIntoView({ block: "center" });
+            const selM = minutesList ? minutesList.querySelector(".tp-minute-item.selected") : null;
+            if (selM) selM.scrollIntoView({ block: "center" });
+        }, 50);
+    }
+
+    function closePopover() {
+        popover.classList.add("hidden");
+        if (backdrop) backdrop.classList.add("hidden");
+        trigger.classList.remove("is-open");
+        trigger.setAttribute("aria-expanded", "false");
+    }
+
+    renderOptions();
+    parseTime();
+    updateUI(false);
+
+    trigger.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (popover.classList.contains("hidden")) {
+            openPopover();
+        } else {
+            closePopover();
+        }
+    });
+
+    if (backdrop) {
+        backdrop.addEventListener("click", closePopover);
+    }
+
+    if (btnClose) {
+        btnClose.addEventListener("click", closePopover);
+    }
+
+    if (btnConfirm) {
+        btnConfirm.addEventListener("click", (e) => {
+            e.preventDefault();
+            updateUI(true);
+            closePopover();
+        });
+    }
+
+    if (btnNow) {
+        btnNow.addEventListener("click", (e) => {
+            e.preventDefault();
+            const now = new Date();
+            currentHour = String(now.getHours()).padStart(2, "0");
+            currentMinute = String(now.getMinutes()).padStart(2, "0");
+            updateUI(true);
+        });
+    }
+
+    presetChips.forEach((chip) => {
+        chip.addEventListener("click", (e) => {
+            e.preventDefault();
+            const val = chip.dataset.time;
+            if (val === "now") {
+                const now = new Date();
+                currentHour = String(now.getHours()).padStart(2, "0");
+                currentMinute = String(now.getMinutes()).padStart(2, "0");
+            } else if (val) {
+                const parts = val.split(":");
+                currentHour = parts[0];
+                currentMinute = parts[1];
+            }
+            updateUI(true);
+        });
+    });
+
+    if (hoursList) {
+        hoursList.addEventListener("click", (e) => {
+            const btn = e.target.closest(".tp-hour-item");
+            if (!btn) return;
+            currentHour = btn.dataset.hour;
+            updateUI(true);
+        });
+    }
+
+    if (minutesList) {
+        minutesList.addEventListener("click", (e) => {
+            const btn = e.target.closest(".tp-minute-item");
+            if (!btn) return;
+            currentMinute = btn.dataset.minute;
+            updateUI(true);
+        });
+    }
+
+    if (hourBtn) {
+        hourBtn.addEventListener("click", () => {
+            hourBtn.classList.add("active");
+            if (minuteBtn) minuteBtn.classList.remove("active");
+            if (hoursList) {
+                const sel = hoursList.querySelector(".tp-hour-item.selected");
+                if (sel) sel.scrollIntoView({ block: "center", behavior: "smooth" });
+            }
+        });
+    }
+
+    if (minuteBtn) {
+        minuteBtn.addEventListener("click", () => {
+            minuteBtn.classList.add("active");
+            if (hourBtn) hourBtn.classList.remove("active");
+            if (minutesList) {
+                const sel = minutesList.querySelector(".tp-minute-item.selected");
+                if (sel) sel.scrollIntoView({ block: "center", behavior: "smooth" });
+            }
+        });
+    }
+
+    // Intercept native input value changes so UI automatically reflects external changes
+    const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+    if (descriptor && descriptor.set) {
+        const originalSet = descriptor.set;
+        Object.defineProperty(input, "value", {
+            get() {
+                return descriptor.get.call(this);
+            },
+            set(val) {
+                originalSet.call(this, val);
+                parseTime();
+                updateUI(false);
+            }
+        });
+    }
+
+    input.addEventListener("change", () => {
+        parseTime();
+        updateUI(false);
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && !popover.classList.contains("hidden")) {
+            closePopover();
+        }
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!popover.classList.contains("hidden") && !container.contains(e.target)) {
+            closePopover();
+        }
+    });
+
+    container._syncTimePicker = () => {
+        parseTime();
+        updateUI(false);
+    };
+}
+
+function setupTimePickers() {
+    const containers = document.querySelectorAll(".custom-timepicker");
+    containers.forEach((c) => initSingleTimePicker(c));
+}
 
 let agendaSelectedDate = todayISO();
 let agendaCurrentView = "month"; // "month" | "week" | "day" | "schedule"
@@ -6565,6 +6832,7 @@ function init() {
     setupPrivacyMode();
     setupCategoryPicker();
     setupDatePicker();
+    setupTimePickers();
     setupAgenda();
     setupHistoricalReports();
     setupRecurringBills();
@@ -7526,3 +7794,4 @@ function setupQuickStartWizard() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+

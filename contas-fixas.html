@@ -231,8 +231,65 @@
                             </div>
                         </div>
                         <div class="field">
-                            <label for="recurringTime">Horário da assinatura</label>
-                            <input type="time" id="recurringTime" class="field-time-input" value="12:00" required aria-label="Horário exato em que assinou">
+                            <label for="recurringTimePickerButton">Horário da assinatura</label>
+                            <div class="custom-timepicker" id="recurringTimePickerContainer">
+                                <input type="time" id="recurringTime" class="field-time-input timepicker-native-input" value="12:00" required aria-label="Horário exato em que assinou">
+        
+                                <button type="button" id="recurringTimePickerButton" class="timepicker-trigger" aria-haspopup="dialog" aria-expanded="false">
+                                    <span class="timepicker-left">
+                                        <span class="timepicker-icon-badge">⏰</span>
+                                        <span class="timepicker-time-display">12:00</span>
+                                        <span class="timepicker-period-tag" id="recurringTimePeriodTag">☀️ Meio-dia</span>
+                                    </span>
+                                    <span class="timepicker-chevron" aria-hidden="true">▾</span>
+                                </button>
+        
+                                <div class="timepicker-backdrop hidden"></div>
+        
+                                <div class="timepicker-popover hidden" id="recurringTimePopover" role="dialog" aria-modal="true" aria-label="Selecionar horário da assinatura">
+                                    <div class="tp-header">
+                                        <div class="tp-title-box">
+                                            <span class="tp-clock-icon">⏰</span>
+                                            <span class="tp-title">Horário da assinatura</span>
+                                        </div>
+                                        <button type="button" class="tp-btn-close" aria-label="Fechar">✕</button>
+                                    </div>
+        
+                                    <div class="tp-preview-card">
+                                        <div class="tp-preview-digits">
+                                            <button type="button" class="tp-digit-btn tp-hour-btn active" title="Selecionar hora"><span class="tp-hour-text">12</span><small>h</small></button>
+                                            <span class="tp-preview-colon">:</span>
+                                            <button type="button" class="tp-digit-btn tp-minute-btn" title="Selecionar minuto"><span class="tp-minute-text">00</span><small>m</small></button>
+                                        </div>
+                                        <div class="tp-preview-period">☀️ Meio-dia</div>
+                                    </div>
+        
+                                    <div class="tp-presets-bar">
+                                        <button type="button" class="tp-preset-chip" data-time="now">⚡ Agora</button>
+                                        <button type="button" class="tp-preset-chip" data-time="08:00">☀️ 08:00</button>
+                                        <button type="button" class="tp-preset-chip" data-time="12:00">🕛 12:00</button>
+                                        <button type="button" class="tp-preset-chip" data-time="15:00">☕ 15:00</button>
+                                        <button type="button" class="tp-preset-chip" data-time="20:00">🌙 20:00</button>
+                                    </div>
+        
+                                    <div class="tp-selector-grid">
+                                        <div class="tp-column tp-column-hours">
+                                            <div class="tp-column-header">HORA</div>
+                                            <div class="tp-scroll-list tp-hours-list"></div>
+                                        </div>
+                                        <div class="tp-column-separator"></div>
+                                        <div class="tp-column tp-column-minutes">
+                                            <div class="tp-column-header">MINUTO</div>
+                                            <div class="tp-scroll-list tp-minutes-list"></div>
+                                        </div>
+                                    </div>
+        
+                                    <div class="tp-footer">
+                                        <button type="button" class="button button-secondary tp-btn-now" style="font-size: 11.5px; padding: 6px 12px;">⏰ Agora</button>
+                                        <button type="button" class="button button-primary tp-btn-confirm" style="font-size: 11.5px; padding: 6px 16px;">Confirmar ✓</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="field">
                             <label for="recurringFrequencyPickerButton">Frequência</label>

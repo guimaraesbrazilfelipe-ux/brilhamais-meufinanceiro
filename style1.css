@@ -5566,6 +5566,446 @@ body.privacy-mode .breakdown-val {
     opacity: 1;
 }
 
+/* ============================================================
+   SELETOR DE HORÁRIO MODERNO (CUSTOM TIMEPICKER)
+   ============================================================ */
+
+.custom-timepicker {
+    position: relative;
+    width: 100%;
+}
+
+.custom-timepicker .timepicker-native-input {
+    position: absolute !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    pointer-events: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    clip: rect(0 0 0 0) !important;
+    clip-path: inset(50%) !important;
+}
+
+.timepicker-trigger {
+    width: 100%;
+    height: 42px;
+    min-height: 42px;
+    max-height: 42px;
+    padding: 0 12px;
+    border-radius: 9px;
+    font-size: 13px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #182438;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    outline: none;
+}
+
+.timepicker-trigger:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(124, 93, 250, 0.45);
+    transform: translateY(-1px);
+}
+
+.timepicker-trigger:focus-visible,
+.timepicker-trigger.is-open {
+    border-color: var(--purple, #7c5dfa);
+    box-shadow: 0 0 0 3px rgba(124, 93, 250, 0.25);
+}
+
+.timepicker-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.timepicker-icon-badge {
+    font-size: 13.5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: rgba(124, 93, 250, 0.15);
+    color: #a78bfa;
+    flex-shrink: 0;
+}
+
+.timepicker-time-display {
+    font-size: 14px;
+    font-weight: 700;
+    color: #f8fafc;
+    letter-spacing: 0.03em;
+    font-variant-numeric: tabular-nums;
+}
+
+.timepicker-period-tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    color: var(--muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+}
+
+.timepicker-chevron {
+    font-size: 11px;
+    color: var(--muted);
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.timepicker-trigger.is-open .timepicker-chevron {
+    transform: rotate(180deg);
+    color: #a78bfa;
+}
+
+/* Backdrop para fechar o timepicker */
+.timepicker-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: transparent;
+}
+
+/* Popover Flutuante do Seletor de Horário */
+.timepicker-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 320px;
+    max-width: calc(100vw - 32px);
+    z-index: 10001;
+    background: linear-gradient(180deg, #182338 0%, #101827 100%);
+    border: 1px solid rgba(124, 93, 250, 0.35);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+    animation: tpFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+}
+
+@keyframes tpFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.tp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.tp-title-box {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.tp-clock-icon {
+    font-size: 15px;
+}
+
+.tp-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #e2e8f0;
+}
+
+.tp-btn-close {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    line-height: 1;
+    transition: all 0.15s ease;
+}
+
+.tp-btn-close:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Cartão de visualização do horário selecionado */
+.tp-preview-card {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.tp-preview-digits {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-variant-numeric: tabular-nums;
+}
+
+.tp-digit-btn {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 4px 8px;
+    color: #f8fafc;
+    font-size: 20px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 2px;
+    transition: all 0.15s ease;
+    line-height: 1;
+}
+
+.tp-digit-btn small {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.tp-digit-btn:hover {
+    background: rgba(124, 93, 250, 0.15);
+    border-color: rgba(124, 93, 250, 0.35);
+}
+
+.tp-digit-btn.active {
+    background: rgba(124, 93, 250, 0.25);
+    border-color: rgba(124, 93, 250, 0.6);
+    color: #c4b5fd;
+    box-shadow: 0 0 12px rgba(124, 93, 250, 0.35);
+}
+
+.tp-digit-btn.active small {
+    color: #a78bfa;
+}
+
+.tp-preview-colon {
+    font-size: 20px;
+    font-weight: 800;
+    color: #94a3b8;
+    line-height: 1;
+}
+
+.tp-preview-period {
+    font-size: 11px;
+    font-weight: 600;
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+/* Barra de atalhos rápidos (Presets) */
+.tp-presets-bar {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    margin-bottom: 12px;
+    scrollbar-width: none;
+}
+
+.tp-presets-bar::-webkit-scrollbar {
+    display: none;
+}
+
+.tp-preset-chip {
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.tp-preset-chip:hover {
+    background: rgba(124, 93, 250, 0.2);
+    border-color: rgba(124, 93, 250, 0.45);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.tp-preset-chip:active {
+    transform: translateY(0);
+}
+
+/* Grade de rolagem de Horas e Minutos */
+.tp-selector-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 8px;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 10px;
+}
+
+.tp-column {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.tp-column-header {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-align: center;
+    margin-bottom: 6px;
+}
+
+.tp-column-separator {
+    width: 1px;
+    height: 140px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.tp-scroll-list {
+    height: 156px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 2px 4px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(124, 93, 250, 0.35) transparent;
+}
+
+.tp-scroll-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.tp-scroll-list::-webkit-scrollbar-thumb {
+    background: rgba(124, 93, 250, 0.35);
+    border-radius: 4px;
+}
+
+.tp-item-btn {
+    height: 30px;
+    min-height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.12s ease;
+    user-select: none;
+}
+
+.tp-item-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #f8fafc;
+}
+
+.tp-item-btn.selected {
+    background: linear-gradient(135deg, #7c5dfa 0%, #6366f1 100%) !important;
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 4px 12px rgba(124, 93, 250, 0.4) !important;
+}
+
+/* Rodapé com Ações */
+.tp-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* Responsividade Mobile para o Timepicker */
+@media (max-width: 600px) {
+    .timepicker-backdrop {
+        background: rgba(7, 11, 18, 0.75);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
+    .timepicker-popover {
+        position: fixed !important;
+        inset: auto 0 0 0 !important;
+        top: auto !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 20px 20px 0 0 !important;
+        border-bottom: none !important;
+        padding: 20px 18px max(20px, env(safe-area-inset-bottom)) !important;
+        animation: tpSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        z-index: 10001 !important;
+    }
+
+    @keyframes tpSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(100%);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .tp-scroll-list {
+        height: 180px;
+    }
+
+    .tp-item-btn {
+        height: 34px;
+        min-height: 34px;
+        font-size: 14px;
+    }
+}
+
 .recurring-form-grid .datepicker-trigger {
     justify-content: space-between;
 }
