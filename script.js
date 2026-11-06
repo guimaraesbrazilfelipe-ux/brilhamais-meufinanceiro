@@ -232,10 +232,20 @@ function defaultData() {
     return {
         transactions: [],
         salaries: {},
-        salaryConfig: { amount: 0, grossAmount: 0, benefitsAmount: 0, date: "", day: 5, autoDeposit: true },
+        salaryConfig: {
+            amount: 0,
+            grossAmount: 0,
+            benefitsAmount: 0,
+            date: "",
+            day: 5,
+            autoDeposit: true,
+            has13th: false,
+            thirteenthAmount: 0
+        },
         budgets: {},
         goals: {},
-        recurringBills: []
+        recurringBills: [],
+        isDemoData: false
     };
 }
 
@@ -262,10 +272,13 @@ function loadData() {
                 benefitsAmount: Number(data.salaryConfig?.benefitsAmount || 0),
                 date: data.salaryConfig?.date || "",
                 day: Number(data.salaryConfig?.day || 5),
-                autoDeposit: data.salaryConfig?.autoDeposit !== false
+                autoDeposit: data.salaryConfig?.autoDeposit !== false,
+                has13th: Boolean(data.salaryConfig?.has13th),
+                thirteenthAmount: Number(data.salaryConfig?.thirteenthAmount || 0)
             },
             budgets: data.budgets || {},
             goals: data.goals || {},
+            isDemoData: Boolean(data.isDemoData),
             recurringBills: (Array.isArray(data.recurringBills) ? data.recurringBills : []).map((b) => ({
                 ...b,
                 isVariable: Boolean(b.isVariable),
@@ -306,16 +319,25 @@ function saveData() {
 }
 
 function getSalaryForMonth(monthStr) {
+    let baseSalary = 0;
     if (data.salaries && data.salaries[monthStr] !== undefined && Number(data.salaries[monthStr]) > 0) {
-        return Number(data.salaries[monthStr]);
-    }
-    if (data.salaryConfig && Number(data.salaryConfig.amount) > 0) {
+        baseSalary = Number(data.salaries[monthStr]);
+    } else if (data.salaryConfig && Number(data.salaryConfig.amount) > 0) {
         const startMonth = (data.salaryConfig.date || "").slice(0, 7);
         if (!startMonth || monthStr >= startMonth) {
-            return Number(data.salaryConfig.amount);
+            baseSalary = Number(data.salaryConfig.amount);
         }
     }
-    return 0;
+
+    // 13º Salário automático em Dezembro se configurado
+    if (data.salaryConfig && data.salaryConfig.has13th) {
+        const thirteenth = Number(data.salaryConfig.thirteenthAmount || data.salaryConfig.amount || 0);
+        if (monthStr && monthStr.endsWith("-12") && thirteenth > 0) {
+            baseSalary += thirteenth;
+        }
+    }
+
+    return baseSalary;
 }
 
 function getSalaryNextDepositCalculation(previewAmount = null, previewDate = null) {
@@ -541,7 +563,22 @@ function getPeriodSummary(periodType = "month", value = null) {
 
     const expenses = manualExpenses + paidRecurringTotal;
     const balance = income - expenses;
+    const pendingRecurringExpenses = Math.max(0, allRecurringTotal - paidRecurringTotal);
+    const projectedBalance = balance - pendingRecurringExpenses;
     const savingsRate = income > 0 ? (balance / income) * 100 : 0;
+    const projectedSavingsRate = income > 0 ? (projectedBalance / income) * 100 : 0;
+
+    let periodGoalTotal = 0;
+    if (periodType === "year") {
+        const targetYear = String(value || (currentD ? currentD.slice(0, 4) : new Date().getFullYear()));
+        for (let mon = 1; mon <= 12; mon++) {
+            const mStr = `${targetYear}-${String(mon).padStart(2, "0")}`;
+            periodGoalTotal += Number(data.goals[mStr] || 0);
+        }
+    } else if (periodType === "month") {
+        periodGoalTotal = Number(data.goals[value || selectedMonth()] || 0);
+    }
+    const projectedFreeBalance = projectedBalance - periodGoalTotal;
 
     return {
         salary: effectiveSalary,
@@ -550,10 +587,14 @@ function getPeriodSummary(periodType = "month", value = null) {
         manualExpenses,
         paidRecurringExpenses: paidRecurringTotal,
         allRecurringExpenses: allRecurringTotal,
-        pendingRecurringExpenses: Math.max(0, allRecurringTotal - paidRecurringTotal),
+        pendingRecurringExpenses,
         expenses,
         balance,
+        projectedBalance,
         savingsRate,
+        projectedSavingsRate,
+        yearGoalTotal: periodGoalTotal,
+        projectedFreeBalance,
         transactions
     };
 }
@@ -601,6 +642,12 @@ function getMonthlySummary(month) {
 
     const expenses = manualExpenses + paidRecurringTotal;
     const balance = income - expenses;
+    const pendingRecurringExpenses = Math.max(0, allRecurringTotal - paidRecurringTotal);
+    const projectedBalance = balance - pendingRecurringExpenses;
+    const savingsRate = income > 0 ? (balance / income) * 100 : 0;
+    const projectedSavingsRate = income > 0 ? (projectedBalance / income) * 100 : 0;
+    const monthGoal = Number(data.goals[month] || 0);
+    const projectedFreeBalance = projectedBalance - monthGoal;
 
     return {
         salary: effectiveSalary,
@@ -609,10 +656,14 @@ function getMonthlySummary(month) {
         manualExpenses,
         paidRecurringExpenses: paidRecurringTotal,
         allRecurringExpenses: allRecurringTotal,
-        pendingRecurringExpenses: Math.max(0, allRecurringTotal - paidRecurringTotal),
+        pendingRecurringExpenses,
         expenses,
         balance,
-        savingsRate: income > 0 ? (balance / income) * 100 : 0,
+        projectedBalance,
+        savingsRate,
+        projectedSavingsRate,
+        yearGoalTotal: monthGoal,
+        projectedFreeBalance,
         transactions
     };
 }
@@ -678,7 +729,7 @@ function renderSummary() {
     renderDashboardBudgetBreakdown(summary, m);
 }
 
-function renderContextualInsight(summary, m) {
+function renderContextualInsight(summary, m, periodOptions = null) {
     const container = $("#contextInsightCard");
     if (!container) return;
 
@@ -686,6 +737,15 @@ function renderContextualInsight(summary, m) {
     const expenses = Number(summary.expenses || 0);
     const balance = Number(summary.balance || 0);
     const savingsRate = Number(summary.savingsRate || 0);
+    const pendingBills = Number(summary.pendingRecurringExpenses || 0);
+    const projBal = Number(summary.projectedBalance !== undefined ? summary.projectedBalance : balance);
+    const projRate = Number(summary.projectedSavingsRate !== undefined ? summary.projectedSavingsRate : savingsRate);
+
+    const isYear = periodOptions && (periodOptions.mode === "this_year" || periodOptions.mode === "last_2_years");
+    const isWeek = periodOptions && periodOptions.mode === "this_week";
+    const periodName = isYear
+        ? `no período (${periodOptions.label})`
+        : (isWeek ? "nesta semana" : `neste mês (${monthLabel(m)})`);
 
     let messageHtml = "";
     let actionsHtml = "";
@@ -697,8 +757,8 @@ function renderContextualInsight(summary, m) {
             <div class="insight-msg">
                 <span class="insight-icon">👋</span>
                 <div>
-                    <strong>Comece seu planejamento para ${monthLabel(m)}</strong>
-                    <p>Ainda não há receitas ou despesas cadastradas para este mês. Cadastre sua renda líquida e primeiras contas para calcular o saldo previsto.</p>
+                    <strong>Comece seu planejamento para ${isYear ? periodOptions.label : monthLabel(m)}</strong>
+                    <p>Ainda não há receitas ou despesas cadastradas para este período. Cadastre sua renda líquida e primeiras contas para calcular o saldo previsto.</p>
                 </div>
             </div>
         `;
@@ -713,8 +773,8 @@ function renderContextualInsight(summary, m) {
             <div class="insight-msg">
                 <span class="insight-icon">ℹ️</span>
                 <div>
-                    <strong>Resultado parcial do mês</strong>
-                    <p>Seus gastos cadastrados somam <strong>${money(expenses)}</strong>, mas nenhuma renda líquida foi cadastrada para este mês. Cadastre sua renda para saber seu saldo real.</p>
+                    <strong>Resultado parcial ${periodName}</strong>
+                    <p>Seus gastos cadastrados somam <strong>${money(expenses)}</strong>, mas nenhuma renda líquida foi cadastrada para este período. Cadastre sua renda para saber seu saldo real.</p>
                 </div>
             </div>
         `;
@@ -722,14 +782,30 @@ function renderContextualInsight(summary, m) {
             <a href="configuracoes.html" class="button button-primary insight-btn">💵 Cadastrar salário líquido</a>
             <a href="lancamentos.html?type=receita" class="button button-secondary insight-btn">+ Receita extra</a>
         `;
+    } else if (isYear && pendingBills > 0) {
+        // Balanço Anual com contas a vencer / projeção realista (Item 2 e 3)
+        stateClass = projBal >= 0 ? "state-success" : "state-warning";
+        messageHtml = `
+            <div class="insight-msg">
+                <span class="insight-icon">📊</span>
+                <div>
+                    <strong>Balanço Anual para ${periodOptions.label}: Saldo projetado de ${money(projBal)} (${formatPercent(projRate)})</strong>
+                    <p>Renda total de <strong>${money(income)}</strong>, com <strong>${money(expenses)}</strong> em despesas já pagas e <strong>${money(pendingBills)}</strong> em contas fixas a pagar no decorrer do ano. O saldo líquido projetado é de <strong>${money(projBal)}</strong>.${summary.yearGoalTotal > 0 ? ` Cumprindo a meta de economia anual de <strong>${money(summary.yearGoalTotal)}</strong>, restarão <strong>${money(summary.projectedFreeBalance)}</strong> de saldo livre.` : ""}</p>
+                </div>
+            </div>
+        `;
+        actionsHtml = `
+            <a href="contas-fixas.html" class="button button-secondary insight-btn">⟳ Revisar contas fixas</a>
+            <a href="planejamento.html" class="button button-secondary insight-btn">◎ Ajustar metas e limites</a>
+        `;
     } else if (balance < 0) {
         stateClass = "state-danger";
         messageHtml = `
             <div class="insight-msg">
                 <span class="insight-icon">⚠️</span>
                 <div>
-                    <strong>Seus gastos cadastrados superam a receita em ${money(Math.abs(balance))} neste mês</strong>
-                    <p>Suas despesas cadastradas totalizam ${money(expenses)} contra ${money(income)} de receitas. Você pode revisar seus lançamentos ou adicionar entradas extras para equilibrar o mês.</p>
+                    <strong>Seus gastos cadastrados superam a receita em ${money(Math.abs(balance))} ${periodName}</strong>
+                    <p>Suas despesas cadastradas totalizam ${money(expenses)} contra ${money(income)} de receitas. Você pode revisar seus lançamentos ou adicionar entradas extras para equilibrar as contas.</p>
                 </div>
             </div>
         `;
@@ -740,12 +816,14 @@ function renderContextualInsight(summary, m) {
         `;
     } else if (balance > 0) {
         stateClass = "state-success";
+        const rateToDisplay = isYear ? projRate : savingsRate;
+        const balToDisplay = isYear ? projBal : balance;
         messageHtml = `
             <div class="insight-msg">
                 <span class="insight-icon">🎉</span>
                 <div>
-                    <strong>Você economizou ${money(balance)} (${formatPercent(savingsRate)}) neste mês</strong>
-                    <p>Suas receitas cadastradas cobriram todas as despesas com saldo positivo restante. Uma ótima oportunidade para reforçar sua reserva de emergência.</p>
+                    <strong>Você economizou ${money(balToDisplay)} (${formatPercent(rateToDisplay)}) ${periodName}</strong>
+                    <p>Suas receitas cadastradas cobriram as despesas com saldo positivo restante. Uma ótima oportunidade para reforçar sua reserva de emergência.</p>
                 </div>
             </div>
         `;
@@ -759,8 +837,8 @@ function renderContextualInsight(summary, m) {
             <div class="insight-msg">
                 <span class="insight-icon">⚖️</span>
                 <div>
-                    <strong>Receitas e despesas equilibradas</strong>
-                    <p>As entradas e saídas cadastradas para este mês estão no mesmo valor (${money(income)}).</p>
+                    <strong>Receitas e despesas equilibradas ${periodName}</strong>
+                    <p>As entradas e saídas cadastradas estão no mesmo valor (${money(income)}).</p>
                 </div>
             </div>
         `;
@@ -1596,6 +1674,75 @@ function renderPlanning() {
             }
         }
     }
+
+    // Atualizar preview do painel de replicar planejamento
+    const curYear = month.slice(0, 4);
+    if ($("#repeatMonthName")) $("#repeatMonthName").textContent = formatMonthName(month);
+    if ($("#repeatBudgetVal")) $("#repeatBudgetVal").textContent = money(budget);
+    if ($("#repeatGoalVal")) $("#repeatGoalVal").textContent = money(Number(data.goals[month] || 0));
+    if ($("#repeatYearBtnLabel")) $("#repeatYearBtnLabel").textContent = curYear;
+}
+
+function setupRepeatPlanning() {
+    const btnAllYear = $("#btnRepeatAllYear");
+    const btn12Months = $("#btnRepeat12Months");
+
+    if (btnAllYear) {
+        btnAllYear.addEventListener("click", () => {
+            const m = selectedMonth();
+            const budgetVal = Number($("#budget")?.value || data.budgets[m] || 0);
+            const goalVal = Number($("#goal")?.value || data.goals[m] || 0);
+
+            if (budgetVal <= 0 && goalVal <= 0) {
+                showToast("Defina um limite de gastos ou meta de economia antes de replicar.");
+                return;
+            }
+
+            const yr = m.slice(0, 4);
+            for (let mon = 1; mon <= 12; mon++) {
+                const k = `${yr}-${String(mon).padStart(2, "0")}`;
+                if (budgetVal > 0) data.budgets[k] = budgetVal;
+                if (goalVal > 0) data.goals[k] = goalVal;
+            }
+
+            saveData();
+            renderPlanning();
+            showToast(`Planejamento replicado com sucesso para todos os 12 meses de ${yr}! 🎉`);
+        });
+    }
+
+    if (btn12Months) {
+        btn12Months.addEventListener("click", () => {
+            const m = selectedMonth();
+            const budgetVal = Number($("#budget")?.value || data.budgets[m] || 0);
+            const goalVal = Number($("#goal")?.value || data.goals[m] || 0);
+
+            if (budgetVal <= 0 && goalVal <= 0) {
+                showToast("Defina um limite de gastos ou meta de economia antes de replicar.");
+                return;
+            }
+
+            const [yStr, mStr] = m.split("-");
+            let y = parseInt(yStr, 10);
+            let mo = parseInt(mStr, 10);
+
+            for (let i = 0; i < 12; i++) {
+                let curM = mo + i;
+                let curY = y;
+                while (curM > 12) {
+                    curM -= 12;
+                    curY += 1;
+                }
+                const k = `${curY}-${String(curM).padStart(2, "0")}`;
+                if (budgetVal > 0) data.budgets[k] = budgetVal;
+                if (goalVal > 0) data.goals[k] = goalVal;
+            }
+
+            saveData();
+            renderPlanning();
+            showToast("Planejamento replicado com sucesso para os próximos 12 meses! 🎉");
+        });
+    }
 }
 
 function renderSettings() {
@@ -1634,6 +1781,26 @@ function renderSettings() {
             salaryDateInput.value = todayISO();
         }
         syncDatePicker();
+    }
+
+    const has13thCheck = $("#salaryHas13th");
+    const thirteenthInput = $("#salary13thAmount");
+    const thirteenthGroup = $("#salary13thGroup");
+
+    if (has13thCheck) {
+        has13thCheck.checked = Boolean(data.salaryConfig?.has13th);
+        if (thirteenthGroup) {
+            thirteenthGroup.style.display = has13thCheck.checked ? "grid" : "none";
+        }
+        has13thCheck.onchange = () => {
+            if (thirteenthGroup) {
+                thirteenthGroup.style.display = has13thCheck.checked ? "grid" : "none";
+            }
+        };
+    }
+
+    if (thirteenthInput && !thirteenthInput.value && data.salaryConfig?.thirteenthAmount) {
+        thirteenthInput.value = data.salaryConfig.thirteenthAmount;
     }
 
     if (salaryCard) {
@@ -2412,6 +2579,7 @@ function renderAll() {
     renderRecurringBills();
     renderRecurringAlertBanner();
     renderReports();
+    setupDemoBanner();
 }
 
 /* ==============================
@@ -4348,7 +4516,29 @@ function renderHistoricalReports() {
     }
     if (incEl) incEl.textContent = money(summary.income);
     if (expEl) expEl.textContent = money(summary.expenses);
-    if (savEl) savEl.textContent = formatPercent(summary.savingsRate);
+    if (savEl) {
+        const rateToDisplay = historyFilterMode === "year" ? (summary.projectedSavingsRate || summary.savingsRate) : summary.savingsRate;
+        savEl.textContent = formatPercent(rateToDisplay);
+    }
+
+    // Painel de Projeção Anual no Histórico
+    const histProjPanel = $("#historyProjectionPanel");
+    if (histProjPanel) {
+        if (historyFilterMode === "year" && summary.pendingRecurringExpenses > 0) {
+            histProjPanel.style.display = "block";
+            const rEl = $("#histProjRealized");
+            const pEl = $("#histProjPending");
+            const fEl = $("#histProjFinal");
+            if (rEl) rEl.textContent = money(summary.balance);
+            if (pEl) pEl.textContent = money(summary.pendingRecurringExpenses);
+            if (fEl) {
+                fEl.textContent = money(summary.projectedBalance);
+                fEl.style.color = summary.projectedBalance < 0 ? "#ef4444" : "#34d399";
+            }
+        } else {
+            histProjPanel.style.display = "none";
+        }
+    }
 
     // Category Breakdown Report (Despesas)
     const breakdownContainer = $("#historyCategoryBreakdown");
@@ -4738,7 +4928,10 @@ function renderReports() {
 
         const expenses = manualExpenses + paidRecurringTotal;
         const balance = income - expenses;
+        const pendingRecurringExpenses = Math.max(0, allRecurringTotal - paidRecurringTotal);
+        const projectedBalance = balance - pendingRecurringExpenses;
         const savingsRate = income > 0 ? (balance / income) * 100 : 0;
+        const projectedSavingsRate = income > 0 ? (projectedBalance / income) * 100 : 0;
 
         summary = {
             salary: effectiveSalary,
@@ -4747,10 +4940,14 @@ function renderReports() {
             manualExpenses,
             paidRecurringExpenses: paidRecurringTotal,
             allRecurringExpenses: allRecurringTotal,
-            pendingRecurringExpenses: Math.max(0, allRecurringTotal - paidRecurringTotal),
+            pendingRecurringExpenses,
             expenses,
             balance,
-            savingsRate
+            projectedBalance,
+            savingsRate,
+            projectedSavingsRate,
+            yearGoalTotal: 0,
+            projectedFreeBalance: projectedBalance
         };
     } else if (filter.mode === "this_year") {
         summary = getPeriodSummary("year", filter.year);
@@ -4760,6 +4957,9 @@ function renderReports() {
         const totalIncome = sum1.income + sum2.income;
         const totalExpenses = sum1.expenses + sum2.expenses;
         const totalBal = totalIncome - totalExpenses;
+        const totalPending = sum1.pendingRecurringExpenses + sum2.pendingRecurringExpenses;
+        const projBal = totalBal - totalPending;
+        const totalGoals = (sum1.yearGoalTotal || 0) + (sum2.yearGoalTotal || 0);
         summary = {
             salary: sum1.salary + sum2.salary,
             extraIncome: sum1.extraIncome + sum2.extraIncome,
@@ -4767,10 +4967,14 @@ function renderReports() {
             manualExpenses: sum1.manualExpenses + sum2.manualExpenses,
             paidRecurringExpenses: sum1.paidRecurringExpenses + sum2.paidRecurringExpenses,
             allRecurringExpenses: sum1.allRecurringExpenses + sum2.allRecurringExpenses,
-            pendingRecurringExpenses: sum1.pendingRecurringExpenses + sum2.pendingRecurringExpenses,
+            pendingRecurringExpenses: totalPending,
             expenses: totalExpenses,
             balance: totalBal,
-            savingsRate: totalIncome > 0 ? (totalBal / totalIncome) * 100 : 0
+            projectedBalance: projBal,
+            savingsRate: totalIncome > 0 ? (totalBal / totalIncome) * 100 : 0,
+            projectedSavingsRate: totalIncome > 0 ? (projBal / totalIncome) * 100 : 0,
+            yearGoalTotal: totalGoals,
+            projectedFreeBalance: projBal - totalGoals
         };
     } else {
         // "this_month"
@@ -4778,6 +4982,7 @@ function renderReports() {
     }
 
     // 1. Atualizar títulos, descrições e valores dos 4 Cards de Resumo
+    const isAnnual = filter.mode === "this_year" || filter.mode === "last_2_years";
     const titleBal = $("#reportSummaryTitleBalance");
     const descBal = $("#reportSummaryDescBalance");
     const titleInc = $("#reportSummaryTitleIncome");
@@ -4787,14 +4992,28 @@ function renderReports() {
     const titleSav = $("#reportSummaryTitleSavings");
     const descSav = $("#reportSummaryDescSavings");
 
-    if (titleBal) titleBal.textContent = `Saldo ${filter.periodTitle}`;
-    if (descBal) descBal.textContent = `Receitas menos despesas (${filter.label})`;
+    if (titleBal) {
+        titleBal.textContent = isAnnual ? `Saldo ${filter.periodTitle} (Realizado)` : `Saldo ${filter.periodTitle}`;
+    }
+    if (descBal) {
+        if (isAnnual && summary.pendingRecurringExpenses > 0) {
+            descBal.innerHTML = `Realizado: ${money(summary.balance)} • <strong>Projetado: ${money(summary.projectedBalance)}</strong>`;
+        } else {
+            descBal.textContent = `Receitas menos despesas (${filter.label})`;
+        }
+    }
     if (titleInc) titleInc.textContent = `Receitas ${filter.periodTitle}`;
     if (descInc) descInc.textContent = `Salário e entradas extras (${filter.label})`;
     if (titleExp) titleExp.textContent = `Despesas ${filter.periodTitle}`;
-    if (descExp) descExp.textContent = `Saídas e contas pagas (${filter.label})`;
-    if (titleSav) titleSav.textContent = `Taxa de economia`;
-    if (descSav) descSav.textContent = `Percentual poupado (${filter.label})`;
+    if (descExp) descExp.textContent = `Saídas e contas quitadas (${filter.label})`;
+    if (titleSav) {
+        titleSav.textContent = isAnnual ? `Taxa de economia projetada` : `Taxa de economia`;
+    }
+    if (descSav) {
+        descSav.textContent = isAnnual
+            ? `Após todos os compromissos (${filter.label})`
+            : `Percentual poupado (${filter.label})`;
+    }
 
     const monthBalEl = $("#monthBalance");
     const monthIncEl = $("#monthIncome");
@@ -4807,7 +5026,39 @@ function renderReports() {
     }
     if (monthIncEl) monthIncEl.textContent = money(summary.income);
     if (monthExpEl) monthExpEl.textContent = money(summary.expenses);
-    if (savingsEl) savingsEl.textContent = formatPercent(summary.savingsRate);
+    if (savingsEl) {
+        const rateToDisplay = isAnnual ? (summary.projectedSavingsRate || summary.savingsRate) : summary.savingsRate;
+        savingsEl.textContent = formatPercent(rateToDisplay);
+    }
+
+    // Atualizar Quadro de Projeção Realizada vs Projetada (Item 2 da Avaliação)
+    const projPanel = $("#reportProjectionPanel");
+    if (projPanel) {
+        const projRealized = $("#projRealizedVal");
+        const projPending = $("#projPendingVal");
+        const projFinal = $("#projFinalVal");
+        const projGoal = $("#projGoalVal");
+        const projFree = $("#projFreeVal");
+        const projRate = $("#projRateVal");
+        const projTitle = $("#reportProjectionTitle");
+
+        if (projRealized) projRealized.textContent = money(summary.balance);
+        if (projPending) projPending.textContent = money(summary.pendingRecurringExpenses);
+        if (projFinal) {
+            projFinal.textContent = money(summary.projectedBalance);
+            projFinal.style.color = summary.projectedBalance < 0 ? "#ef4444" : "#34d399";
+        }
+        if (projGoal) projGoal.textContent = money(summary.yearGoalTotal || 0);
+        if (projFree) {
+            const freeVal = summary.projectedFreeBalance !== undefined ? summary.projectedFreeBalance : (summary.projectedBalance - (summary.yearGoalTotal || 0));
+            projFree.textContent = money(freeVal);
+            projFree.style.color = freeVal < 0 ? "#ef4444" : "#34d399";
+        }
+        if (projRate) projRate.textContent = formatPercent(summary.projectedSavingsRate || summary.savingsRate);
+        if (projTitle) {
+            projTitle.textContent = isAnnual ? `Projeção Anual (${filter.label})` : `Projeção Financeira (${filter.label})`;
+        }
+    }
 
     // 2. Atualizar KPIs de detalhamento em relatórios
     const totalExpEl = $("#reportTotalExpensesSpent");
@@ -4968,7 +5219,7 @@ function renderReports() {
         }
     }
 
-    renderContextualInsight(summary, currentM);
+    renderContextualInsight(summary, currentM, { mode: filter.mode, label: filter.label, periodTitle: filter.periodTitle });
 }
 
 /* ==============================
@@ -5329,6 +5580,11 @@ function handleSalarySubmit(event) {
     const normalizedBenefits = rawBenefits.includes(",") ? rawBenefits.replace(/\./g, "").replace(",", ".") : rawBenefits;
     const benefits = Number(normalizedBenefits) || 0;
 
+    const has13th = Boolean($("#salaryHas13th")?.checked);
+    const raw13th = String($("#salary13thAmount")?.value || "").trim().replace("R$", "").trim();
+    const normalized13th = raw13th.includes(",") ? raw13th.replace(/\./g, "").replace(",", ".") : raw13th;
+    const thirteenthAmount = Number(normalized13th) || (has13th ? salary : 0);
+
     const previousConfig = data.salaryConfig;
     const previousMonthSalary = data.salaries[currentM];
 
@@ -5338,7 +5594,9 @@ function handleSalarySubmit(event) {
         benefitsAmount: benefits,
         date: dateInput,
         day: salaryDay,
-        autoDeposit: true
+        autoDeposit: true,
+        has13th: has13th,
+        thirteenthAmount: thirteenthAmount
     };
 
     // Propaga automaticamente para este mês e para o próximo mês
@@ -5660,6 +5918,150 @@ async function clearAllData() {
     } catch (error) {
         console.error("Erro ao limpar dados:", error);
         showToast("Não foi possível apagar os dados.");
+    }
+}
+
+function clearDemoDataToZero() {
+    data = {
+        transactions: [],
+        recurringBills: [],
+        salaries: {},
+        salaryConfig: null,
+        budgets: {},
+        goals: {},
+        isDemoData: false
+    };
+    saveData();
+    localStorage.setItem("mf_quickstart_completed", "true");
+    sessionStorage.setItem("mf_dismiss_demo_banner", "true");
+    const banner = $("#demoDataBanner");
+    if (banner) banner.style.display = "none";
+    renderAll();
+    showToast("Painel zerado com sucesso! Comece inserindo seus dados reais.");
+}
+
+function loadSimulation2027() {
+    const netSalary = 1729.98;
+    const thirteenthSalary = 1729.98;
+    const monthlyBills = [
+        { name: "Moradia", amount: 300, category: "Moradia", dueDay: 10 },
+        { name: "Contas da casa", amount: 120, category: "Contas da casa", dueDay: 15 },
+        { name: "Alimentação", amount: 450, category: "Alimentação", dueDay: 12 },
+        { name: "Celular e internet", amount: 50, category: "Comunicação", dueDay: 20 },
+        { name: "Transporte", amount: 160, category: "Transporte", dueDay: 5 },
+        { name: "Saúde e higiene", amount: 120, category: "Saúde", dueDay: 8 },
+        { name: "Lazer e gastos diversos", amount: 150, category: "Lazer", dueDay: 25 }
+    ];
+
+    const months2027 = [
+        "2027-01", "2027-02", "2027-03", "2027-04",
+        "2027-05", "2027-06", "2027-07", "2027-08",
+        "2027-09", "2027-10", "2027-11", "2027-12"
+    ];
+
+    const salaries = {};
+    const budgets = {};
+    const goals = {};
+
+    months2027.forEach((m) => {
+        salaries[m] = netSalary;
+        budgets[m] = 1350;
+        goals[m] = 300;
+    });
+
+    const recurringBills = monthlyBills.map((b) => ({
+        id: createId(),
+        name: b.name,
+        amount: b.amount,
+        category: b.category,
+        startDate: `2027-01-${String(b.dueDay).padStart(2, "0")}`,
+        dueDay: b.dueDay,
+        subscriptionTime: "12:00",
+        frequency: "monthly",
+        paidDates: [],
+        paidMonths: []
+    }));
+
+    const transactions = [
+        {
+            id: createId(),
+            type: "despesa",
+            description: "Despesas anuais realizadas",
+            amount: 600.00,
+            category: "Outros",
+            date: "2027-01-20",
+            notes: "Gasto já realizado (relatório da simulação 2027)",
+            status: "paid"
+        }
+    ];
+
+    data = {
+        transactions,
+        recurringBills,
+        salaries,
+        salaryConfig: {
+            amount: netSalary,
+            grossAmount: 2100.00,
+            benefitsAmount: 0,
+            date: "2027-01-05",
+            day: 5,
+            autoDeposit: true,
+            has13th: true,
+            thirteenthAmount: thirteenthSalary
+        },
+        budgets,
+        goals,
+        isDemoData: true
+    };
+
+    saveData();
+    localStorage.setItem("mf_quickstart_completed", "true");
+    sessionStorage.setItem("meuFinanceiro.month", "2027-01");
+    sessionStorage.setItem("meuFinanceiro.date", "2027-01-20");
+    sessionStorage.removeItem("mf_dismiss_demo_banner");
+
+    const mInput = $("#selectedMonthInput");
+    if (mInput) mInput.value = "2027-01";
+
+    renderAll();
+    showToast("Simulação oficial de 2027 carregada com sucesso! 🚀");
+}
+
+function setupDemoBanner() {
+    const banner = $("#demoDataBanner");
+    if (!banner) return;
+
+    const isDismissed = sessionStorage.getItem("mf_dismiss_demo_banner") === "true";
+    if (data && data.isDemoData && !isDismissed) {
+        banner.style.display = "block";
+    } else {
+        banner.style.display = "none";
+    }
+
+    const btnClear = $("#btnDemoClear");
+    if (btnClear && !btnClear.dataset.bound) {
+        btnClear.dataset.bound = "true";
+        btnClear.addEventListener("click", async () => {
+            const confirmed = await showConfirmDialog({
+                title: "Começar com painel zerado?",
+                message: "Deseja remover os dados da simulação de exemplo para cadastrar seus números reais do zero?",
+                confirmLabel: "Sim, zerar painel",
+                cancelLabel: "Cancelar",
+                danger: false
+            });
+            if (confirmed) {
+                clearDemoDataToZero();
+            }
+        });
+    }
+
+    const btnDismiss = $("#btnDemoDismiss");
+    if (btnDismiss && !btnDismiss.dataset.bound) {
+        btnDismiss.dataset.bound = "true";
+        btnDismiss.addEventListener("click", () => {
+            sessionStorage.setItem("mf_dismiss_demo_banner", "true");
+            banner.style.display = "none";
+        });
     }
 }
 
@@ -6150,6 +6552,11 @@ function init() {
         clearAllDataBtn.addEventListener("click", clearAllData);
     }
 
+    const btnLoadSim2027 = $("#btnLoadSim2027");
+    if (btnLoadSim2027) {
+        btnLoadSim2027.addEventListener("click", loadSimulation2027);
+    }
+
     setupNavigation();
     setupMobileMenu();
     setupSidebarToggle();
@@ -6161,6 +6568,8 @@ function init() {
     setupRecurringBills();
     setupTransactionsPage();
     setupReports();
+    setupRepeatPlanning();
+    setupDemoBanner();
     setupWelcomeTutorial();
     setupQuickStartWizard();
     renderAll();
@@ -7032,13 +7441,13 @@ function setupQuickStartWizard() {
         btnFinish.addEventListener("click", () => {
             const netSalary = Number($("#wizardNetSalary")?.value || 0);
             const payDay = parseInt($("#wizardSalaryDay")?.value || "5", 10) || 5;
+            const curM = currentMonth();
 
             if (netSalary > 0) {
                 if (!data.salaryConfig) data.salaryConfig = {};
                 data.salaryConfig.amount = netSalary;
                 data.salaryConfig.payDay = payDay;
                 data.salaryConfig.day = payDay;
-                const curM = currentMonth();
                 data.salaryConfig.date = `${curM}-${String(payDay).padStart(2, "0")}`;
                 data.salaryConfig.autoDeposit = true;
                 if (!data.salaries) data.salaries = {};
@@ -7048,12 +7457,21 @@ function setupQuickStartWizard() {
             }
 
             if (!Array.isArray(data.recurringBills)) data.recurringBills = [];
+            if (!data.budgets) data.budgets = {};
+
+            let totalBudgetsFromWizard = 0;
+
             document.querySelectorAll(".wizard-chip.selected").forEach((chip) => {
+                const kind = chip.dataset.kind || "bill";
                 const cat = chip.dataset.cat || "Moradia";
                 const desc = chip.dataset.desc || "Despesa fixa";
                 const input = chip.querySelector(".wizard-chip-val");
                 const val = Number(input?.value || 0);
-                if (val > 0) {
+                if (val <= 0) return;
+
+                if (kind === "bill") {
+                    const dayInput = chip.querySelector(".wizard-chip-day-input");
+                    const billDueDay = parseInt(dayInput?.value || "10", 10) || payDay;
                     const exists = data.recurringBills.some((b) => b.name === desc);
                     if (!exists) {
                         data.recurringBills.push({
@@ -7061,16 +7479,26 @@ function setupQuickStartWizard() {
                             name: desc,
                             amount: val,
                             category: cat,
-                            startDate: `${currentMonth()}-${String(payDay).padStart(2, "0")}`,
-                            dueDay: payDay,
+                            startDate: `${curM}-${String(billDueDay).padStart(2, "0")}`,
+                            dueDay: billDueDay,
                             subscriptionTime: "12:00",
                             frequency: "monthly",
                             paidDates: [],
                             paidMonths: []
                         });
                     }
+                } else if (kind === "budget") {
+                    totalBudgetsFromWizard += val;
                 }
             });
+
+            if (totalBudgetsFromWizard > 0) {
+                data.budgets[curM] = totalBudgetsFromWizard;
+            }
+
+            // Marca que agora o usuário inseriu seus próprios dados reais
+            data.isDemoData = false;
+            sessionStorage.setItem("mf_dismiss_demo_banner", "true");
 
             saveData();
             closeWizard(true);

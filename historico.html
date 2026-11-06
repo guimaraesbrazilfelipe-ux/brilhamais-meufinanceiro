@@ -63,6 +63,16 @@
         </aside>
 
         <main class="main-content">
+            <div id="demoDataBanner" class="demo-data-banner" role="alert">
+                <div class="demo-banner-content">
+                    <span>🧪 <strong>Modo Demonstração:</strong> Você está visualizando dados de simulação/exemplo. Seus números reais ainda não foram inseridos.</span>
+                    <div class="demo-banner-actions">
+                        <button type="button" class="btn-demo-clear" id="btnDemoClear">Começar com painel zerado</button>
+                        <button type="button" class="btn-demo-dismiss" id="btnDemoDismiss" title="Ocultar aviso">✕</button>
+                    </div>
+                </div>
+            </div>
+
             <header class="topbar">
                 <div>
                     <p class="eyebrow">CONSULTA E ANÁLISE TEMPORAL</p>
@@ -174,6 +184,36 @@
                     <p class="summary-description">Economizado no período</p>
                 </article>
             </section>
+
+            <!-- Painel de Projeção Anual / Período (Itens 2 e 3 da Avaliação) -->
+            <div id="historyProjectionPanel" class="panel projection-summary-panel" style="margin-top: 20px; display: none;">
+                <div class="panel-heading">
+                    <div>
+                        <h2 id="historyProjectionTitle">Projeção e Conciliação do Ano</h2>
+                        <p id="historyProjectionSubtitle">Saldo realizado vs compromissos pendentes até o fim do período.</p>
+                    </div>
+                    <span class="status-pill">📊 Projeção Realista</span>
+                </div>
+                <div class="projection-grid">
+                    <div class="projection-col">
+                        <span class="projection-label">1. Saldo Realizado</span>
+                        <strong class="projection-val" id="histProjRealized">R$ 0,00</strong>
+                        <small>Entradas menos saídas pagas</small>
+                    </div>
+                    <div class="projection-divider">−</div>
+                    <div class="projection-col">
+                        <span class="projection-label">2. Contas a Pagar</span>
+                        <strong class="projection-val warning-text" id="histProjPending">R$ 0,00</strong>
+                        <small>Compromissos pendentes</small>
+                    </div>
+                    <div class="projection-divider">=</div>
+                    <div class="projection-col highlight-col">
+                        <span class="projection-label">3. Saldo Final Projetado</span>
+                        <strong class="projection-val highlight-val" id="histProjFinal">R$ 0,00</strong>
+                        <small>Saldo líquido previsto</small>
+                    </div>
+                </div>
+            </div>
 
             <!-- Abas para alternar período: Mês completo (padrão), Dia, Ano ou Todos -->
             <div class="period-tabs" role="tablist" aria-label="Filtrar por período" style="margin: 22px 0 24px;">

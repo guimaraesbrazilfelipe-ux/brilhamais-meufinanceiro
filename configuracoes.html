@@ -63,6 +63,16 @@
         </aside>
 
         <main class="main-content">
+            <div id="demoDataBanner" class="demo-data-banner" role="alert">
+                <div class="demo-banner-content">
+                    <span>🧪 <strong>Modo Demonstração:</strong> Você está visualizando dados de simulação/exemplo. Seus números reais ainda não foram inseridos.</span>
+                    <div class="demo-banner-actions">
+                        <button type="button" class="btn-demo-clear" id="btnDemoClear">Começar com painel zerado</button>
+                        <button type="button" class="btn-demo-dismiss" id="btnDemoDismiss" title="Ocultar aviso">✕</button>
+                    </div>
+                </div>
+            </div>
+
             <header class="topbar">
                 <div>
                     <p class="eyebrow">PREFERÊNCIAS E DADOS</p>
@@ -226,6 +236,22 @@
                             <small class="field-hint">Vales específicos não somam ao saldo bancário disponível em dinheiro na conta.</small>
                         </div>
 
+                        <!-- Configuração do 13º Salário (Item 2 e Simulação 2027) -->
+                        <div class="field" style="grid-column: 1 / -1; background: rgba(124, 93, 250, 0.06); border: 1px solid rgba(124, 93, 250, 0.2); border-radius: 10px; padding: 14px 16px;">
+                            <label style="display: flex; align-items: center; gap: 10px; font-weight: 700; cursor: pointer; color: #e2e8f0;">
+                                <input type="checkbox" id="salaryHas13th" style="width: 18px; height: 18px; accent-color: var(--purple);">
+                                <span>🎁 Incluir 13º Salário no planejamento anual</span>
+                            </label>
+                            <small class="field-hint" style="margin-top: 4px; display: block;">Adiciona automaticamente a renda do 13º salário em Dezembro e no cálculo de projeção anual.</small>
+                            <div id="salary13thGroup" style="display: none; margin-top: 12px; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                                <div>
+                                    <label for="salary13thAmount" style="font-size: 12px; color: #cbd5e1; font-weight: 600;">Valor do 13º Salário Líquido (R$)</label>
+                                    <input type="number" id="salary13thAmount" step="0.01" min="0" placeholder="Ex.: 1729,98" style="margin-top: 4px; width: 100%;">
+                                    <small class="field-hint">Deixe em branco para usar o mesmo valor do salário líquido mensal.</small>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="field settings-submit-field" style="grid-column: 1 / -1;">
                             <button type="submit" class="button button-primary" id="btnSaveSalary">
                                 💾 Salvar salário e ativar cálculo
@@ -287,6 +313,9 @@
                         <a href="index.html?wizard=true" class="button button-secondary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
                             🚀 Iniciar configuração rápida
                         </a>
+                        <button id="btnLoadSim2027" type="button" class="button button-secondary" style="border-color: rgba(245, 158, 11, 0.5); color: #fef3c7;">
+                            🧪 Carregar Simulação 2027 (Exemplo)
+                        </button>
                         <input id="importFile" type="file" accept=".json,application/json" hidden>
                     </div>
                 </div>

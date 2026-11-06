@@ -64,6 +64,16 @@
         </aside>
 
         <main class="main-content">
+            <div id="demoDataBanner" class="demo-data-banner" role="alert">
+                <div class="demo-banner-content">
+                    <span>🧪 <strong>Modo Demonstração:</strong> Você está visualizando dados de simulação/exemplo. Seus números reais ainda não foram inseridos.</span>
+                    <div class="demo-banner-actions">
+                        <button type="button" class="btn-demo-clear" id="btnDemoClear">Começar com painel zerado</button>
+                        <button type="button" class="btn-demo-dismiss" id="btnDemoDismiss" title="Ocultar aviso">✕</button>
+                    </div>
+                </div>
+            </div>
+
             <header class="topbar">
                 <div>
                     <p class="eyebrow">ANÁLISE E INDICADORES</p>
@@ -221,6 +231,56 @@
                     <p class="summary-amount" id="savingsRate">0,0%</p>
                     <p class="summary-description" id="reportSummaryDescSavings">Parte da receita que sobrou</p>
                 </article>
+            </section>
+
+            <!-- Painel de Conciliação e Projeção Financeira Realizada vs Projetada (Itens 2 e 3 da Avaliação) -->
+            <section class="panel projection-summary-panel" id="reportProjectionPanel">
+                <div class="panel-heading">
+                    <div>
+                        <h2 id="reportProjectionTitle">Projeção e Conciliação do Período</h2>
+                        <p id="reportProjectionSubtitle">Visão transparente: o que já foi pago e o saldo real que restará após todos os compromissos.</p>
+                    </div>
+                    <span class="status-pill" id="reportProjectionBadge">📊 Projeção Realista</span>
+                </div>
+
+                <div class="projection-grid">
+                    <div class="projection-col">
+                        <span class="projection-label">1. Saldo Realizado (Caixa)</span>
+                        <strong class="projection-val" id="projRealizedVal">R$ 0,00</strong>
+                        <small id="projRealizedSub">Receitas menos gastos já pagos</small>
+                    </div>
+
+                    <div class="projection-divider">−</div>
+
+                    <div class="projection-col">
+                        <span class="projection-label">2. Contas a Pagar no Período</span>
+                        <strong class="projection-val warning-text" id="projPendingVal">R$ 0,00</strong>
+                        <small id="projPendingSub">Contas fixas e recorrentes pendentes</small>
+                    </div>
+
+                    <div class="projection-divider">=</div>
+
+                    <div class="projection-col highlight-col">
+                        <span class="projection-label">3. Saldo Final Projetado</span>
+                        <strong class="projection-val highlight-val" id="projFinalVal">R$ 0,00</strong>
+                        <small id="projFinalSub">Saldo líquido após quitar todas as contas</small>
+                    </div>
+                </div>
+
+                <div class="projection-goals-row" id="reportProjectionGoalsRow">
+                    <div class="proj-goal-item">
+                        <span>🎯 Meta de economia:</span>
+                        <strong id="projGoalVal" class="purple-text">R$ 0,00</strong>
+                    </div>
+                    <div class="proj-goal-item">
+                        <span>💎 Saldo livre pós-meta:</span>
+                        <strong id="projFreeVal" class="green-text">R$ 0,00</strong>
+                    </div>
+                    <div class="proj-goal-item">
+                        <span>📊 Taxa de economia projetada:</span>
+                        <strong id="projRateVal">0,0%</strong>
+                    </div>
+                </div>
             </section>
 
             <!-- Diagnóstico Contextual Neutro (Item 2) -->

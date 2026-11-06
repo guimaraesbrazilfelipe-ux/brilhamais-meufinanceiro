@@ -3903,17 +3903,32 @@ body.privacy-mode .breakdown-val {
     .welcome-tutorial-overlay {
         padding: 16px 12px;
         box-sizing: border-box;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: hidden !important;
     }
     .tutorial-card {
         padding: 20px 16px 18px;
         border-radius: 18px;
-        max-width: 100%;
-        width: 100%;
-        min-width: 0;
-        margin: auto 0;
+        max-width: 100% !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: auto;
+        box-sizing: border-box;
+    }
+    .tutorial-header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .tutorial-skip-btn {
+        padding: 4px 8px;
+        font-size: 12px;
     }
     .tutorial-nav-pills {
         gap: 6px;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
     }
     .tutorial-nav-pill {
         padding: 6px 10px;
@@ -7806,6 +7821,302 @@ body.privacy-mode .breakdown-val {
     border-color: rgba(255, 255, 255, 0.15);
     box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
 }
+
+/* ============================================================
+   BANNER DE DADOS DE DEMONSTRAÇÃO / EXEMPLO
+   ============================================================ */
+.demo-data-banner {
+    display: none;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(217, 119, 6, 0.08));
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    border-radius: 12px;
+    padding: 12px 18px;
+    margin-bottom: 24px;
+    animation: fadeInSlide .25s ease-out;
+}
+
+.demo-data-banner.is-active {
+    display: block;
+}
+
+.demo-banner-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: #fef3c7;
+    line-height: 1.45;
+}
+
+.demo-banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-demo-clear {
+    background: #f59e0b;
+    color: #0f172a;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all .2s ease;
+    white-space: nowrap;
+}
+
+.btn-demo-clear:hover {
+    background: #fbbf24;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.btn-demo-dismiss {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fef3c7;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    transition: all .15s ease;
+}
+
+.btn-demo-dismiss:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+/* ============================================================
+   QUADRO DE PROJEÇÃO FINANCEIRA (REALIZADO VS PROJETADO)
+   ============================================================ */
+.projection-summary-panel {
+    background: linear-gradient(180deg, rgba(24, 35, 56, 0.95), rgba(16, 24, 39, 0.98)) !important;
+    border: 1px solid rgba(124, 93, 250, 0.28) !important;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    margin-bottom: 24px;
+}
+
+.projection-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1.25fr;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: rgba(0, 0, 0, 0.22);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin-top: 14px;
+}
+
+.projection-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.projection-divider {
+    font-size: 22px;
+    font-weight: 800;
+    color: #64748b;
+    user-select: none;
+    text-align: center;
+}
+
+.projection-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #94a3b8;
+}
+
+.projection-val {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+    font-family: inherit;
+    letter-spacing: -0.5px;
+}
+
+.projection-col small {
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.projection-col.highlight-col {
+    background: linear-gradient(135deg, rgba(124, 93, 250, 0.15), rgba(16, 185, 129, 0.12));
+    border: 1px solid rgba(124, 93, 250, 0.4);
+    padding: 12px 16px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(124, 93, 250, 0.15);
+}
+
+.projection-col.highlight-col .projection-label {
+    color: #c4b5fd;
+}
+
+.projection-col.highlight-col .projection-val {
+    color: #34d399;
+    font-size: 25px;
+}
+
+.projection-goals-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.proj-goal-item {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 9px;
+    padding: 8px 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: #cbd5e1;
+}
+
+.proj-goal-item strong {
+    font-size: 13.5px;
+    font-weight: 800;
+}
+
+/* ============================================================
+   PAINEL DE REPLICAR PLANEJAMENTO (12 MESES / ANO TODO)
+   ============================================================ */
+.repeat-planning-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-top: 24px;
+}
+
+.repeat-planning-content {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-top: 12px;
+}
+
+.repeat-planning-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+/* ============================================================
+   WIZARD: SEPARAÇÃO DE CONTAS E VENCIMENTOS INDIVIDUAIS
+   ============================================================ */
+.wizard-sub-section {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+}
+
+.wizard-section-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.wizard-section-heading h4 {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin: 0;
+}
+
+.wizard-section-heading small {
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.wizard-chip-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.wizard-chip-day-input {
+    width: 48px;
+    padding: 3px 6px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--border);
+    color: #ffffff;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.wizard-chip-day-input:focus {
+    border-color: var(--purple);
+    outline: none;
+}
+
+/* Opaque backdrop for wizard to avoid confusion with background dashboard */
+.wizard-modal {
+    background: rgba(9, 14, 24, 0.96) !important;
+    backdrop-filter: blur(12px) !important;
+}
+
+@media (max-width: 650px) {
+    .projection-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        text-align: center;
+    }
+
+    .projection-col {
+        align-items: center;
+    }
+
+    .projection-divider {
+        display: none;
+    }
+
+    .demo-banner-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .repeat-planning-actions {
+        flex-direction: column;
+    }
+
+    .repeat-planning-actions .button {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+}
+
 
 
 

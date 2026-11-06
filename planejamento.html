@@ -63,6 +63,16 @@
         </aside>
 
         <main class="main-content">
+            <div id="demoDataBanner" class="demo-data-banner" role="alert">
+                <div class="demo-banner-content">
+                    <span>🧪 <strong>Modo Demonstração:</strong> Você está visualizando dados de simulação/exemplo. Seus números reais ainda não foram inseridos.</span>
+                    <div class="demo-banner-actions">
+                        <button type="button" class="btn-demo-clear" id="btnDemoClear">Começar com painel zerado</button>
+                        <button type="button" class="btn-demo-dismiss" id="btnDemoDismiss" title="Ocultar aviso">✕</button>
+                    </div>
+                </div>
+            </div>
+
             <header class="topbar">
                 <div>
                     <p class="eyebrow">METAS E ORÇAMENTO</p>
@@ -178,6 +188,37 @@
                         </div>
                         <p id="goalStatus" class="progress-label">Nenhuma meta definida.</p>
                     </div>
+                </div>
+            </section>
+
+            <!-- Painel para Replicar Planejamento por Vários Meses (Item 5 da Avaliação) -->
+            <section class="panel repeat-planning-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>🔁 Replicar Planejamento</h2>
+                        <p>Economize tempo aplicando o mesmo limite de gastos e meta para os próximos meses ou para o ano todo.</p>
+                    </div>
+                </div>
+
+                <div class="repeat-planning-content">
+                    <p style="font-size: 13.5px; color: var(--text); margin: 0 0 12px;">
+                        Plano do mês de referência (<strong id="repeatMonthName" class="purple-text">Mês selecionado</strong>):
+                        Limite: <strong id="repeatBudgetVal" style="color: #cbd5e1;">R$ 0,00</strong> |
+                        Meta: <strong id="repeatGoalVal" style="color: #34d399;">R$ 0,00</strong>
+                    </p>
+
+                    <div class="repeat-planning-actions">
+                        <button type="button" class="button button-primary" id="btnRepeatAllYear">
+                            📅 Replicar para todo o ano (<span id="repeatYearBtnLabel">2027</span>)
+                        </button>
+                        <button type="button" class="button button-secondary" id="btnRepeat12Months">
+                            🗓️ Replicar para os próximos 12 meses
+                        </button>
+                    </div>
+
+                    <p style="font-size: 11.5px; color: var(--muted); margin: 12px 0 0;">
+                        💡 O limite e a meta deste mês serão copiados para todos os meses do período escolhido, permitindo simulações anuais sem preencher mês a mês.
+                    </p>
                 </div>
             </section>
 
