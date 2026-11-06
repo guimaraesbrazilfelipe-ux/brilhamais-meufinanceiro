@@ -7256,6 +7256,7 @@ function setupRecurringBills() {
         btnToggle.addEventListener("click", () => {
             const isHidden = form.classList.toggle("hidden");
             if (!isHidden) {
+                form.scrollIntoView({ behavior: "smooth", block: "nearest" });
                 const nameInput = $("#recurringName");
                 if (nameInput) nameInput.focus();
                 const dateInput = $("#recurringDate");

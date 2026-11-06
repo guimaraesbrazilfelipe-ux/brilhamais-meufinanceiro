@@ -8342,8 +8342,50 @@ body.privacy-mode .breakdown-val {
 }
 
 /* =========================================
-   ABAS DE STATUS DAS CONTAS FIXAS (ITEM 5)
+   TOOLBAR E ABAS DE STATUS DAS CONTAS FIXAS
 ========================================= */
+.bills-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+}
+
+.bills-toolbar .bills-status-tabs {
+    margin-bottom: 0;
+}
+
+.bills-toolbar #btnToggleNewRecurring {
+    margin: 0;
+    white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(124, 93, 250, 0.3);
+    transition: all 0.2s ease;
+}
+
+.bills-toolbar #btnToggleNewRecurring:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(124, 93, 250, 0.45);
+}
+
+@media (max-width: 640px) {
+    .bills-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .bills-toolbar .bills-status-tabs {
+        width: 100%;
+    }
+
+    .bills-toolbar #btnToggleNewRecurring {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 .bills-status-tabs {
     display: inline-flex;
     gap: 6px;
