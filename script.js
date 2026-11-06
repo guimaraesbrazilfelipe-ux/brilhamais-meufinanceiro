@@ -6022,6 +6022,8 @@ function loadSimulation2027() {
 
     const mInput = $("#selectedMonthInput");
     if (mInput) mInput.value = "2027-01";
+    const dInput = $("#dashboardMonth");
+    if (dInput) dInput.value = "2027-01-20";
 
     renderAll();
     showToast("Simulação oficial de 2027 carregada com sucesso! 🚀");
