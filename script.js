@@ -7480,6 +7480,9 @@ function setupWelcomeTutorial() {
             const isActive = i === currentStep;
             pill.classList.toggle("active", isActive);
             pill.setAttribute("aria-selected", String(isActive));
+            if (isActive) {
+                pill.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+            }
         });
 
         dots.forEach((dot, i) => {
@@ -7560,6 +7563,47 @@ function setupWelcomeTutorial() {
             if (!isNaN(step)) goToStep(step);
         });
     });
+
+    // Rolagem horizontal invisível das etapas do tutorial (roda do mouse e arrastar)
+    const pillsContainer = overlay.querySelector(".tutorial-nav-pills");
+    if (pillsContainer) {
+        // Rolar horizontalmente com a roda do mouse (deltaY -> scrollLeft)
+        pillsContainer.addEventListener("wheel", (e) => {
+            if (e.deltaY !== 0) {
+                e.preventDefault();
+                pillsContainer.scrollLeft += e.deltaY;
+            }
+        }, { passive: false });
+
+        // Arrastar para rolar no desktop (drag-to-scroll)
+        let isDown = false;
+        let startX = 0;
+        let scrollStart = 0;
+
+        pillsContainer.addEventListener("mousedown", (e) => {
+            isDown = true;
+            pillsContainer.classList.add("dragging");
+            startX = e.pageX - pillsContainer.offsetLeft;
+            scrollStart = pillsContainer.scrollLeft;
+        });
+
+        const stopDrag = () => {
+            if (!isDown) return;
+            isDown = false;
+            pillsContainer.classList.remove("dragging");
+        };
+
+        pillsContainer.addEventListener("mouseleave", stopDrag);
+        pillsContainer.addEventListener("mouseup", stopDrag);
+
+        pillsContainer.addEventListener("mousemove", (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - pillsContainer.offsetLeft;
+            const walk = (x - startX) * 1.5;
+            pillsContainer.scrollLeft = scrollStart - walk;
+        });
+    }
 
     dots.forEach((dot) => {
         dot.addEventListener("click", () => {
