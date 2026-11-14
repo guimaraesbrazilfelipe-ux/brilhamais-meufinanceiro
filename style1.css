@@ -3384,6 +3384,29 @@ body::-webkit-scrollbar,
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 20px;
+    height: 20px;
+    color: currentColor;
+}
+
+.privacy-btn .privacy-icon svg {
+    display: block;
+    width: 19px;
+    height: 19px;
+    stroke: currentColor;
+}
+
+body.privacy-mode .privacy-btn {
+    border-color: rgba(148, 117, 255, 0.45);
+    background: rgba(124, 93, 250, 0.15);
+    color: var(--purple-light, #c4b5fd);
+    box-shadow: 0 0 10px rgba(124, 93, 250, 0.18);
+}
+
+body.privacy-mode .privacy-btn:hover {
+    background: rgba(124, 93, 250, 0.28);
+    border-color: rgba(148, 117, 255, 0.7);
+    color: #ffffff;
 }
 
 body.privacy-mode .summary-card .summary-amount,
