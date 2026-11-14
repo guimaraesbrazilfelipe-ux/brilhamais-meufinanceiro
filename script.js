@@ -6439,8 +6439,6 @@ function setupMobileMenu() {
 }
 
 function setupSidebarToggle() {
-    const toggleBtn = document.getElementById("sidebarToggleBtn");
-
     function isCollapsed() {
         return document.documentElement.classList.contains("sidebar-collapsed") ||
                document.body.classList.contains("sidebar-collapsed");
@@ -6453,20 +6451,20 @@ function setupSidebarToggle() {
             try {
                 localStorage.setItem("meuFinanceiro_sidebarCollapsed", "true");
             } catch (err) {}
-            if (toggleBtn) {
-                toggleBtn.setAttribute("aria-label", "Expandir menu lateral");
-                toggleBtn.setAttribute("title", "Expandir menu lateral (Ctrl+B)");
-            }
+            document.querySelectorAll(".sidebar-toggle-btn").forEach(btn => {
+                btn.setAttribute("aria-label", "Expandir menu lateral");
+                btn.setAttribute("title", "Expandir menu lateral (Ctrl+B)");
+            });
         } else {
             document.documentElement.classList.remove("sidebar-collapsed");
             document.body.classList.remove("sidebar-collapsed");
             try {
                 localStorage.setItem("meuFinanceiro_sidebarCollapsed", "false");
             } catch (err) {}
-            if (toggleBtn) {
-                toggleBtn.setAttribute("aria-label", "Minimizar menu lateral");
-                toggleBtn.setAttribute("title", "Minimizar menu lateral (Ctrl+B)");
-            }
+            document.querySelectorAll(".sidebar-toggle-btn").forEach(btn => {
+                btn.setAttribute("aria-label", "Minimizar menu lateral");
+                btn.setAttribute("title", "Minimizar menu lateral (Ctrl+B)");
+            });
         }
 
         setTimeout(() => {
@@ -6485,11 +6483,23 @@ function setupSidebarToggle() {
         }
     } catch (err) {}
 
-    if (toggleBtn) {
-        toggleBtn.addEventListener("click", (e) => {
+    // Registra clique em todos os botões de toggle (topo e rodapé)
+    document.querySelectorAll(".sidebar-toggle-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
             e.preventDefault();
             e.stopPropagation();
             setSidebarCollapsed(!isCollapsed());
+        });
+    });
+
+    // Se a barra estiver colapsada, clicar no sifrão da marca expande o menu suavemente
+    const brand = document.querySelector(".sidebar .brand");
+    if (brand) {
+        brand.addEventListener("click", (e) => {
+            if (isCollapsed()) {
+                e.preventDefault();
+                setSidebarCollapsed(false);
+            }
         });
     }
 

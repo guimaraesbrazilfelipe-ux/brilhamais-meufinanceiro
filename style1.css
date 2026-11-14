@@ -232,7 +232,16 @@ a {
     line-height: 1;
     text-align: center;
     opacity: 0.85;
+    color: currentColor;
     transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), color 0.2s ease, opacity 0.2s ease;
+}
+
+.nav-link .nav-icon svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    flex-shrink: 0;
 }
 
 .nav-link:hover .nav-icon,
@@ -267,6 +276,59 @@ a {
 
 .sidebar-bottom {
     margin-top: auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.bottom-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(0.2, 0, 0, 1);
+    box-sizing: border-box;
+}
+
+.bottom-toggle-btn:hover {
+    background: rgba(124, 93, 250, 0.18);
+    border-color: rgba(124, 93, 250, 0.4);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.bottom-toggle-btn .toggle-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.bottom-toggle-btn .icon-collapse {
+    display: block;
+}
+
+.bottom-toggle-btn .icon-expand {
+    display: none;
+}
+
+.bottom-toggle-btn .toggle-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: opacity 0.2s, max-width 0.3s;
 }
 
 .tip-card {
@@ -326,12 +388,12 @@ a {
 
     html.sidebar-collapsed .sidebar-header,
     body.sidebar-collapsed .sidebar-header {
-        flex-direction: column;
+        display: flex;
         justify-content: center;
         align-items: center;
-        gap: 12px;
         margin-bottom: 24px;
         width: 100%;
+        min-height: 42px;
         transition: margin-bottom 0.32s cubic-bezier(0.2, 0, 0, 1);
     }
 
@@ -339,6 +401,13 @@ a {
     body.sidebar-collapsed .brand {
         margin: 0;
         justify-content: center;
+        width: 100%;
+        cursor: pointer;
+    }
+
+    html.sidebar-collapsed .brand:hover .brand-icon {
+        transform: scale(1.08);
+        box-shadow: 0 4px 14px rgba(124, 93, 250, 0.4);
     }
 
     html.sidebar-collapsed .brand-text,
@@ -349,16 +418,12 @@ a {
         pointer-events: none;
     }
 
-    html.sidebar-collapsed .sidebar-toggle-lines .line-2,
-    body.sidebar-collapsed .sidebar-toggle-lines .line-2 {
-        width: 100%;
-    }
-
-    html.sidebar-collapsed .sidebar-toggle-btn,
-    body.sidebar-collapsed .sidebar-toggle-btn {
-        background: rgba(124, 93, 250, 0.18);
-        border-color: rgba(124, 93, 250, 0.4);
-        color: #c4b5fd;
+    html.sidebar-collapsed .header-toggle-btn,
+    body.sidebar-collapsed .header-toggle-btn {
+        opacity: 0;
+        max-width: 0;
+        pointer-events: none;
+        display: none !important;
     }
 
     html.sidebar-collapsed .sidebar > .menu-label,
@@ -407,13 +472,82 @@ a {
 
     html.sidebar-collapsed .sidebar-bottom,
     body.sidebar-collapsed .sidebar-bottom {
-        opacity: 0;
-        max-height: 0;
-        overflow: hidden;
-        margin: 0;
+        opacity: 1 !important;
+        max-height: none !important;
+        overflow: visible !important;
+        pointer-events: auto !important;
+        transform: none !important;
+        margin-top: auto;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    html.sidebar-collapsed .sidebar-footer,
+    body.sidebar-collapsed .sidebar-footer {
+        display: none !important;
+    }
+
+    html.sidebar-collapsed .bottom-toggle-btn,
+    body.sidebar-collapsed .bottom-toggle-btn {
+        width: 44px;
+        height: 44px;
         padding: 0;
+        justify-content: center;
+        border-radius: 10px;
+        background: rgba(124, 93, 250, 0.15);
+        border-color: rgba(124, 93, 250, 0.35);
+        color: #c4b5fd;
+        margin: 0 auto;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        position: relative;
+    }
+
+    html.sidebar-collapsed .bottom-toggle-btn:hover,
+    body.sidebar-collapsed .bottom-toggle-btn:hover {
+        background: rgba(124, 93, 250, 0.28);
+        border-color: rgba(148, 117, 255, 0.7);
+        color: #ffffff;
+        transform: scale(1.08);
+    }
+
+    html.sidebar-collapsed .bottom-toggle-btn .icon-collapse,
+    body.sidebar-collapsed .bottom-toggle-btn .icon-collapse {
+        display: none;
+    }
+
+    html.sidebar-collapsed .bottom-toggle-btn .icon-expand,
+    body.sidebar-collapsed .bottom-toggle-btn .icon-expand {
+        display: block;
+    }
+
+    html.sidebar-collapsed .bottom-toggle-btn .toggle-label,
+    body.sidebar-collapsed .bottom-toggle-btn .toggle-label {
+        opacity: 0;
+        max-width: 0;
         pointer-events: none;
-        transform: translateY(10px);
+        display: none;
+    }
+
+    html.sidebar-collapsed .bottom-toggle-btn:hover::after {
+        content: "Expandir menu lateral (Ctrl+B)";
+        position: absolute;
+        left: calc(100% + 12px);
+        top: 50%;
+        transform: translateY(-50%);
+        background: #182338;
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+        padding: 6px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(124, 93, 250, 0.4);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+        pointer-events: none;
+        z-index: 1000;
+        animation: tooltipFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     /* Tooltip flutuante elegante ao passar o mouse */
