@@ -291,8 +291,18 @@
                         window.showToast("Conta criada e sincronizada com sucesso!");
                     }
                 } else {
-                    showAlert("Conta criada com sucesso! Verifique seu email para confirmar o cadastro.", true);
-                    formSignUp.reset();
+                    // Sem necessidade de confirmação por email: efetua login direto automático
+                    try {
+                        await window.MFAuth.signIn(email, pwd);
+                        closeModal();
+                        if (typeof window.showToast === "function") {
+                            window.showToast("Conta criada e sincronizada com sucesso!");
+                        }
+                    } catch (signInErr) {
+                        showAlert("Conta criada com sucesso! Faça login com seu email e senha.", true);
+                        formSignUp.reset();
+                        setTimeout(() => switchTab("signin"), 1200);
+                    }
                 }
             } catch (err) {
                 console.error("Erro de cadastro:", err);
