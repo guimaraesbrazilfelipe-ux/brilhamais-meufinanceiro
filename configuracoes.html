@@ -16,6 +16,9 @@
             }
         } catch (e) {}
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabaseClient.js" defer></script>
+    <script src="authModal.js" defer></script>
     <script src="script.js" defer></script>
 </head>
 <body>
@@ -289,6 +292,31 @@
                             <h4>🛡️ Proteção contra lançamentos duplicados</h4>
                             <p>Se você cadastrar um lançamento manual com a categoria "Salário", o sistema reconhece a duplicidade e não soma duas vezes na visão geral do mês nem no histórico.</p>
                         </div>
+                    </div>
+                </article>
+
+                <!-- Sincronização em Nuvem (Supabase) -->
+                <article class="panel" style="margin-top: 24px;">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>☁️ Sincronização em Nuvem (Supabase)</h2>
+                            <p>Conecte seu banco de dados Supabase para sincronizar suas finanças entre múltiplos aparelhos com segurança (RLS).</p>
+                        </div>
+                    </div>
+                    <div class="form-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                        <div class="field">
+                            <label for="settingsSupabaseUrl">URL do Projeto Supabase</label>
+                            <input type="url" id="settingsSupabaseUrl" placeholder="https://seu-projeto.supabase.co" autocomplete="off">
+                        </div>
+                        <div class="field">
+                            <label for="settingsSupabaseAnonKey">Chave Anon (Pública)</label>
+                            <input type="password" id="settingsSupabaseAnonKey" placeholder="eyJhbGciOiJIUzI1NiIs..." autocomplete="off">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                        <button type="button" class="button button-primary" id="btnSaveSupabaseSettings">Salvar Conexão</button>
+                        <button type="button" class="button button-secondary" id="btnOpenAuthFromSettings">Acessar Conta / Fazer Login</button>
+                        <span id="supabaseSettingsStatus" style="font-size: 13px; color: var(--muted);"></span>
                     </div>
                 </article>
 

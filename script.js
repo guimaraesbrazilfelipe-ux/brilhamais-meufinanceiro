@@ -306,6 +306,9 @@ let toastTimeout;
 function saveData() {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        if (window.MFAuth && typeof window.MFAuth.scheduleSync === "function") {
+            window.MFAuth.scheduleSync();
+        }
         return true;
     } catch (error) {
         console.error("Erro ao salvar:", error);
@@ -6818,11 +6821,70 @@ function init() {
         clearAllDataBtn.addEventListener("click", clearAllData);
     }
 
+    function setupSupabaseSettings() {
+        const urlInput = $("#settingsSupabaseUrl");
+        const keyInput = $("#settingsSupabaseAnonKey");
+        const saveBtn = $("#btnSaveSupabaseSettings");
+        const authBtn = $("#btnOpenAuthFromSettings");
+        const statusLabel = $("#supabaseSettingsStatus");
+
+        if (!urlInput || !keyInput) return;
+
+        if (window.MFAuth) {
+            const cfg = window.MFAuth.getConfig();
+            if (cfg.url) urlInput.value = cfg.url;
+            if (cfg.anonKey) keyInput.value = cfg.anonKey;
+
+            const updateStatus = () => {
+                const user = window.MFAuth.getUser();
+                if (user) {
+                    statusLabel.textContent = `● Conectado como ${user.email}`;
+                    statusLabel.style.color = "#10b981";
+                } else if (cfg.url && cfg.anonKey) {
+                    statusLabel.textContent = "○ Configurado (Não autenticado)";
+                    statusLabel.style.color = "#f59e0b";
+                } else {
+                    statusLabel.textContent = "○ Não configurado";
+                    statusLabel.style.color = "var(--muted)";
+                }
+            };
+
+            updateStatus();
+            window.addEventListener("mf:auth-change", updateStatus);
+        }
+
+        if (saveBtn) {
+            saveBtn.addEventListener("click", () => {
+                const u = urlInput.value.trim();
+                const k = keyInput.value.trim();
+                if (!u || !k) {
+                    showToast("Informe a URL do Projeto e a Chave Anon.");
+                    return;
+                }
+                if (window.MFAuth) {
+                    window.MFAuth.saveConfig(u, k);
+                    showToast("Conexão Supabase salva com sucesso!");
+                }
+            });
+        }
+
+        if (authBtn) {
+            authBtn.addEventListener("click", () => {
+                const modal = $("#authModal");
+                if (modal) {
+                    modal.classList.remove("hidden");
+                    modal.setAttribute("aria-hidden", "false");
+                }
+            });
+        }
+    }
+
     const btnLoadSim2027 = $("#btnLoadSim2027");
     if (btnLoadSim2027) {
         btnLoadSim2027.addEventListener("click", loadSimulation2027);
     }
 
+    setupSupabaseSettings();
     setupNavigation();
     setupMobileMenu();
     setupSidebarToggle();

@@ -1,0 +1,407 @@
+/**
+ * ==============================================================================
+ * MEU FINANCEIRO - CLIENTE SUPABASE & CAMADA DE AUTENTICAÇÃO / SINCRONIZAÇÃO
+ * ==============================================================================
+ * Fornece integração Local-First com o Supabase:
+ * - Gerenciamento de credenciais (persistidas em localStorage ou predefinidas)
+ * - Autenticação completa: Login, Cadastro, Logout, Recuperação e Sessão
+ * - Sincronização bidirecional transparente com o banco PostgreSQL
+ * ==============================================================================
+ */
+
+const SUPABASE_CONFIG_KEY = "meuFinanceiro_supabaseConfig";
+const DEFAULT_SUPABASE_URL = "https://hrkbtxpwqyexdcbtysno.supabase.co";
+const DEFAULT_SUPABASE_ANON_KEY = "sb_publishable_M6OSbmZRjvnOJ99PT91E6Q_3LCWdKLR";
+
+// Objeto de configuração inicial (predefinido com as credenciais do projeto)
+let supabaseConfig = {
+    url: DEFAULT_SUPABASE_URL,
+    anonKey: DEFAULT_SUPABASE_ANON_KEY
+};
+
+let supabaseClient = null;
+let currentUser = null;
+let isSyncing = false;
+
+// 1. Carregar configurações salvas
+function loadSupabaseConfig() {
+    try {
+        const saved = localStorage.getItem(SUPABASE_CONFIG_KEY);
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed && parsed.url && parsed.anonKey) {
+                supabaseConfig = parsed;
+                return;
+            }
+        }
+    } catch (e) {
+        console.warn("Erro ao carregar configurações do Supabase:", e);
+    }
+    // Padrão do projeto
+    supabaseConfig = {
+        url: DEFAULT_SUPABASE_URL,
+        anonKey: DEFAULT_SUPABASE_ANON_KEY
+    };
+}
+
+// 2. Salvar configurações
+function saveSupabaseConfig(url, anonKey) {
+    supabaseConfig = {
+        url: (url || "").trim(),
+        anonKey: (anonKey || "").trim()
+    };
+    try {
+        localStorage.setItem(SUPABASE_CONFIG_KEY, JSON.stringify(supabaseConfig));
+    } catch (e) {}
+    initSupabase();
+}
+
+// 3. Inicializar cliente do SDK Supabase
+function initSupabase() {
+    loadSupabaseConfig();
+
+    if (!window.supabase) {
+        console.warn("SDK do Supabase ainda não carregado na página.");
+        return null;
+    }
+
+    if (supabaseConfig.url && supabaseConfig.anonKey) {
+        try {
+            supabaseClient = window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey, {
+                auth: {
+                    persistSession: true,
+                    autoRefreshToken: true,
+                    detectSessionInUrl: true
+                }
+            });
+
+            // Escuta mudanças de autenticação
+            supabaseClient.auth.onAuthStateChange(async (event, session) => {
+                currentUser = session ? session.user : null;
+                window.dispatchEvent(new CustomEvent("mf:auth-change", { detail: { event, session, user: currentUser } }));
+                
+                if (event === "SIGNED_IN" && session) {
+                    await handleUserSignedIn(session.user);
+                } else if (event === "SIGNED_OUT") {
+                    handleUserSignedOut();
+                }
+            });
+
+            return supabaseClient;
+        } catch (err) {
+            console.error("Erro ao instanciar cliente Supabase:", err);
+            return null;
+        }
+    }
+
+    return null;
+}
+
+// 4. Funções de Autenticação
+async function authSignUp(email, password) {
+    if (!supabaseClient) throw new Error("Supabase não está configurado. Insira a URL e a Anon Key.");
+    const { data, error } = await supabaseClient.auth.signUp({
+        email: email.trim(),
+        password
+    });
+    if (error) throw error;
+    return data;
+}
+
+async function authSignIn(email, password) {
+    if (!supabaseClient) throw new Error("Supabase não está configurado. Insira a URL e a Anon Key.");
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: email.trim(),
+        password
+    });
+    if (error) throw error;
+    return data;
+}
+
+async function authSignOut() {
+    if (!supabaseClient) return;
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) throw error;
+}
+
+async function authResetPassword(email) {
+    if (!supabaseClient) throw new Error("Supabase não está configurado.");
+    const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: window.location.origin + window.location.pathname
+    });
+    if (error) throw error;
+    return data;
+}
+
+async function getCurrentSession() {
+    if (!supabaseClient) return null;
+    try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        currentUser = session ? session.user : null;
+        return session;
+    } catch (e) {
+        return null;
+    }
+}
+
+// 5. Camada de Sincronização em Nuvem (Local-First)
+async function handleUserSignedIn(user) {
+    if (!user || isSyncing) return;
+    isSyncing = true;
+    window.dispatchEvent(new CustomEvent("mf:sync-status", { detail: { status: "syncing" } }));
+
+    try {
+        // Verifica se o usuário já tem dados na nuvem
+        const { data: cloudTxs, error } = await supabaseClient
+            .from("transactions")
+            .select("*")
+            .order("date", { ascending: false });
+
+        const hasCloudData = !error && Array.isArray(cloudTxs) && cloudTxs.length > 0;
+        const localData = typeof window.data === "object" ? window.data : null;
+        const hasLocalTxs = localData && Array.isArray(localData.transactions) && localData.transactions.length > 0;
+
+        // Se o usuário tem transações locais e a nuvem está vazia, sobe os dados locais (Migração)
+        if (hasLocalTxs && !hasCloudData) {
+            await pushAllLocalDataToCloud(user.id, localData);
+            if (typeof window.showToast === "function") {
+                window.showToast("Seus dados locais foram sincronizados na sua conta em nuvem!");
+            }
+        } else if (hasCloudData) {
+            // Se já existem dados na nuvem, puxa para memória
+            await pullCloudDataToLocal();
+            if (typeof window.renderAll === "function") {
+                window.renderAll();
+            }
+        }
+
+        window.dispatchEvent(new CustomEvent("mf:sync-status", { detail: { status: "synced" } }));
+    } catch (err) {
+        console.error("Erro na sincronização pós-login:", err);
+        window.dispatchEvent(new CustomEvent("mf:sync-status", { detail: { status: "error", error: err.message } }));
+    } finally {
+        isSyncing = false;
+    }
+}
+
+function handleUserSignedOut() {
+    currentUser = null;
+    window.dispatchEvent(new CustomEvent("mf:sync-status", { detail: { status: "offline" } }));
+}
+
+// Puxa dados da nuvem para o aplicativo local
+async function pullCloudDataToLocal() {
+    if (!supabaseClient || !currentUser) return;
+
+    try {
+        // 1. Configurações e Salário
+        const { data: settings } = await supabaseClient
+            .from("user_settings")
+            .select("*")
+            .single();
+
+        // 2. Transações
+        const { data: txs } = await supabaseClient
+            .from("transactions")
+            .select("*")
+            .order("date", { ascending: false });
+
+        // 3. Contas Fixas
+        const { data: bills } = await supabaseClient
+            .from("recurring_bills")
+            .select("*");
+
+        // 4. Histórico Mensal de Contas Fixas
+        const { data: records } = await supabaseClient
+            .from("recurring_bill_records")
+            .select("*");
+
+        // 5. Planos Mensais
+        const { data: plans } = await supabaseClient
+            .from("monthly_plans")
+            .select("*");
+
+        if (window.data) {
+            if (settings) {
+                window.data.salaryConfig = {
+                    amount: Number(settings.salary_amount || 0),
+                    grossAmount: Number(settings.gross_amount || 0),
+                    benefitsAmount: Number(settings.benefits_amount || 0),
+                    date: settings.start_date || "",
+                    day: Number(settings.pay_day || 5),
+                    autoDeposit: settings.auto_deposit !== false,
+                    has13th: Boolean(settings.has_13th),
+                    thirteenthAmount: Number(settings.thirteenth_amount || 0)
+                };
+            }
+
+            if (Array.isArray(txs)) {
+                window.data.transactions = txs.map(t => ({
+                    id: t.id,
+                    type: t.type,
+                    description: t.description,
+                    amount: Number(t.amount),
+                    category: t.category,
+                    date: t.date,
+                    notes: t.notes || ""
+                }));
+            }
+
+            if (Array.isArray(bills)) {
+                const billRecordsMap = {};
+                if (Array.isArray(records)) {
+                    records.forEach(r => {
+                        if (!billRecordsMap[r.recurring_bill_id]) {
+                            billRecordsMap[r.recurring_bill_id] = { monthlyAmounts: {}, paidMonths: [], paidDates: [] };
+                        }
+                        if (r.amount !== null && r.amount !== undefined) {
+                            billRecordsMap[r.recurring_bill_id].monthlyAmounts[r.month_year] = Number(r.amount);
+                        }
+                        if (r.is_paid) {
+                            billRecordsMap[r.recurring_bill_id].paidMonths.push(r.month_year);
+                            if (r.paid_date) billRecordsMap[r.recurring_bill_id].paidDates.push(r.paid_date);
+                        }
+                    });
+                }
+
+                window.data.recurringBills = bills.map(b => {
+                    const rec = billRecordsMap[b.id] || { monthlyAmounts: {}, paidMonths: [], paidDates: [] };
+                    return {
+                        id: b.id,
+                        name: b.name,
+                        amount: Number(b.amount),
+                        startDate: b.start_date,
+                        dueDay: Number(b.due_day),
+                        subscriptionTime: b.subscription_time ? b.subscription_time.slice(0, 5) : "09:00",
+                        frequency: b.frequency || "monthly",
+                        category: b.category,
+                        isVariable: Boolean(b.is_variable),
+                        monthlyAmounts: rec.monthlyAmounts,
+                        paidMonths: rec.paidMonths,
+                        paidDates: rec.paidDates
+                    };
+                });
+            }
+
+            if (Array.isArray(plans)) {
+                window.data.salaries = {};
+                window.data.budgets = {};
+                window.data.goals = {};
+                plans.forEach(p => {
+                    if (p.salary_override) window.data.salaries[p.month_year] = Number(p.salary_override);
+                    if (p.budget_limit) window.data.budgets[p.month_year] = Number(p.budget_limit);
+                    if (p.savings_goal) window.data.goals[p.month_year] = Number(p.savings_goal);
+                });
+            }
+
+            // Salva no cache local para navegação offline fluida
+            if (typeof window.saveData === "function") {
+                window.saveData();
+            }
+        }
+    } catch (err) {
+        console.error("Erro ao puxar dados da nuvem:", err);
+    }
+}
+
+// Envia dados locais para a nuvem
+async function pushAllLocalDataToCloud(userId, localData) {
+    if (!supabaseClient || !userId || !localData) return;
+
+    try {
+        // 1. user_settings
+        const sc = localData.salaryConfig || {};
+        await supabaseClient.from("user_settings").upsert({
+            user_id: userId,
+            salary_amount: Number(sc.amount || 0),
+            gross_amount: Number(sc.grossAmount || 0),
+            benefits_amount: Number(sc.benefitsAmount || 0),
+            start_date: sc.date || null,
+            pay_day: Number(sc.day || 5),
+            auto_deposit: sc.autoDeposit !== false,
+            has13th: Boolean(sc.has13th),
+            thirteenth_amount: Number(sc.thirteenthAmount || 0),
+            updated_at: new Date().toISOString()
+        });
+
+        // 2. transactions
+        if (Array.isArray(localData.transactions) && localData.transactions.length > 0) {
+            const txRows = localData.transactions.map(t => ({
+                id: (t.id && t.id.length >= 32) ? t.id : undefined, // usa UUID se válido
+                user_id: userId,
+                type: t.type,
+                description: t.description,
+                amount: Number(t.amount),
+                category: t.category,
+                date: t.date,
+                notes: t.notes || null
+            }));
+            await supabaseClient.from("transactions").upsert(txRows);
+        }
+
+        // 3. recurring_bills
+        if (Array.isArray(localData.recurringBills) && localData.recurringBills.length > 0) {
+            const billRows = localData.recurringBills.map(b => ({
+                id: (b.id && b.id.length >= 32) ? b.id : undefined,
+                user_id: userId,
+                name: b.name,
+                amount: Number(b.amount),
+                start_date: b.startDate,
+                due_day: Number(b.dueDay || 1),
+                subscription_time: (b.subscriptionTime || "09:00") + ":00",
+                frequency: b.frequency || "monthly",
+                category: b.category,
+                is_variable: Boolean(b.isVariable)
+            }));
+            await supabaseClient.from("recurring_bills").upsert(billRows);
+        }
+    } catch (e) {
+        console.error("Erro ao enviar dados locais para nuvem:", e);
+    }
+}
+
+// Sincronização pontual disparada por saveData()
+let syncDebounceTimer = null;
+function scheduleCloudSync() {
+    if (!supabaseClient || !currentUser) return;
+    clearTimeout(syncDebounceTimer);
+    syncDebounceTimer = setTimeout(async () => {
+        if (isSyncing) return;
+        isSyncing = true;
+        window.dispatchEvent(new CustomEvent("mf:sync-status", { detail: { status: "syncing" } }));
+        try {
+            if (window.data) {
+                await pushAllLocalDataToCloud(currentUser.id, window.data);
+                window.dispatchEvent(new CustomEvent("mf:sync-status", { detail: { status: "synced" } }));
+            }
+        } catch (e) {
+            console.warn("Falha temporária ao sincronizar em segundo plano:", e);
+            window.dispatchEvent(new CustomEvent("mf:sync-status", { detail: { status: "error" } }));
+        } finally {
+            isSyncing = false;
+        }
+    }, 1200); // 1.2s debounce para não sobrecarregar
+}
+
+// Inicializa no carregamento da página
+document.addEventListener("DOMContentLoaded", () => {
+    initSupabase();
+    getCurrentSession().then(session => {
+        window.dispatchEvent(new CustomEvent("mf:auth-ready", { detail: { session, user: currentUser } }));
+    });
+});
+
+// Exporta para escopo global
+window.MFAuth = {
+    getConfig: () => ({ ...supabaseConfig }),
+    saveConfig: saveSupabaseConfig,
+    init: initSupabase,
+    signUp: authSignUp,
+    signIn: authSignIn,
+    signOut: authSignOut,
+    resetPassword: authResetPassword,
+    getSession: getCurrentSession,
+    getUser: () => currentUser,
+    scheduleSync: scheduleCloudSync,
+    pullData: pullCloudDataToLocal
+};
