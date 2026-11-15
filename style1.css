@@ -6700,9 +6700,6 @@ body.privacy-mode .breakdown-val {
     line-height: 1;
     display: inline-block;
 }
-    letter-spacing: -0.02em;
-    display: inline-block;
-}
 
 .btn-edit-bill-amount {
     background: rgba(255, 255, 255, 0.08);
@@ -7108,7 +7105,6 @@ body.privacy-mode .breakdown-val {
     border-color: rgba(239, 68, 68, 0.35);
     color: #f87171;
     transform: scale(1.06);
-}
 }
 
 /* Integrado na Agenda */
@@ -9485,4 +9481,244 @@ body.privacy-mode .breakdown-val {
 .auth-security-badge {
     font-size: 11px;
     color: var(--muted);
+}
+
+
+/* ============================================================
+   RASTREABILIDADE DE ATIVIDADES & TRILHA DE AUDITORIA (LOGS)
+   ============================================================ */
+
+.activity-audit-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius, 14px);
+    padding: 22px;
+}
+
+.activity-filters-bar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 16px 0 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.activity-filter-pill {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 99px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.activity-filter-pill:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    border-color: rgba(148, 117, 255, 0.3);
+}
+
+.activity-filter-pill.active {
+    background: var(--purple);
+    border-color: var(--purple-light);
+    color: #ffffff;
+    box-shadow: 0 2px 10px rgba(124, 93, 250, 0.35);
+}
+
+.activity-timeline-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 480px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.activity-timeline-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.activity-timeline-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+}
+
+.activity-timeline-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.activity-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(148, 117, 255, 0.25);
+    transform: translateX(3px);
+}
+
+.activity-icon-col {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.activity-icon-col.icon-transactions {
+    background: rgba(16, 185, 129, 0.15);
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.activity-icon-col.icon-recurring {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fde68a;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.activity-icon-col.icon-settings {
+    background: rgba(124, 93, 250, 0.15);
+    color: #c4b5fd;
+    border: 1px solid rgba(124, 93, 250, 0.3);
+}
+
+.activity-icon-col.icon-planning {
+    background: rgba(59, 130, 246, 0.15);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.activity-icon-col.icon-auth {
+    background: rgba(139, 92, 246, 0.15);
+    color: #d8b4fe;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.activity-icon-col.icon-system {
+    background: rgba(100, 116, 139, 0.15);
+    color: #cbd5e1;
+    border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+.activity-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 3px;
+}
+
+.activity-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+}
+
+.activity-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 99px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+}
+
+.activity-badge.badge-transactions {
+    background: rgba(16, 185, 129, 0.12);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.activity-badge.badge-recurring {
+    background: rgba(245, 158, 11, 0.12);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.activity-badge.badge-settings {
+    background: rgba(124, 93, 250, 0.12);
+    color: #a78bfa;
+    border: 1px solid rgba(124, 93, 250, 0.25);
+}
+
+.activity-badge.badge-planning {
+    background: rgba(59, 130, 246, 0.12);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.activity-badge.badge-auth {
+    background: rgba(139, 92, 246, 0.12);
+    color: #c084fc;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+}
+
+.activity-badge.badge-system {
+    background: rgba(100, 116, 139, 0.12);
+    color: #94a3b8;
+    border: 1px solid rgba(100, 116, 139, 0.25);
+}
+
+.activity-desc {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin: 0 0 6px;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.activity-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 11px;
+    color: #64748b;
+    flex-wrap: wrap;
+}
+
+.activity-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.activity-empty {
+    text-align: center;
+    padding: 36px 16px;
+    color: var(--muted);
+}
+
+.activity-empty-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+    opacity: 0.6;
+}
+
+.activity-empty p {
+    font-size: 13px;
+    margin: 0;
 }

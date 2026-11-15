@@ -1709,6 +1709,15 @@ function setupRepeatPlanning() {
             }
 
             saveData();
+            if (window.MFActivityLogger) {
+                window.MFActivityLogger.log(
+                    "planning",
+                    "PLANNING_REPLICATED",
+                    "Planejamento replicado no ano",
+                    `Limite (${money(budgetVal)}) e meta (${money(goalVal)}) replicados para todos os 12 meses de ${yr}`,
+                    { year: yr, budget: budgetVal, goal: goalVal }
+                );
+            }
             renderPlanning();
             showToast(`Planejamento replicado com sucesso para todos os 12 meses de ${yr}! 🎉`);
         });
@@ -1742,6 +1751,15 @@ function setupRepeatPlanning() {
             }
 
             saveData();
+            if (window.MFActivityLogger) {
+                window.MFActivityLogger.log(
+                    "planning",
+                    "PLANNING_REPLICATED",
+                    "Planejamento replicado por 12 meses",
+                    `Limite (${money(budgetVal)}) e meta (${money(goalVal)}) replicados para os próximos 12 meses`,
+                    { budget: budgetVal, goal: goalVal }
+                );
+            }
             renderPlanning();
             showToast("Planejamento replicado com sucesso para os próximos 12 meses! 🎉");
         });
@@ -2157,6 +2175,15 @@ function payRecurringBill(billId, targetDate) {
     }
 
     saveData();
+    if (window.MFActivityLogger) {
+        window.MFActivityLogger.log(
+            "recurring",
+            "RECURRING_PAID",
+            "Conta fixa marcada como paga",
+            `Conta "${bill.name}" marcada como paga para ${formatDate(dateToPay)}`,
+            { id: bill.id, name: bill.name, date: dateToPay }
+        );
+    }
     showToast(`Conta "${bill.name}" marcada como paga para ${formatDate(dateToPay)}!`);
     renderAll();
 }
@@ -2179,6 +2206,15 @@ function unpayRecurringBill(billId, targetDate) {
     }
 
     saveData();
+    if (window.MFActivityLogger) {
+        window.MFActivityLogger.log(
+            "recurring",
+            "RECURRING_UNPAID",
+            "Pagamento de conta desmarcado",
+            `Pagamento de "${bill.name}" desmarcado para ${formatDate(dateToUnpay || todayISO())}`,
+            { id: bill.id, name: bill.name }
+        );
+    }
     showToast(`Pagamento de "${bill.name}" desmarcado.`);
     renderAll();
 }
@@ -2197,6 +2233,15 @@ async function deleteRecurringBill(billId) {
 
     data.recurringBills = (data.recurringBills || []).filter((b) => b.id !== billId);
     saveData();
+    if (window.MFActivityLogger) {
+        window.MFActivityLogger.log(
+            "recurring",
+            "RECURRING_DELETED",
+            "Conta fixa removida",
+            `Conta "${bill.name}" de ${money(bill.amount)} removida das contas fixas`,
+            { id: bill.id, name: bill.name, amount: bill.amount }
+        );
+    }
     showToast("Conta fixa excluída com sucesso.");
     renderAll();
 }
@@ -5694,6 +5739,16 @@ async function deleteTransaction(id) {
         return;
     }
 
+    if (window.MFActivityLogger) {
+        window.MFActivityLogger.log(
+            "transactions",
+            "TRANSACTION_DELETED",
+            "Lançamento excluído",
+            `${transaction.type === "receita" ? "Receita" : "Despesa"}: "${transaction.description}" de ${money(transaction.amount)} em ${formatDate(transaction.date)}`,
+            { id: transaction.id, amount: transaction.amount, type: transaction.type, category: transaction.category }
+        );
+    }
+
     if ($("#editId") && $("#editId").value === id) {
         resetTransactionForm();
     }
@@ -5795,6 +5850,26 @@ function handleTransactionSubmit(event) {
         return;
     }
 
+    if (window.MFActivityLogger) {
+        if (id) {
+            window.MFActivityLogger.log(
+                "transactions",
+                "TRANSACTION_UPDATED",
+                "Lançamento atualizado",
+                `${type === "receita" ? "Receita" : "Despesa"}: "${description}" de ${money(amount)} em ${formatDate(date)} (${category})`,
+                { id, type, description, amount, category, date }
+            );
+        } else {
+            window.MFActivityLogger.log(
+                "transactions",
+                "TRANSACTION_CREATED",
+                "Novo lançamento registrado",
+                `${type === "receita" ? "Receita" : "Despesa"}: "${description}" de ${money(amount)} em ${formatDate(date)} (${category})`,
+                { type, description, amount, category, date }
+            );
+        }
+    }
+
     sessionStorage.setItem("meuFinanceiro.date", date);
     sessionStorage.setItem("meuFinanceiro.month", date.slice(0, 7));
     if ($("#dashboardMonth")) {
@@ -5883,6 +5958,16 @@ function handleSalarySubmit(event) {
         return;
     }
 
+    if (window.MFActivityLogger) {
+        window.MFActivityLogger.log(
+            "settings",
+            "SALARY_UPDATED",
+            "Salário e renda configurados",
+            `Salário mensal fixado em ${money(salary)} para o dia ${salaryDay}${has13th ? " (com 13º salário)" : ""}`,
+            { salary, salaryDay, has13th, grossSalary, benefits }
+        );
+    }
+
     renderAll();
     const calc = getSalaryNextDepositCalculation();
     const daysMsg = calc && calc.diffDays > 0 ? ` (Faltam ${calc.diffDays} dias para o próximo depósito)` : "";
@@ -5920,6 +6005,16 @@ function handleBudgetSubmit(event) {
         return;
     }
 
+    if (window.MFActivityLogger) {
+        window.MFActivityLogger.log(
+            "planning",
+            "BUDGET_UPDATED",
+            "Limite de gastos atualizado",
+            `Limite para ${formatMonthName(month)} ajustado para ${money(budget)}`,
+            { month, budget }
+        );
+    }
+
     renderPlanning();
     showToast("Limite mensal atualizado!");
 }
@@ -5955,6 +6050,16 @@ function handleGoalSubmit(event) {
         return;
     }
 
+    if (window.MFActivityLogger) {
+        window.MFActivityLogger.log(
+            "planning",
+            "GOAL_UPDATED",
+            "Meta de economia atualizada",
+            `Meta para ${formatMonthName(month)} ajustada para ${money(goal)}`,
+            { month, goal }
+        );
+    }
+
     renderPlanning();
     showToast("Meta de economia atualizada!");
 }
@@ -5986,7 +6091,26 @@ function exportBackup() {
 
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 
+    if (window.MFActivityLogger) {
+        window.MFActivityLogger.log(
+            "system",
+            "BACKUP_EXPORTED",
+            "Backup JSON exportado",
+            `Backup baixado contendo ${(data.transactions || []).length} lançamentos e ${(data.recurringBills || []).length} contas fixas`
+        );
+    }
+
     showToast("Backup exportado!");
+}
+
+function sanitizeCsvCell(val) {
+    const str = String(val ?? "");
+    // Prevenção contra Injeção de Fórmulas em CSV (CWE-1236):
+    // Se a célula iniciar com '=', '+', '-', '@', tabulação ou retorno, prefixa com apóstrofe de escape (')
+    if (/^[=+\-@\t\r]/.test(str)) {
+        return `"'${str.replace(/"/g, '""')}"`;
+    }
+    return `"${str.replace(/"/g, '""')}"`;
 }
 
 function exportCSV() {
@@ -5999,12 +6123,12 @@ function exportCSV() {
     const rows = [...data.transactions]
         .sort((a, b) => b.date.localeCompare(a.date))
         .map((t) => [
-            formatDate(t.date),
-            t.type === "receita" ? "Receita" : "Despesa",
-            `"${(t.description || "").replace(/"/g, '""')}"`,
-            `"${(t.category || "").replace(/"/g, '""')}"`,
-            Number(t.amount || 0).toFixed(2).replace(".", ","),
-            `"${(t.notes || "").replace(/"/g, '""')}"`
+            sanitizeCsvCell(formatDate(t.date)),
+            sanitizeCsvCell(t.type === "receita" ? "Receita" : "Despesa"),
+            sanitizeCsvCell(t.description || ""),
+            sanitizeCsvCell(t.category || ""),
+            sanitizeCsvCell(Number(t.amount || 0).toFixed(2).replace(".", ",")),
+            sanitizeCsvCell(t.notes || "")
         ]);
 
     const csvContent = "\uFEFF" + [headers.join(";"), ...rows.map((r) => r.join(";"))].join("\r\n");
@@ -6015,6 +6139,16 @@ function exportCSV() {
     link.download = `meu-financeiro-${todayISO()}.csv`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    if (window.MFActivityLogger) {
+        window.MFActivityLogger.log(
+            "system",
+            "CSV_EXPORTED",
+            "Planilha CSV exportada",
+            `Planilha baixada contendo ${data.transactions.length} lançamentos`
+        );
+    }
+
     showToast("Planilha CSV exportada com sucesso!");
 }
 
@@ -6143,6 +6277,15 @@ async function importBackup(file) {
         resetTransactionForm();
         renderAll();
 
+        if (window.MFActivityLogger) {
+            window.MFActivityLogger.log(
+                "system",
+                "BACKUP_IMPORTED",
+                "Backup JSON restaurado",
+                `Importados com sucesso ${importedData.transactions.length} lançamentos e ${(importedData.recurringBills || []).length} contas fixas`
+            );
+        }
+
         showToast("Backup importado com sucesso!");
     } catch (error) {
         showToast(
@@ -6177,6 +6320,15 @@ async function clearAllData() {
         sessionStorage.removeItem("meuFinanceiro.agendaDate");
         sessionStorage.removeItem("meuFinanceiro.reportPeriod");
 
+        if (window.MFActivityLogger) {
+            window.MFActivityLogger.log(
+                "system",
+                "DATA_CLEARED",
+                "Dados reiniciados",
+                "Todos os lançamentos e configurações locais foram apagados"
+            );
+        }
+
         data = defaultData();
         saveData();
 
@@ -6202,6 +6354,14 @@ function clearDemoDataToZero() {
         isDemoData: false
     };
     saveData();
+    if (window.MFActivityLogger) {
+        window.MFActivityLogger.log(
+            "system",
+            "SIMULATION_LOADED",
+            "Simulação 2027 carregada",
+            "Cenário de teste financeiro de 2027 com salário, metas e contas recorrentes aplicado"
+        );
+    }
     localStorage.setItem("mf_quickstart_completed", "true");
     sessionStorage.setItem("mf_dismiss_demo_banner", "true");
     const banner = $("#demoDataBanner");
@@ -6285,6 +6445,14 @@ function loadSimulation2027() {
     };
 
     saveData();
+    if (window.MFActivityLogger) {
+        window.MFActivityLogger.log(
+            "system",
+            "SIMULATION_LOADED",
+            "Simulação 2027 carregada",
+            "Cenário de teste financeiro de 2027 com salário, metas e contas recorrentes aplicado"
+        );
+    }
     localStorage.setItem("mf_quickstart_completed", "true");
     sessionStorage.setItem("meuFinanceiro.month", "2027-01");
     sessionStorage.setItem("meuFinanceiro.date", "2027-01-20");
@@ -6892,12 +7060,118 @@ function init() {
         }
     }
 
+    function setupActivityAuditPanel() {
+        const listEl = $("#activityTimelineList");
+        if (!listEl) return;
+
+        let currentFilter = "all";
+
+        function renderTimeline(categoryFilter) {
+            if (categoryFilter !== undefined) currentFilter = categoryFilter;
+            if (!window.MFActivityLogger) return;
+
+            const logs = window.MFActivityLogger.getLogs(currentFilter);
+            if (!logs || logs.length === 0) {
+                listEl.innerHTML = `
+                    <div class="activity-empty">
+                        <div class="activity-empty-icon">📋</div>
+                        <p>Nenhuma atividade registrada nesta categoria.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = logs.map(entry => {
+                const badge = window.MFActivityLogger.getCategoryBadge(entry.category);
+                const timeAgo = window.MFActivityLogger.formatRelativeTime(entry.timestamp);
+                const fullDate = new Date(entry.timestamp).toLocaleString("pt-BR", {
+                    dateStyle: "short",
+                    timeStyle: "medium"
+                });
+                const safeTitle = escapeHTML(entry.title || "Atividade");
+                const safeDesc = escapeHTML(entry.description || "");
+                const safeUser = escapeHTML(entry.user || "Local");
+                const safeDevice = escapeHTML(entry.device || "💻 Computador");
+
+                return `
+                    <div class="activity-item" data-id="${entry.id}">
+                        <div class="activity-icon-col">
+                            <div class="activity-icon-circle" title="${badge.label}">${badge.icon}</div>
+                            <div class="activity-connector-line"></div>
+                        </div>
+                        <div class="activity-content-col">
+                            <div class="activity-header-row">
+                                <span class="activity-title">${safeTitle}</span>
+                                <span class="activity-badge ${badge.className}">${badge.label}</span>
+                            </div>
+                            ${safeDesc ? `<p class="activity-desc">${safeDesc}</p>` : ""}
+                            <div class="activity-meta">
+                                <span class="activity-meta-item" title="${fullDate}">⏱️ ${timeAgo}</span>
+                                <span class="activity-meta-item">👤 ${safeUser}</span>
+                                <span class="activity-meta-item">${safeDevice}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        renderTimeline("all");
+
+        // Filtros rápidos por categoria
+        const filterPills = document.querySelectorAll("#activityFiltersBar .activity-filter-pill");
+        filterPills.forEach(pill => {
+            pill.addEventListener("click", () => {
+                filterPills.forEach(p => p.classList.remove("active"));
+                pill.classList.add("active");
+                renderTimeline(pill.dataset.activityFilter || "all");
+            });
+        });
+
+        // Exportação para planilha CSV
+        const btnExport = $("#btnExportActivityCsv");
+        if (btnExport) {
+            btnExport.addEventListener("click", () => {
+                if (window.MFActivityLogger) {
+                    window.MFActivityLogger.exportCSV();
+                }
+            });
+        }
+
+        // Limpeza de logs com diálogo seguro
+        const btnClear = $("#btnClearActivityLogs");
+        if (btnClear) {
+            btnClear.addEventListener("click", async () => {
+                const confirmed = await showConfirmDialog({
+                    title: "Limpar histórico de atividades?",
+                    message: "Tem certeza de que deseja apagar a trilha de auditoria? Suas receitas, despesas e configurações continuarão salvas.",
+                    confirmLabel: "Limpar histórico",
+                    danger: true
+                });
+                if (confirmed && window.MFActivityLogger) {
+                    window.MFActivityLogger.clearLogs();
+                    renderTimeline("all");
+                    showToast("Trilha de auditoria limpa com sucesso!");
+                }
+            });
+        }
+
+        // Atualização reativa em tempo real
+        window.addEventListener("mf:activity-logged", () => {
+            renderTimeline();
+        });
+        window.addEventListener("mf:activity-cleared", () => {
+            renderTimeline();
+        });
+    }
+
     const btnLoadSim2027 = $("#btnLoadSim2027");
     if (btnLoadSim2027) {
         btnLoadSim2027.addEventListener("click", loadSimulation2027);
     }
 
     setupSupabaseSettings();
+    setupActivityAuditPanel();
     setupNavigation();
     setupMobileMenu();
     setupSidebarToggle();
@@ -7303,6 +7577,15 @@ function bindEditBillAmountModalEvents() {
             }
 
             saveData();
+            if (window.MFActivityLogger) {
+                window.MFActivityLogger.log(
+                    "recurring",
+                    "RECURRING_AMOUNT_ADJUSTED",
+                    "Valor de conta fixa alterado",
+                    `Conta "${bill.name}" alterada para ${money(newAmount)} (${scope === "month" ? "somente para " + formatMonthName(targetMonth) : "valor padrão"})`,
+                    { id: bill.id, name: bill.name, newAmount, scope, targetMonth }
+                );
+            }
             closeEditBillAmountModal();
             renderAll();
         };
@@ -7410,6 +7693,16 @@ function setupRecurringBills() {
 
             data.recurringBills.push(newBill);
             saveData();
+
+            if (window.MFActivityLogger) {
+                window.MFActivityLogger.log(
+                    "recurring",
+                    "RECURRING_CREATED",
+                    "Nova conta fixa cadastrada",
+                    `Conta "${name}" de ${money(amount)} (Vencimento todo dia ${dueDay}, ${frequency})`,
+                    { name, amount, dueDay, frequency, category, isVariable }
+                );
+            }
 
             form.reset();
             const timeInput = $("#recurringTime");

@@ -53,6 +53,14 @@ function saveSupabaseConfig(url, anonKey) {
     try {
         localStorage.setItem(SUPABASE_CONFIG_KEY, JSON.stringify(supabaseConfig));
     } catch (e) {}
+    if (window.MFActivityLogger) {
+        window.MFActivityLogger.log(
+            "settings",
+            "SUPABASE_CONFIG_SAVED",
+            "Conexão Supabase configurada",
+            `URL do projeto Supabase atualizada para ${supabaseConfig.url || "padrão"}`
+        );
+    }
     initSupabase();
 }
 
@@ -105,6 +113,14 @@ async function authSignUp(email, password) {
         password
     });
     if (error) throw error;
+    if (window.MFActivityLogger) {
+        window.MFActivityLogger.log(
+            "auth",
+            "AUTH_SIGNUP",
+            "Conta criada com sucesso",
+            `Novo cadastro realizado para ${email.trim()}`
+        );
+    }
     return data;
 }
 
@@ -115,6 +131,14 @@ async function authSignIn(email, password) {
         password
     });
     if (error) throw error;
+    if (window.MFActivityLogger) {
+        window.MFActivityLogger.log(
+            "auth",
+            "AUTH_LOGIN",
+            "Login realizado com sucesso",
+            `Sessão de usuário autenticada como ${email.trim()}`
+        );
+    }
     return data;
 }
 
@@ -122,6 +146,14 @@ async function authSignOut() {
     if (!supabaseClient) return;
     const { error } = await supabaseClient.auth.signOut();
     if (error) throw error;
+    if (window.MFActivityLogger) {
+        window.MFActivityLogger.log(
+            "auth",
+            "AUTH_LOGOUT",
+            "Logout realizado",
+            "Sessão de usuário finalizada com sucesso"
+        );
+    }
 }
 
 async function authResetPassword(email) {
@@ -187,6 +219,18 @@ async function handleUserSignedIn(user) {
 function handleUserSignedOut() {
     currentUser = null;
     window.dispatchEvent(new CustomEvent("mf:sync-status", { detail: { status: "offline" } }));
+
+    // Proteção contra contaminação de dados locais entre contas diferentes (Cross-User Session Bleed):
+    // Ao deslogar, reinicia os dados em memória e no cache para proteger a privacidade financeira
+    if (typeof window.defaultData === "function") {
+        window.data = window.defaultData();
+        try {
+            localStorage.removeItem("meuFinanceiro_data");
+        } catch (e) {}
+        if (typeof window.renderAll === "function") {
+            window.renderAll();
+        }
+    }
 }
 
 // Puxa dados da nuvem para o aplicativo local
@@ -373,6 +417,14 @@ function scheduleCloudSync() {
             if (window.data) {
                 await pushAllLocalDataToCloud(currentUser.id, window.data);
                 window.dispatchEvent(new CustomEvent("mf:sync-status", { detail: { status: "synced" } }));
+                if (window.MFActivityLogger) {
+                    window.MFActivityLogger.log(
+                        "auth",
+                        "CLOUD_SYNCED",
+                        "Dados sincronizados na nuvem",
+                        "Todas as alterações locais foram salvas no Supabase com sucesso"
+                    );
+                }
             }
         } catch (e) {
             console.warn("Falha temporária ao sincronizar em segundo plano:", e);
@@ -396,6 +448,7 @@ window.MFAuth = {
     getConfig: () => ({ ...supabaseConfig }),
     saveConfig: saveSupabaseConfig,
     init: initSupabase,
+    getClient: () => supabaseClient,
     signUp: authSignUp,
     signIn: authSignIn,
     signOut: authSignOut,

@@ -220,6 +220,11 @@
         modal.addEventListener("click", (e) => {
             if (e.target === modal) closeModal();
         });
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && !modal.classList.contains("hidden")) {
+                closeModal();
+            }
+        });
 
         // Submit Sign In
         formSignIn.addEventListener("submit", async (e) => {

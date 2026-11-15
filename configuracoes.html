@@ -19,6 +19,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabaseClient.js" defer></script>
     <script src="authModal.js" defer></script>
+    <script src="activityLogger.js" defer></script>
     <script src="script.js" defer></script>
 </head>
 <body>
@@ -324,6 +325,41 @@
                         <button type="button" class="button button-primary" id="btnSaveSupabaseSettings">Salvar Conexão</button>
                         <button type="button" class="button button-secondary" id="btnOpenAuthFromSettings">Acessar Conta / Fazer Login</button>
                         <span id="supabaseSettingsStatus" style="font-size: 13px; color: var(--muted);"></span>
+                    </div>
+                </article>
+
+                <!-- Rastreabilidade das Atividades / Trilha de Auditoria -->
+                <article class="panel activity-audit-panel" style="margin-top: 24px;">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>🛡️ Rastreabilidade & Trilha de Auditoria</h2>
+                            <p>Histórico cronológico detalhado de todas as alterações, transações, configurações e sincronizações realizadas.</p>
+                        </div>
+                        <div class="button-group" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button type="button" class="button button-secondary" id="btnExportActivityCsv" title="Exportar histórico em planilha CSV">
+                                📊 Exportar CSV
+                            </button>
+                            <button type="button" class="button button-danger" id="btnClearActivityLogs" title="Limpar histórico de atividades" style="padding: 8px 12px; font-size: 13px;">
+                                🗑️ Limpar logs
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filtros rápidos por categoria -->
+                    <div class="activity-filters-bar" id="activityFiltersBar">
+                        <button type="button" class="activity-filter-pill active" data-activity-filter="all">Todos</button>
+                        <button type="button" class="activity-filter-pill" data-activity-filter="transactions">Lançamentos</button>
+                        <button type="button" class="activity-filter-pill" data-activity-filter="recurring">Contas Fixas</button>
+                        <button type="button" class="activity-filter-pill" data-activity-filter="settings">Configurações</button>
+                        <button type="button" class="activity-filter-pill" data-activity-filter="planning">Planejamento</button>
+                        <button type="button" class="activity-filter-pill" data-activity-filter="auth">Segurança & Nuvem</button>
+                    </div>
+
+                    <!-- Timeline de atividades -->
+                    <div class="activity-timeline-container">
+                        <div class="activity-timeline-list" id="activityTimelineList">
+                            <!-- Preenchido dinamicamente via JavaScript -->
+                        </div>
                     </div>
                 </article>
 

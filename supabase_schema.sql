@@ -105,16 +105,33 @@ CREATE TABLE IF NOT EXISTS public.monthly_plans (
 CREATE INDEX IF NOT EXISTS idx_monthly_plans_user_month ON public.monthly_plans(user_id, month_year);
 
 -- ------------------------------------------------------------------------------
--- 6. HABILITAR ROW LEVEL SECURITY (RLS)
+-- 6. TABELA: activity_logs
+-- Trilha de auditoria e rastreabilidade de ações do usuário
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.activity_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    action TEXT NOT NULL,
+    category TEXT NOT NULL,
+    description TEXT,
+    details JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_activity_logs_user_created ON public.activity_logs(user_id, created_at DESC);
+
+-- ------------------------------------------------------------------------------
+-- 7. HABILITAR ROW LEVEL SECURITY (RLS)
 -- ------------------------------------------------------------------------------
 ALTER TABLE public.user_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.recurring_bills ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.recurring_bill_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.monthly_plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.activity_logs ENABLE ROW LEVEL SECURITY;
 
 -- ------------------------------------------------------------------------------
--- 7. POLÍTICAS DE ACESSO ISOLADO POR USUÁRIO (RLS POLICIES)
+-- 8. POLÍTICAS DE ACESSO ISOLADO POR USUÁRIO (RLS POLICIES)
 -- ------------------------------------------------------------------------------
 DROP POLICY IF EXISTS "user_settings_policy" ON public.user_settings;
 CREATE POLICY "user_settings_policy" ON public.user_settings
@@ -138,10 +155,22 @@ DROP POLICY IF EXISTS "recurring_bill_records_policy" ON public.recurring_bill_r
 CREATE POLICY "recurring_bill_records_policy" ON public.recurring_bill_records
     FOR ALL
     USING (auth.uid() = user_id)
-    WITH CHECK (auth.uid() = user_id);
+    WITH CHECK (
+        auth.uid() = user_id
+        AND EXISTS (
+            SELECT 1 FROM public.recurring_bills b
+            WHERE b.id = recurring_bill_id AND b.user_id = auth.uid()
+        )
+    );
 
 DROP POLICY IF EXISTS "monthly_plans_policy" ON public.monthly_plans;
 CREATE POLICY "monthly_plans_policy" ON public.monthly_plans
+    FOR ALL
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "activity_logs_policy" ON public.activity_logs;
+CREATE POLICY "activity_logs_policy" ON public.activity_logs
     FOR ALL
     USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
