@@ -7163,6 +7163,13 @@ function init() {
         window.addEventListener("mf:activity-cleared", () => {
             renderTimeline();
         });
+        // Rolagem suave se a URL tiver âncora direta para a trilha
+        if (window.location.hash === "#activityAuditSection") {
+            setTimeout(() => {
+                const section = document.getElementById("activityAuditSection");
+                if (section) section.scrollIntoView({ behavior: "smooth", block: "start" });
+            }, 300);
+        }
     }
 
     const btnLoadSim2027 = $("#btnLoadSim2027");
