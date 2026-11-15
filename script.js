@@ -298,6 +298,17 @@ function loadData() {
 }
 
 let data = loadData();
+
+// Exposição controlada no escopo global para integração perfeita com Supabase, auditoria e automação
+Object.defineProperty(window, "data", {
+    get: () => data,
+    set: (val) => { data = val; },
+    configurable: true
+});
+window.defaultData = defaultData;
+window.loadData = loadData;
+window.saveData = saveData;
+
 let monthlyChart = null;
 let categoryChart = null;
 let showAllTransactions = false;
@@ -8211,4 +8222,11 @@ function setupQuickStartWizard() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+
+// Métodos auxiliares globais
+window.renderAll = renderAll;
+window.selectedMonth = selectedMonth;
+window.showToast = showToast;
+window.payRecurringBill = payRecurringBill;
+window.unpayRecurringBill = unpayRecurringBill;
 
