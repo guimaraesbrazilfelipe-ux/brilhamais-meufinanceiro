@@ -231,6 +231,11 @@ function handleUserSignedOut() {
             window.renderAll();
         }
     }
+
+    // Limpa também a trilha de auditoria local para que o próximo usuário não veja dados do anterior
+    if (window.MFActivityLogger && typeof window.MFActivityLogger.clearLogs === "function") {
+        window.MFActivityLogger.clearLogs();
+    }
 }
 
 // Puxa dados da nuvem para o aplicativo local

@@ -169,8 +169,15 @@ CREATE POLICY "monthly_plans_policy" ON public.monthly_plans
     USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
+-- Política de integridade da trilha de auditoria (apenas SELECT e INSERT, impedindo adulteração de histórico pelo cliente)
 DROP POLICY IF EXISTS "activity_logs_policy" ON public.activity_logs;
-CREATE POLICY "activity_logs_policy" ON public.activity_logs
-    FOR ALL
-    USING (auth.uid() = user_id)
+DROP POLICY IF EXISTS "activity_logs_select" ON public.activity_logs;
+DROP POLICY IF EXISTS "activity_logs_insert" ON public.activity_logs;
+
+CREATE POLICY "activity_logs_select" ON public.activity_logs
+    FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "activity_logs_insert" ON public.activity_logs
+    FOR INSERT
     WITH CHECK (auth.uid() = user_id);
