@@ -391,18 +391,28 @@ a {
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-bottom: 24px;
+        gap: 0;
+        margin: 0 0 24px 0;
         width: 100%;
-        min-height: 42px;
+        min-height: 44px;
         transition: margin-bottom 0.32s cubic-bezier(0.2, 0, 0, 1);
     }
 
     html.sidebar-collapsed .brand,
     body.sidebar-collapsed .brand {
         margin: 0;
+        gap: 0;
         justify-content: center;
         width: 100%;
         cursor: pointer;
+    }
+
+    /* Coluna única de 44px: logo, ícones de aba e botão de expandir ficam no mesmo eixo central */
+    html.sidebar-collapsed .brand-icon,
+    body.sidebar-collapsed .brand-icon {
+        width: 44px;
+        height: 44px;
+        margin: 0 auto;
     }
 
     html.sidebar-collapsed .brand:hover .brand-icon {
@@ -440,15 +450,18 @@ a {
     body.sidebar-collapsed .desktop-navigation {
         width: 100%;
         gap: 8px;
+        justify-items: center;
     }
 
     html.sidebar-collapsed .desktop-navigation .nav-link,
     body.sidebar-collapsed .desktop-navigation .nav-link {
         justify-content: center;
-        padding: 10px 0;
-        width: 48px;
+        padding: 0;
+        width: 44px;
         height: 44px;
+        min-height: 44px;
         margin: 0 auto;
+        gap: 0;
         position: relative;
     }
 
