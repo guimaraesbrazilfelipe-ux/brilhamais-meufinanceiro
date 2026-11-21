@@ -7282,7 +7282,193 @@ function init() {
         });
     }
 
+    /* ============================================================
+       NOTIFICAÇÕES DO PWA (TESTE E CONSENTIMENTO TRANSPARENTE)
+       ============================================================ */
+    function setupNotificationTest() {
+        const btnTest = document.getElementById("btnTestNotification");
+        const statusPill = document.getElementById("notificationStatusPill");
+        const hintText = document.getElementById("notificationHintText");
+        const explainerModal = document.getElementById("notificationExplainerModal");
+        const blockedModal = document.getElementById("notificationBlockedModal");
+
+        if (!btnTest && !statusPill) return;
+
+        function getStatus() {
+            if (!("Notification" in window)) {
+                return "unsupported";
+            }
+            return Notification.permission; // "default", "granted", "denied"
+        }
+
+        function updateUI() {
+            const status = getStatus();
+            if (!statusPill) return;
+
+            statusPill.className = "status-pill";
+
+            if (status === "unsupported") {
+                statusPill.textContent = "Não suportado";
+                statusPill.classList.add("status-notification-unsupported");
+                if (hintText) hintText.textContent = "Este navegador não suporta a Notification API nativa.";
+            } else if (status === "granted") {
+                statusPill.textContent = "● Notificações ativadas";
+                statusPill.classList.add("status-notification-granted");
+                if (hintText) hintText.textContent = "Permissão concedida. Clique em 'Testar notificação' para emitir um alerta teste.";
+            } else if (status === "denied") {
+                statusPill.textContent = "● Bloqueadas no navegador";
+                statusPill.classList.add("status-notification-denied");
+                if (hintText) hintText.textContent = "Permissão bloqueada nas configurações do site no navegador.";
+            } else {
+                statusPill.textContent = "● Não solicitada";
+                statusPill.classList.add("status-notification-default");
+                if (hintText) hintText.textContent = "Nenhuma permissão é solicitada automaticamente ao navegar.";
+            }
+        }
+
+        async function fireTestNotification() {
+            const title = "Meu Financeiro • Lembrete de Teste 🔔";
+            const options = {
+                body: "Sua notificação de teste está funcionando perfeitamente! Você receberá alertas de contas e vencimentos aqui.",
+                icon: "icons/icon-192.png",
+                badge: "icons/icon-192.png",
+                tag: "meu-financeiro-test",
+                vibrate: [200, 100, 200],
+                data: { url: "./index.html" }
+            };
+
+            let sent = false;
+
+            // 1. Prioriza Service Worker Registration (padrão PWA para Android e Desktop)
+            if ("serviceWorker" in navigator) {
+                try {
+                    const reg = await navigator.serviceWorker.ready;
+                    if (reg && typeof reg.showNotification === "function") {
+                        await reg.showNotification(title, options);
+                        sent = true;
+                    }
+                } catch (err) {
+                    console.warn("Falha via Service Worker, tentando fallback nativo:", err);
+                }
+            }
+
+            // 2. Fallback para Notification nativa caso Service Worker não responda
+            if (!sent && typeof Notification === "function") {
+                try {
+                    new Notification(title, options);
+                    sent = true;
+                } catch (err) {
+                    console.warn("Falha via new Notification:", err);
+                }
+            }
+
+            // 3. Feedback visual (Toast no próprio app)
+            if (typeof showToast === "function") {
+                showToast("🔔 Notificação enviada com sucesso ao seu aparelho!");
+            }
+
+            // Registra na trilha de auditoria
+            if (window.ActivityLogger && typeof window.ActivityLogger.log === "function") {
+                window.ActivityLogger.log(
+                    window.ActivityLogger.CATEGORIES.SETTINGS,
+                    "Teste de notificação emitido com sucesso",
+                    { method: sent ? "native" : "toast", timestamp: new Date().toISOString() }
+                );
+            }
+        }
+
+        function showVisualFallback(message) {
+            if (typeof showToast === "function") {
+                showToast(message || "🔔 Alerta de teste do Meu Financeiro!");
+            }
+        }
+
+        function openExplainerModal() {
+            if (!explainerModal) return;
+            explainerModal.classList.add("is-open");
+            explainerModal.setAttribute("aria-hidden", "false");
+        }
+
+        function closeExplainerModal() {
+            if (!explainerModal) return;
+            explainerModal.classList.remove("is-open");
+            explainerModal.setAttribute("aria-hidden", "true");
+        }
+
+        function openBlockedModal() {
+            if (!blockedModal) return;
+            blockedModal.classList.add("is-open");
+            blockedModal.setAttribute("aria-hidden", "false");
+        }
+
+        function closeBlockedModal() {
+            if (!blockedModal) return;
+            blockedModal.classList.remove("is-open");
+            blockedModal.setAttribute("aria-hidden", "true");
+        }
+
+        const explainerClose = document.getElementById("notificationExplainerClose");
+        const explainerCancel = document.getElementById("notificationExplainerCancel");
+        const explainerConfirm = document.getElementById("notificationExplainerConfirm");
+
+        if (explainerClose) explainerClose.addEventListener("click", closeExplainerModal);
+        if (explainerCancel) explainerCancel.addEventListener("click", closeExplainerModal);
+
+        if (explainerConfirm) {
+            explainerConfirm.addEventListener("click", async () => {
+                closeExplainerModal();
+                try {
+                    const permission = await Notification.requestPermission();
+                    updateUI();
+                    if (permission === "granted") {
+                        await fireTestNotification();
+                    } else if (permission === "denied") {
+                        openBlockedModal();
+                    }
+                } catch (err) {
+                    console.error("Erro ao solicitar permissão de notificação:", err);
+                    showVisualFallback("Não foi possível solicitar a permissão nativa. Notificação em tela acionada.");
+                }
+            });
+        }
+
+        const blockedClose = document.getElementById("notificationBlockedClose");
+        const blockedOk = document.getElementById("notificationBlockedOk");
+
+        if (blockedClose) blockedClose.addEventListener("click", closeBlockedModal);
+        if (blockedOk) blockedOk.addEventListener("click", closeBlockedModal);
+
+        if (btnTest) {
+            btnTest.addEventListener("click", async () => {
+                const status = getStatus();
+
+                if (status === "unsupported") {
+                    showVisualFallback("💡 Seu navegador não suporta notificações nativas. Exibindo alerta de demonstração visual.");
+                    return;
+                }
+
+                if (status === "denied") {
+                    openBlockedModal();
+                    return;
+                }
+
+                if (status === "default") {
+                    openExplainerModal();
+                    return;
+                }
+
+                if (status === "granted") {
+                    await fireTestNotification();
+                }
+            });
+        }
+
+        // Atualiza a interface sem jamais solicitar permissão automaticamente
+        updateUI();
+    }
+
     setupServiceWorker();
+    setupNotificationTest();
     setupDeviceAndCloudSettings();
     setupActivityAuditPanel();
     setupNavigation();

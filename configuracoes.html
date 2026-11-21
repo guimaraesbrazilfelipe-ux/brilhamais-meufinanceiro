@@ -360,6 +360,36 @@
                     </div>
                 </article>
 
+                <!-- Painel de Notificações do PWA -->
+                <article class="panel notification-panel" id="notificationPanel" style="margin-top: 24px;">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>🔔 Notificações e Lembretes (PWA)</h2>
+                            <p>Receba alertas de vencimento de contas, salário creditado e metas no seu aparelho.</p>
+                        </div>
+                        <div class="panel-actions">
+                            <span class="status-pill" id="notificationStatusPill">Verificando...</span>
+                        </div>
+                    </div>
+
+                    <div class="notification-panel-body">
+                        <div class="notification-info-box">
+                            <div class="notification-info-icon" aria-hidden="true">📲</div>
+                            <div class="notification-info-text">
+                                <strong>Lembretes inteligentes sem invasão</strong>
+                                <p>O Meu Financeiro avisa no dia exato do vencimento das suas contas fixas e quando seu salário for creditado, sem propagandas e sem compartilhar seus dados.</p>
+                            </div>
+                        </div>
+
+                        <div class="notification-actions-row">
+                            <button type="button" class="button button-primary" id="btnTestNotification">
+                                🔔 Testar notificação
+                            </button>
+                            <span class="notification-hint-text" id="notificationHintText">Nenhuma permissão é solicitada automaticamente.</span>
+                        </div>
+                    </div>
+                </article>
+
                 <!-- Rastreabilidade das Atividades / Trilha de Auditoria -->
                 <article class="panel activity-audit-panel" id="activityAuditSection" style="margin-top: 24px;">
                     <div class="panel-heading">
@@ -496,6 +526,60 @@
     </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <!-- Modal Explicativo: Propósito das Notificações -->
+    <div id="notificationExplainerModal" class="confirm-dialog" role="dialog" aria-modal="true"
+        aria-labelledby="notificationExplainerTitle" aria-describedby="notificationExplainerDesc" aria-hidden="true">
+        <div class="confirm-dialog-card notification-dialog-card">
+            <button type="button" id="notificationExplainerClose" class="confirm-dialog-close" aria-label="Fechar janela">×</button>
+            <div class="confirm-dialog-icon notification-dialog-icon" aria-hidden="true">🔔</div>
+            <p class="confirm-dialog-eyebrow">LEMBRETES DO MEU FINANCEIRO</p>
+            <h2 id="notificationExplainerTitle">Para que servem as notificações?</h2>
+            
+            <div id="notificationExplainerDesc" class="notification-explainer-content">
+                <p>Para você nunca mais esquecer uma conta ou perder o controle das suas finanças, o Meu Financeiro usa notificações do sistema para:</p>
+                <ul class="notification-perks-list">
+                    <li><strong>📅 Contas a vencer:</strong> Alerta no dia do vencimento dos seus boletos e compromissos fixos.</li>
+                    <li><strong>💵 Salário e 13º:</strong> Aviso no momento em que seu salário for creditado e projetado.</li>
+                    <li><strong>🎯 Metas e limites:</strong> Aviso inteligente quando você atingir 80% e 100% do teto mensal.</li>
+                    <li><strong>🔒 100% Privado:</strong> Notificações geradas localmente no seu aparelho, sem envio de dados a terceiros e sem spam.</li>
+                </ul>
+            </div>
+
+            <div class="confirm-dialog-actions">
+                <button type="button" id="notificationExplainerCancel" class="button button-secondary">Agora não</button>
+                <button type="button" id="notificationExplainerConfirm" class="button button-primary">Permitir e testar notificação</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Ajuda: Permissão Bloqueada no Navegador -->
+    <div id="notificationBlockedModal" class="confirm-dialog" role="dialog" aria-modal="true"
+        aria-labelledby="notificationBlockedTitle" aria-describedby="notificationBlockedDesc" aria-hidden="true">
+        <div class="confirm-dialog-card notification-dialog-card">
+            <button type="button" id="notificationBlockedClose" class="confirm-dialog-close" aria-label="Fechar janela">×</button>
+            <div class="confirm-dialog-icon notification-dialog-icon" aria-hidden="true">⚠️</div>
+            <p class="confirm-dialog-eyebrow">PERMISSÃO BLOQUEADA</p>
+            <h2 id="notificationBlockedTitle">Como ativar notificações</h2>
+            
+            <div id="notificationBlockedDesc" class="notification-explainer-content">
+                <p>As notificações estão bloqueadas nas configurações do seu navegador para este site.</p>
+                <div class="notification-unblock-steps">
+                    <p><strong>Para desbloquear e receber lembretes:</strong></p>
+                    <ol>
+                        <li>Toque no <strong>ícone de cadeado 🔒</strong> ou configurações ao lado da barra de endereços (URL).</li>
+                        <li>Procure por <strong>Notificações</strong> ou <strong>Permissões</strong>.</li>
+                        <li>Altere de <em>Bloquear</em> para <strong>Permitir</strong>.</li>
+                        <li>Volte a esta página e clique em <em>Testar notificação</em> novamente.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="confirm-dialog-actions">
+                <button type="button" id="notificationBlockedOk" class="button button-primary">Entendi</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Mobile Menu Drawer & Backdrop (diretos no body para evitar qualquer bug de posicionamento ou stacking context) -->
     <div class="mobile-menu-backdrop" id="mobileMenuBackdrop" aria-hidden="true"></div>
