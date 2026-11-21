@@ -7013,59 +7013,118 @@ function init() {
         clearAllDataBtn.addEventListener("click", clearAllData);
     }
 
-    function setupSupabaseSettings() {
-        const urlInput = $("#settingsSupabaseUrl");
-        const keyInput = $("#settingsSupabaseAnonKey");
-        const saveBtn = $("#btnSaveSupabaseSettings");
-        const authBtn = $("#btnOpenAuthFromSettings");
-        const statusLabel = $("#supabaseSettingsStatus");
+    function setupDeviceAndCloudSettings() {
+        const syncBtn = $("#btnDeviceSyncNow");
+        const authBtn = $("#btnDeviceAuthAction");
+        const statusLabel = $("#deviceSettingsStatus");
+        const deviceIcon = $("#settingsDeviceIcon");
+        const deviceLabel = $("#settingsDeviceLabel");
+        const deviceId = $("#settingsDeviceId");
+        const sessionUser = $("#settingsSessionUser");
+        const sessionDesc = $("#settingsSessionDesc");
+        const sessionIcon = $("#settingsSessionIcon");
+        const statusDot = $("#deviceStatusDot");
+        const badgeText = $("#deviceStatusBadgeText");
 
-        if (!urlInput || !keyInput) return;
+        if (!syncBtn && !authBtn && !deviceLabel) return;
 
-        if (window.MFAuth) {
-            const cfg = window.MFAuth.getConfig();
-            if (cfg.url) urlInput.value = cfg.url;
-            if (cfg.anonKey) keyInput.value = cfg.anonKey;
-
-            const updateStatus = () => {
-                const user = window.MFAuth.getUser();
-                if (user) {
-                    statusLabel.textContent = `● Conectado como ${user.email}`;
-                    statusLabel.style.color = "#10b981";
-                } else if (cfg.url && cfg.anonKey) {
-                    statusLabel.textContent = "○ Configurado (Não autenticado)";
-                    statusLabel.style.color = "#f59e0b";
-                } else {
-                    statusLabel.textContent = "○ Não configurado";
-                    statusLabel.style.color = "var(--muted)";
-                }
-            };
-
-            updateStatus();
-            window.addEventListener("mf:auth-change", updateStatus);
+        // Atualiza informações de identificação do dispositivo
+        if (window.MFDevice) {
+            const devInfo = window.MFDevice.getInfo();
+            const devId = window.MFDevice.getId();
+            if (deviceIcon) deviceIcon.textContent = devInfo.icon || "💻";
+            if (deviceLabel) deviceLabel.textContent = devInfo.label || "Dispositivo Identificado";
+            if (deviceId) deviceId.textContent = `ID do Aparelho: ${devId}`;
         }
 
-        if (saveBtn) {
-            saveBtn.addEventListener("click", () => {
-                const u = urlInput.value.trim();
-                const k = keyInput.value.trim();
-                if (!u || !k) {
-                    showToast("Informe a URL do Projeto e a Chave Anon.");
+        const updateDeviceSessionUi = () => {
+            const user = window.MFAuth ? window.MFAuth.getUser() : null;
+            const devSession = window.MFDevice ? window.MFDevice.getDeviceSession() : null;
+
+            if (user || devSession) {
+                const email = (user && user.email) || (devSession && devSession.email) || "Usuário";
+                if (sessionUser) sessionUser.textContent = email;
+                if (sessionDesc) sessionDesc.textContent = "Sessão contínua ativa neste dispositivo";
+                if (sessionIcon) sessionIcon.textContent = "🟢";
+                if (authBtn) {
+                    authBtn.textContent = "🚪 Desconectar deste aparelho";
+                    authBtn.className = "button button-danger";
+                }
+                if (statusDot) statusDot.style.background = "#10b981";
+                if (badgeText) badgeText.textContent = "Aparelho Conectado";
+                if (statusLabel) {
+                    statusLabel.textContent = `● Sessão persistente ativa para ${email}`;
+                    statusLabel.style.color = "#10b981";
+                }
+            } else {
+                if (sessionUser) sessionUser.textContent = "Modo Local / Desconectado";
+                if (sessionDesc) sessionDesc.textContent = "Nenhuma conta vinculada a este aparelho";
+                if (sessionIcon) sessionIcon.textContent = "👤";
+                if (authBtn) {
+                    authBtn.textContent = "🔑 Entrar / Conectar Conta";
+                    authBtn.className = "button button-secondary";
+                }
+                if (statusDot) statusDot.style.background = "#f59e0b";
+                if (badgeText) badgeText.textContent = "Dispositivo Não Vinculado";
+                if (statusLabel) {
+                    statusLabel.textContent = "○ Este aparelho não possui conta conectada";
+                    statusLabel.style.color = "var(--muted)";
+                }
+            }
+        };
+
+        updateDeviceSessionUi();
+        window.addEventListener("mf:auth-change", updateDeviceSessionUi);
+        window.addEventListener("mf:auth-ready", updateDeviceSessionUi);
+
+        if (syncBtn) {
+            syncBtn.addEventListener("click", async () => {
+                const user = window.MFAuth ? window.MFAuth.getUser() : null;
+                const devSession = window.MFDevice ? window.MFDevice.getDeviceSession() : null;
+                if (!user && !devSession) {
+                    showToast("Entre na sua conta para sincronizar dados na nuvem.");
+                    const modal = $("#authModal");
+                    if (modal) {
+                        modal.classList.remove("hidden");
+                        modal.setAttribute("aria-hidden", "false");
+                    }
                     return;
                 }
-                if (window.MFAuth) {
-                    window.MFAuth.saveConfig(u, k);
-                    showToast("Conexão Supabase salva com sucesso!");
+                try {
+                    syncBtn.disabled = true;
+                    syncBtn.textContent = "⏳ Sincronizando...";
+                    if (window.MFAuth) {
+                        await window.MFAuth.scheduleSync();
+                    }
+                    showToast("Sincronização agendada com sucesso!");
+                } catch (e) {
+                    showToast("Erro ao sincronizar com a nuvem.");
+                } finally {
+                    syncBtn.disabled = false;
+                    syncBtn.textContent = "🔄 Sincronizar Agora";
                 }
             });
         }
 
         if (authBtn) {
-            authBtn.addEventListener("click", () => {
-                const modal = $("#authModal");
-                if (modal) {
-                    modal.classList.remove("hidden");
-                    modal.setAttribute("aria-hidden", "false");
+            authBtn.addEventListener("click", async () => {
+                const user = window.MFAuth ? window.MFAuth.getUser() : null;
+                const devSession = window.MFDevice ? window.MFDevice.getDeviceSession() : null;
+
+                if (user || devSession) {
+                    if (confirm("Deseja realmente desconectar sua conta deste dispositivo? Você voltará ao modo local.")) {
+                        if (window.MFAuth) {
+                            await window.MFAuth.signOut();
+                        }
+                        showToast("Desconectado com sucesso.");
+                        updateDeviceSessionUi();
+                    }
+                } else {
+                    const modal = $("#authModal");
+                    if (modal) {
+                        modal.classList.remove("hidden");
+                        modal.setAttribute("aria-hidden", "false");
+                    }
                 }
             });
         }
@@ -7188,7 +7247,7 @@ function init() {
         btnLoadSim2027.addEventListener("click", loadSimulation2027);
     }
 
-    setupSupabaseSettings();
+    setupDeviceAndCloudSettings();
     setupActivityAuditPanel();
     setupNavigation();
     setupMobileMenu();

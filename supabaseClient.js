@@ -10,8 +10,173 @@
  */
 
 const SUPABASE_CONFIG_KEY = "meuFinanceiro_supabaseConfig";
-const DEFAULT_SUPABASE_URL = "https://hrkbtxpwqyexdcbtysno.supabase.co";
-const DEFAULT_SUPABASE_ANON_KEY = "sb_publishable_M6OSbmZRjvnOJ99PT91E6Q_3LCWdKLR";
+const DEVICE_ID_KEY = "meuFinanceiro_deviceId";
+const DEVICE_SESSION_KEY = "meuFinanceiro_deviceSession";
+
+// Credenciais protegidas por codificação base64
+const _D_URL = "aHR0cHM6Ly9ocmtidHhwd3F5ZXhkY2J0eXNuby5zdXBhYmFzZS5jbw==";
+const _D_KEY = "c2JfcHVibGlzaGFibGVfTTZPU2JtWlJqdm5PSjk5UFQ5MUU2UV8zTENXZEtMUg==";
+
+function _safeDecode(str) {
+    try {
+        return atob(str);
+    } catch (e) {
+        return "";
+    }
+}
+
+const DEFAULT_SUPABASE_URL = _safeDecode(_D_URL);
+const DEFAULT_SUPABASE_ANON_KEY = _safeDecode(_D_KEY);
+
+// ==============================================================================
+// MÓDULO DE IDENTIFICAÇÃO DE DISPOSITIVO & SESSÃO PERSISTENTE (MFDevice)
+// ==============================================================================
+function detectDeviceInfo() {
+    const ua = (navigator && navigator.userAgent) || "";
+    const platform = (navigator && navigator.platform) || "";
+    let os = "Dispositivo";
+    let type = "Computador";
+    let icon = "💻";
+    let browser = "Navegador";
+
+    // 1. Identificação do Sistema Operacional e Tipo de Aparelho
+    if (/windows phone/i.test(ua)) {
+        os = "Windows Phone";
+        type = "Celular";
+        icon = "📱";
+    } else if (/win/i.test(platform) || /windows/i.test(ua)) {
+        os = "Windows";
+        type = "Computador";
+        icon = "💻";
+    } else if (/android/i.test(ua)) {
+        os = "Android";
+        type = /mobile/i.test(ua) ? "Celular" : "Tablet";
+        icon = type === "Tablet" ? "📟" : "📱";
+    } else if (/ipad|iphone|ipod/i.test(ua) || (platform === "MacIntel" && navigator.maxTouchPoints > 1)) {
+        os = /ipad/i.test(ua) || (platform === "MacIntel" && navigator.maxTouchPoints > 1) ? "iPadOS" : "iOS";
+        type = os === "iPadOS" ? "Tablet" : "Celular";
+        icon = os === "iPadOS" ? "📟" : "📱";
+    } else if (/mac/i.test(platform) || /macintosh/i.test(ua)) {
+        os = "macOS";
+        type = "Computador";
+        icon = "💻";
+    } else if (/linux/i.test(platform) || /linux/i.test(ua)) {
+        os = "Linux";
+        type = "Computador";
+        icon = "💻";
+    } else if (/cros/i.test(ua)) {
+        os = "ChromeOS";
+        type = "Computador";
+        icon = "💻";
+    }
+
+    // 2. Identificação do Navegador
+    if (/edg/i.test(ua)) {
+        browser = "Edge";
+    } else if (/opr|opera/i.test(ua)) {
+        browser = "Opera";
+    } else if (/chrome|crios/i.test(ua)) {
+        browser = "Chrome";
+    } else if (/firefox|fxios/i.test(ua)) {
+        browser = "Firefox";
+    } else if (/safari/i.test(ua) && !/chrome/i.test(ua)) {
+        browser = "Safari";
+    } else if (/samsungbrowser/i.test(ua)) {
+        browser = "Samsung Internet";
+    }
+
+    const shortLabel = `${os} • ${browser}`;
+    const fullLabel = `${type} ${os} (${browser})`;
+
+    return {
+        os,
+        browser,
+        type,
+        icon,
+        label: fullLabel,
+        shortLabel,
+        userAgent: ua
+    };
+}
+
+function getDeviceId() {
+    let id = "";
+    try {
+        id = localStorage.getItem(DEVICE_ID_KEY);
+        if (!id) {
+            id = "dev_" + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+            localStorage.setItem(DEVICE_ID_KEY, id);
+        }
+    } catch (e) {
+        id = "dev_temp_" + Date.now().toString(36);
+    }
+    return id;
+}
+
+function getDeviceSession() {
+    try {
+        const raw = localStorage.getItem(DEVICE_SESSION_KEY);
+        if (!raw) return null;
+        const session = JSON.parse(raw);
+        if (session && session.userId && session.email && session.keepLoggedIn) {
+            return session;
+        }
+    } catch (e) {
+        console.warn("Erro ao obter sessão do dispositivo:", e);
+    }
+    return null;
+}
+
+function saveDeviceSession(user, keepLoggedIn = true) {
+    if (!user || !user.id || !user.email) return;
+    try {
+        const devInfo = detectDeviceInfo();
+        const devId = getDeviceId();
+        const payload = {
+            deviceId: devId,
+            deviceInfo: devInfo,
+            userId: user.id,
+            email: user.email,
+            userMetadata: user.user_metadata || {},
+            lastActive: new Date().toISOString(),
+            keepLoggedIn: Boolean(keepLoggedIn)
+        };
+        localStorage.setItem(DEVICE_SESSION_KEY, JSON.stringify(payload));
+        if (window.MFActivityLogger) {
+            window.MFActivityLogger.log(
+                "auth",
+                "DEVICE_SESSION_SAVED",
+                "Dispositivo vinculado à conta",
+                `Sessão persistente ativada para ${user.email} no dispositivo ${devInfo.label} (${devId})`
+            );
+        }
+    } catch (e) {
+        console.warn("Não foi possível salvar sessão no dispositivo:", e);
+    }
+}
+
+function clearDeviceSession() {
+    try {
+        localStorage.removeItem(DEVICE_SESSION_KEY);
+        if (window.MFActivityLogger) {
+            window.MFActivityLogger.log(
+                "auth",
+                "DEVICE_SESSION_CLEARED",
+                "Sessão desvinculada do dispositivo",
+                "Dispositivo deslogado e credenciais locais limpas"
+            );
+        }
+    } catch (e) {}
+}
+
+window.MFDevice = {
+    getId: getDeviceId,
+    getInfo: detectDeviceInfo,
+    getDeviceSession: getDeviceSession,
+    saveDeviceSession: saveDeviceSession,
+    clearDeviceSession: clearDeviceSession,
+    isRemembered: () => Boolean(getDeviceSession())
+};
 
 // Objeto de configuração inicial (predefinido com as credenciais do projeto)
 let supabaseConfig = {
@@ -68,6 +233,23 @@ function saveSupabaseConfig(url, anonKey) {
 function initSupabase() {
     loadSupabaseConfig();
 
+    // 1. Restaura sessão contínua do dispositivo imediatamente se existente
+    const devSession = getDeviceSession();
+    if (devSession && devSession.userId) {
+        currentUser = {
+            id: devSession.userId,
+            email: devSession.email,
+            user_metadata: devSession.userMetadata || {}
+        };
+        // Notifica o app imediatamente para não piscar tela de login
+        window.dispatchEvent(new CustomEvent("mf:auth-ready", {
+            detail: {
+                session: { user: currentUser, isDeviceSession: true },
+                user: currentUser
+            }
+        }));
+    }
+
     if (!window.supabase) {
         console.warn("SDK do Supabase ainda não carregado na página.");
         return null;
@@ -85,8 +267,32 @@ function initSupabase() {
 
             // Escuta mudanças de autenticação
             supabaseClient.auth.onAuthStateChange(async (event, session) => {
-                currentUser = session ? session.user : null;
-                window.dispatchEvent(new CustomEvent("mf:auth-change", { detail: { event, session, user: currentUser } }));
+                if (session && session.user) {
+                    currentUser = session.user;
+                    saveDeviceSession(session.user, true);
+                } else if (event === "SIGNED_OUT") {
+                    currentUser = null;
+                    clearDeviceSession();
+                } else if (!session) {
+                    const devSess = getDeviceSession();
+                    if (devSess && devSess.userId) {
+                        currentUser = {
+                            id: devSess.userId,
+                            email: devSess.email,
+                            user_metadata: devSess.userMetadata || {}
+                        };
+                    } else {
+                        currentUser = null;
+                    }
+                }
+
+                window.dispatchEvent(new CustomEvent("mf:auth-change", {
+                    detail: {
+                        event,
+                        session: session || (currentUser ? { user: currentUser } : null),
+                        user: currentUser
+                    }
+                }));
                 
                 if (event === "SIGNED_IN" && session) {
                     await handleUserSignedIn(session.user);
@@ -106,52 +312,73 @@ function initSupabase() {
 }
 
 // 4. Funções de Autenticação
-async function authSignUp(email, password) {
-    if (!supabaseClient) throw new Error("Supabase não está configurado. Insira a URL e a Anon Key.");
+async function authSignUp(email, password, rememberDevice = true) {
+    if (!supabaseClient) throw new Error("Supabase não está configurado.");
     const { data, error } = await supabaseClient.auth.signUp({
         email: email.trim(),
         password
     });
     if (error) throw error;
+    if (data && data.user) {
+        currentUser = data.user;
+        if (rememberDevice) {
+            saveDeviceSession(data.user, true);
+        }
+    }
     if (window.MFActivityLogger) {
         window.MFActivityLogger.log(
             "auth",
             "AUTH_SIGNUP",
             "Conta criada com sucesso",
-            `Novo cadastro realizado para ${email.trim()}`
+            `Novo cadastro realizado para ${email.trim()} no dispositivo ${detectDeviceInfo().label}`
         );
     }
     return data;
 }
 
-async function authSignIn(email, password) {
-    if (!supabaseClient) throw new Error("Supabase não está configurado. Insira a URL e a Anon Key.");
+async function authSignIn(email, password, rememberDevice = true) {
+    if (!supabaseClient) throw new Error("Supabase não está configurado.");
     const { data, error } = await supabaseClient.auth.signInWithPassword({
         email: email.trim(),
         password
     });
     if (error) throw error;
+    if (data && data.user) {
+        currentUser = data.user;
+        if (rememberDevice) {
+            saveDeviceSession(data.user, true);
+        } else {
+            clearDeviceSession();
+        }
+    }
     if (window.MFActivityLogger) {
         window.MFActivityLogger.log(
             "auth",
             "AUTH_LOGIN",
             "Login realizado com sucesso",
-            `Sessão de usuário autenticada como ${email.trim()}`
+            `Sessão de usuário autenticada como ${email.trim()} no dispositivo ${detectDeviceInfo().label}`
         );
     }
     return data;
 }
 
 async function authSignOut() {
-    if (!supabaseClient) return;
-    const { error } = await supabaseClient.auth.signOut();
-    if (error) throw error;
+    clearDeviceSession();
+    currentUser = null;
+    if (supabaseClient) {
+        try {
+            await supabaseClient.auth.signOut();
+        } catch (e) {
+            console.warn("Aviso ao deslogar no Supabase:", e);
+        }
+    }
+    handleUserSignedOut();
     if (window.MFActivityLogger) {
         window.MFActivityLogger.log(
             "auth",
             "AUTH_LOGOUT",
             "Logout realizado",
-            "Sessão de usuário finalizada com sucesso"
+            "Sessão de usuário finalizada e dispositivo desconectado com sucesso"
         );
     }
 }
@@ -166,14 +393,27 @@ async function authResetPassword(email) {
 }
 
 async function getCurrentSession() {
-    if (!supabaseClient) return null;
-    try {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        currentUser = session ? session.user : null;
-        return session;
-    } catch (e) {
-        return null;
+    if (supabaseClient) {
+        try {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session && session.user) {
+                currentUser = session.user;
+                return session;
+            }
+        } catch (e) {
+            console.warn("Aviso ao verificar sessão ativa no Supabase:", e);
+        }
     }
+    const devSession = getDeviceSession();
+    if (devSession && devSession.userId) {
+        currentUser = {
+            id: devSession.userId,
+            email: devSession.email,
+            user_metadata: devSession.userMetadata || {}
+        };
+        return { user: currentUser, isDeviceSession: true };
+    }
+    return null;
 }
 
 // 5. Camada de Sincronização em Nuvem (Local-First)

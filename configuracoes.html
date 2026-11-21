@@ -303,28 +303,53 @@
                     </div>
                 </article>
 
-                <!-- Sincronização em Nuvem (Supabase) -->
-                <article class="panel" style="margin-top: 24px;">
+                <!-- Sincronização em Nuvem & Dispositivo Conectado -->
+                <article class="panel device-sync-panel" id="deviceSyncPanel" style="margin-top: 24px;">
                     <div class="panel-heading">
                         <div>
-                            <h2>☁️ Sincronização em Nuvem (Supabase)</h2>
-                            <p>Conecte seu banco de dados Supabase para sincronizar suas finanças entre múltiplos aparelhos com segurança (RLS).</p>
+                            <h2>☁️ Nuvem & Dispositivo Conectado</h2>
+                            <p>Sincronização em nuvem segura com reconhecimento de aparelho e autenticação contínua.</p>
+                        </div>
+                        <div class="device-status-badge" id="deviceStatusBadge">
+                            <span class="device-status-dot" id="deviceStatusDot"></span>
+                            <span id="deviceStatusBadgeText">Dispositivo Verificado</span>
                         </div>
                     </div>
-                    <div class="form-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 16px;">
-                        <div class="field">
-                            <label for="settingsSupabaseUrl">URL do Projeto Supabase</label>
-                            <input type="url" id="settingsSupabaseUrl" placeholder="https://seu-projeto.supabase.co" autocomplete="off">
+
+                    <div class="device-info-grid">
+                        <div class="device-info-card">
+                            <div class="device-card-icon" id="settingsDeviceIcon">💻</div>
+                            <div class="device-card-content">
+                                <span class="device-card-title" id="settingsDeviceLabel">Detectando aparelho...</span>
+                                <span class="device-card-subtitle" id="settingsDeviceId">ID: Verificando...</span>
+                            </div>
                         </div>
-                        <div class="field">
-                            <label for="settingsSupabaseAnonKey">Chave Anon (Pública)</label>
-                            <input type="password" id="settingsSupabaseAnonKey" placeholder="eyJhbGciOiJIUzI1NiIs..." autocomplete="off">
+
+                        <div class="device-info-card">
+                            <div class="device-card-icon">🔒</div>
+                            <div class="device-card-content">
+                                <span class="device-card-title">Chave API & Conexão Segura</span>
+                                <span class="device-card-subtitle">Credenciais criptografadas e protegidas contra acesso público</span>
+                            </div>
+                        </div>
+
+                        <div class="device-info-card">
+                            <div class="device-card-icon" id="settingsSessionIcon">👤</div>
+                            <div class="device-card-content">
+                                <span class="device-card-title" id="settingsSessionUser">Modo Local / Desconectado</span>
+                                <span class="device-card-subtitle" id="settingsSessionDesc">Nenhuma conta vinculada a este aparelho</span>
+                            </div>
                         </div>
                     </div>
-                    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                        <button type="button" class="button button-primary" id="btnSaveSupabaseSettings">Salvar Conexão</button>
-                        <button type="button" class="button button-secondary" id="btnOpenAuthFromSettings">Acessar Conta / Fazer Login</button>
-                        <span id="supabaseSettingsStatus" style="font-size: 13px; color: var(--muted);"></span>
+
+                    <div class="device-actions-bar">
+                        <button type="button" class="button button-primary" id="btnDeviceSyncNow">
+                            🔄 Sincronizar Agora
+                        </button>
+                        <button type="button" class="button button-secondary" id="btnDeviceAuthAction">
+                            🔑 Entrar / Conectar Conta
+                        </button>
+                        <span id="deviceSettingsStatus" style="font-size: 13px; color: var(--muted); margin-left: 8px;"></span>
                     </div>
                 </article>
 

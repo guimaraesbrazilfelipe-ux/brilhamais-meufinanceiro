@@ -21,15 +21,21 @@
                         <span class="auth-brand-icon">⚡</span>
                         <span>Meu Financeiro Nuvem</span>
                     </div>
+
+                    <!-- Selo de Identificação do Dispositivo -->
+                    <div class="auth-device-pill" id="authDevicePill">
+                        <span id="authDeviceIcon">💻</span>
+                        <span id="authDeviceLabel">Dispositivo identificado</span>
+                    </div>
+
                     <h2 id="authModalTitle">Acesse sua conta</h2>
-                    <p id="authModalSubtitle">Sincronize suas despesas e acesse de qualquer aparelho com segurança.</p>
+                    <p id="authModalSubtitle">Sincronize suas finanças e mantenha-se conectado neste aparelho.</p>
                 </div>
 
-                <!-- Abas: Entrar, Cadastrar e Configurar Nuvem -->
+                <!-- Abas: Entrar e Criar conta -->
                 <div class="auth-tabs" role="tablist">
                     <button type="button" class="auth-tab active" data-auth-tab="signin" role="tab">Entrar</button>
                     <button type="button" class="auth-tab" data-auth-tab="signup" role="tab">Criar conta</button>
-                    <button type="button" class="auth-tab" data-auth-tab="config" role="tab">⚙️ Conexão</button>
                 </div>
 
                 <div id="authAlertBox" class="auth-alert hidden"></div>
@@ -47,6 +53,14 @@
                         </div>
                         <input type="password" id="authSignInPassword" placeholder="Sua senha" required autocomplete="current-password">
                     </div>
+
+                    <div class="auth-remember-row">
+                        <label class="auth-checkbox-label" for="authSignInRemember">
+                            <input type="checkbox" id="authSignInRemember" checked>
+                            <span>Continuar logado neste dispositivo</span>
+                        </label>
+                    </div>
+
                     <button type="submit" class="button button-primary auth-submit-btn" id="btnSubmitSignIn">
                         <span>Entrar</span>
                     </button>
@@ -66,30 +80,22 @@
                         <label for="authSignUpPasswordConfirm">Confirmar senha</label>
                         <input type="password" id="authSignUpPasswordConfirm" placeholder="Repita sua senha" required minlength="6" autocomplete="new-password">
                     </div>
+
+                    <div class="auth-remember-row">
+                        <label class="auth-checkbox-label" for="authSignUpRemember">
+                            <input type="checkbox" id="authSignUpRemember" checked>
+                            <span>Lembrar e manter conectado neste dispositivo</span>
+                        </label>
+                    </div>
+
                     <button type="submit" class="button button-primary auth-submit-btn" id="btnSubmitSignUp">
                         <span>Criar minha conta</span>
                     </button>
-                    <p class="auth-footnote">Ao cadastrar, seus dados locais serão preservados e vinculados à sua conta com isolamento seguro (RLS).</p>
+                    <p class="auth-footnote">Ao cadastrar, suas finanças locais serão vinculadas com isolamento seguro (RLS) e mantidas salvas neste dispositivo.</p>
                 </form>
 
-                <!-- Painel de Configurações do Supabase -->
-                <div id="authConfigPanel" class="auth-form hidden">
-                    <p class="auth-config-intro">Insira as credenciais do seu projeto Supabase para habilitar a nuvem:</p>
-                    <div class="field">
-                        <label for="authSupabaseUrl">Project URL</label>
-                        <input type="url" id="authSupabaseUrl" placeholder="https://xyzproject.supabase.co" autocomplete="off">
-                    </div>
-                    <div class="field">
-                        <label for="authSupabaseAnonKey">Anon / Public Key</label>
-                        <input type="password" id="authSupabaseAnonKey" placeholder="eyJhbGciOiJIUzI1NiIs..." autocomplete="off">
-                    </div>
-                    <div class="auth-config-actions">
-                        <button type="button" class="button button-primary" id="btnSaveSupabaseConfig">Salvar Conexão</button>
-                    </div>
-                </div>
-
                 <div class="auth-modal-footer">
-                    <span class="auth-security-badge">🔒 Criptografia ponta a ponta & Row Level Security</span>
+                    <span class="auth-security-badge">🔒 Conexão Segura & Criptografia Ponta a Ponta</span>
                 </div>
             </div>
         </div>
@@ -151,6 +157,25 @@
             topbarActions.appendChild(authContainer);
         }
 
+        // Se já existe sessão persistente salva neste dispositivo, exibe o perfil imediatamente
+        if (window.MFDevice) {
+            const devSession = window.MFDevice.getDeviceSession();
+            if (devSession && devSession.email) {
+                const trigger = authContainer.querySelector("#authTriggerBtn");
+                const widget = authContainer.querySelector("#userProfileWidget");
+                if (trigger) trigger.classList.add("hidden");
+                if (widget) {
+                    widget.classList.remove("hidden");
+                    const emailLabel = widget.querySelector("#userEmailLabel");
+                    const dropdownEmail = widget.querySelector("#userDropdownEmail");
+                    const avatarChar = widget.querySelector("#userAvatarChar");
+                    if (emailLabel) emailLabel.textContent = devSession.email;
+                    if (dropdownEmail) dropdownEmail.textContent = devSession.email;
+                    if (avatarChar) avatarChar.textContent = devSession.email.charAt(0).toUpperCase();
+                }
+            }
+        }
+
         setupTopbarEvents();
     }
 
@@ -163,7 +188,15 @@
 
         const formSignIn = document.getElementById("authSignInForm");
         const formSignUp = document.getElementById("authSignUpForm");
-        const panelConfig = document.getElementById("authConfigPanel");
+
+        // Atualiza a identificação do dispositivo no cabeçalho do modal
+        const devIcon = document.getElementById("authDeviceIcon");
+        const devLabel = document.getElementById("authDeviceLabel");
+        if (window.MFDevice) {
+            const info = window.MFDevice.getInfo();
+            if (devIcon) devIcon.textContent = info.icon || "💻";
+            if (devLabel) devLabel.textContent = `Aparelho: ${info.label}`;
+        }
 
         function showAlert(msg, isSuccess = false) {
             if (!alertBox) return;
@@ -182,26 +215,16 @@
 
             formSignIn.classList.toggle("hidden", target !== "signin");
             formSignUp.classList.toggle("hidden", target !== "signup");
-            panelConfig.classList.toggle("hidden", target !== "config");
 
             const title = document.getElementById("authModalTitle");
             const sub = document.getElementById("authModalSubtitle");
 
             if (target === "signin") {
                 title.textContent = "Acesse sua conta";
-                sub.textContent = "Sincronize suas despesas e acesse de qualquer aparelho.";
+                sub.textContent = "Sincronize suas finanças e mantenha-se conectado neste aparelho.";
             } else if (target === "signup") {
                 title.textContent = "Criar conta gratuita";
                 sub.textContent = "Cadastre-se para manter suas finanças salvas na nuvem com isolamento.";
-            } else if (target === "config") {
-                title.textContent = "Conexão com o Supabase";
-                sub.textContent = "Conecte seu projeto inserindo sua URL e chave pública (Anon).";
-                // Preenche valores atuais se existirem
-                if (window.MFAuth) {
-                    const cfg = window.MFAuth.getConfig();
-                    document.getElementById("authSupabaseUrl").value = cfg.url || "";
-                    document.getElementById("authSupabaseAnonKey").value = cfg.anonKey || "";
-                }
             }
         }
 
@@ -232,6 +255,7 @@
             clearAlert();
             const email = document.getElementById("authSignInEmail").value;
             const pwd = document.getElementById("authSignInPassword").value;
+            const remember = document.getElementById("authSignInRemember") ? document.getElementById("authSignInRemember").checked : true;
             const btn = document.getElementById("btnSubmitSignIn");
 
             if (!email || !pwd) {
@@ -242,7 +266,7 @@
             try {
                 btn.disabled = true;
                 btn.innerHTML = `<span class="auth-spinner"></span> Entrando...`;
-                await window.MFAuth.signIn(email, pwd);
+                await window.MFAuth.signIn(email, pwd, remember);
                 closeModal();
                 if (typeof window.showToast === "function") {
                     window.showToast("Login realizado com sucesso!");
@@ -268,6 +292,7 @@
             const email = document.getElementById("authSignUpEmail").value;
             const pwd = document.getElementById("authSignUpPassword").value;
             const pwdConfirm = document.getElementById("authSignUpPasswordConfirm").value;
+            const remember = document.getElementById("authSignUpRemember") ? document.getElementById("authSignUpRemember").checked : true;
             const btn = document.getElementById("btnSubmitSignUp");
 
             if (!email || !pwd) {
@@ -288,7 +313,7 @@
             try {
                 btn.disabled = true;
                 btn.innerHTML = `<span class="auth-spinner"></span> Cadastrando...`;
-                const res = await window.MFAuth.signUp(email, pwd);
+                const res = await window.MFAuth.signUp(email, pwd, remember);
                 
                 if (res.session) {
                     closeModal();
@@ -298,7 +323,7 @@
                 } else {
                     // Sem necessidade de confirmação por email: efetua login direto automático
                     try {
-                        await window.MFAuth.signIn(email, pwd);
+                        await window.MFAuth.signIn(email, pwd, remember);
                         closeModal();
                         if (typeof window.showToast === "function") {
                             window.showToast("Conta criada e sincronizada com sucesso!");
@@ -333,24 +358,6 @@
                 } catch (err) {
                     showAlert(err.message || "Erro ao solicitar recuperação.");
                 }
-            });
-        }
-
-        // Salvar Configurações de Conexão Supabase
-        const btnSaveConfig = document.getElementById("btnSaveSupabaseConfig");
-        if (btnSaveConfig) {
-            btnSaveConfig.addEventListener("click", () => {
-                const url = document.getElementById("authSupabaseUrl").value.trim();
-                const key = document.getElementById("authSupabaseAnonKey").value.trim();
-
-                if (!url || !key) {
-                    showAlert("Informe a Project URL e a Anon Key.");
-                    return;
-                }
-
-                window.MFAuth.saveConfig(url, key);
-                showAlert("Configurações do Supabase salvas com sucesso!", true);
-                setTimeout(() => switchTab("signin"), 1000);
             });
         }
     }
@@ -470,6 +477,10 @@
     document.addEventListener("DOMContentLoaded", () => {
         injectAuthModalHtml();
         injectTopbarAuthElement();
+        if (window.MFDevice && window.MFDevice.getDeviceSession()) {
+            const devSession = window.MFDevice.getDeviceSession();
+            updateAuthUi({ user: { id: devSession.userId, email: devSession.email } }, { id: devSession.userId, email: devSession.email });
+        }
         if (window.MFAuth) {
             window.MFAuth.getSession().then(s => updateAuthUi(s, window.MFAuth.getUser()));
         }
@@ -479,5 +490,9 @@
     if (document.readyState === "interactive" || document.readyState === "complete") {
         injectAuthModalHtml();
         injectTopbarAuthElement();
+        if (window.MFDevice && window.MFDevice.getDeviceSession()) {
+            const devSession = window.MFDevice.getDeviceSession();
+            updateAuthUi({ user: { id: devSession.userId, email: devSession.email } }, { id: devSession.userId, email: devSession.email });
+        }
     }
 })();
