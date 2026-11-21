@@ -6530,7 +6530,7 @@ function setupNavigation() {
         if (!href) return;
 
         const isCurrent = href === currentPath ||
-            (href === "index.html" && (currentPath === "" || currentPath === "index1.html"));
+            (href === "index.html" && currentPath === "");
 
         link.classList.toggle("active", isCurrent);
         if (isCurrent) {
@@ -7879,7 +7879,7 @@ function setupWelcomeTutorial() {
     document.querySelectorAll(".nav-link-tutorial").forEach((btn) => {
         btn.addEventListener("click", (e) => {
             const currentPath = window.location.pathname.split("/").pop() || "index.html";
-            const currentPage = (currentPath === "index.html" || currentPath === "index1.html")
+            const currentPage = currentPath === "index.html"
                 ? "index.html"
                 : (currentPath + window.location.search);
 
@@ -8004,7 +8004,6 @@ function setupWelcomeTutorial() {
 
         const isAnotherPage = rawReturn &&
             rawReturn !== "index.html" &&
-            rawReturn !== "index1.html" &&
             !rawReturn.endsWith("/index.html") &&
             rawReturn !== "/";
 
@@ -8310,8 +8309,10 @@ function setupQuickStartWizard() {
     const urlParams = new URLSearchParams(window.location.search);
     const forceOpen = urlParams.get("wizard") === "true";
     const alreadyCompleted = localStorage.getItem("mf_quickstart_completed") === "true";
+    const tutorialOverlay = $("#welcomeTutorial");
+    const tutorialActive = tutorialOverlay && !tutorialOverlay.classList.contains("hidden") && tutorialOverlay.style.display !== "none";
 
-    if (forceOpen || (!alreadyCompleted && (!data.salaryConfig || !data.salaryConfig.amount))) {
+    if (forceOpen || (!alreadyCompleted && !tutorialActive && (!data.salaryConfig || !data.salaryConfig.amount))) {
         setTimeout(openWizard, 250);
     }
 }
