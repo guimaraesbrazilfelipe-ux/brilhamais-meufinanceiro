@@ -9862,3 +9862,20 @@ body.privacy-mode .breakdown-val {
     font-size: 13px;
     margin: 0;
 }
+
+/* ============================================================
+   PWA STANDALONE & SAFE AREA INSETS (iOS & Android)
+   ============================================================ */
+@media all and (display-mode: standalone) {
+    body {
+        overscroll-behavior-y: contain;
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+
+    .topbar {
+        padding-top: max(16px, env(safe-area-inset-top));
+    }
+}

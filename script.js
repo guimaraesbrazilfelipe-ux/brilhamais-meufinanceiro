@@ -7247,6 +7247,42 @@ function init() {
         btnLoadSim2027.addEventListener("click", loadSimulation2027);
     }
 
+    function setupServiceWorker() {
+        if (!("serviceWorker" in navigator)) return;
+
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("./sw.js")
+                .then((registration) => {
+                    // Monitora novas versões do Service Worker
+                    registration.addEventListener("updatefound", () => {
+                        const newWorker = registration.installing;
+                        if (!newWorker) return;
+
+                        newWorker.addEventListener("statechange", () => {
+                            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                                if (typeof showToast === "function") {
+                                    showToast("Nova versão do aplicativo disponível! Atualizando...");
+                                }
+                                newWorker.postMessage({ type: "SKIP_WAITING" });
+                            }
+                        });
+                    });
+                })
+                .catch((err) => {
+                    console.warn("Service Worker não registrado:", err);
+                });
+
+            // Recarrega automaticamente quando o novo service worker assume o controle
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener("controllerchange", () => {
+                if (refreshing) return;
+                refreshing = true;
+                window.location.reload();
+            });
+        });
+    }
+
+    setupServiceWorker();
     setupDeviceAndCloudSettings();
     setupActivityAuditPanel();
     setupNavigation();
