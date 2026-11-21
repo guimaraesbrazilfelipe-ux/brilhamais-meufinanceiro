@@ -647,12 +647,16 @@ h1 {
     border-radius: 10px;
     font-weight: 700;
     font-size: 12px;
-    transition: .2s;
+    transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s, border-color 0.2s, filter 0.2s;
 }
 
 .button:hover {
     transform: translateY(-1px);
     filter: brightness(1.1);
+}
+
+.button:active {
+    transform: scale3d(0.96, 0.96, 1);
 }
 
 .button-primary {
@@ -693,6 +697,10 @@ h1 {
     transform: translateY(-2px);
     filter: brightness(1.1);
     box-shadow: 0 6px 20px rgba(148, 117, 255, .42);
+}
+
+.btn-new-transaction:active {
+    transform: scale3d(0.96, 0.96, 1);
 }
 
 .month-toolbar {
@@ -2705,38 +2713,48 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     .topbar {
         align-items: flex-start;
         flex-direction: column;
-        gap: 14px;
+        gap: 12px;
+        margin-bottom: 4px;
     }
 
     .topbar-actions {
         width: 100%;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
         flex-wrap: wrap;
     }
 
     .topbar-actions .privacy-btn {
-        flex: 0 0 42px;
-        width: 42px;
-        height: 42px;
-        min-height: 42px;
+        flex: 0 0 38px;
+        width: 38px;
+        height: 38px;
+        min-height: 38px;
+        border-radius: 99px;
         padding: 0;
     }
 
     .btn-new-transaction {
         flex: 1;
-        min-height: 42px;
-        padding: 10px 20px;
+        min-height: 38px;
+        height: 38px;
+        padding: 0 18px;
         font-size: 13px;
         text-align: center;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .topbar > .button,
     .topbar .button:not(.btn-new-transaction) {
-        min-height: 40px;
-        padding: 9px 15px;
-        font-size: 12px;
+        min-height: 38px;
+        height: 38px;
+        padding: 0 16px;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .summary-grid {
@@ -3108,79 +3126,109 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 
-/* Entrada moderna: primeiro o painel maior, depois seu conteúdo interno */
+/* Suporte a transições suaves entre abas e páginas */
+@view-transition {
+    navigation: auto;
+}
+
+.main-content {
+    animation: pageContentEnter 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+    will-change: opacity, transform;
+    transform: translateZ(0);
+}
+
+@keyframes pageContentEnter {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, 8px, 0);
+    }
+    100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+/* Entrada moderna, fluida e acelerada por GPU a 60fps (sem blur pesado) */
 @keyframes financePanelEnter {
     0% {
         opacity: 0;
-        transform: translateY(22px) scale(.985);
-        filter: blur(3px);
+        transform: translate3d(0, 14px, 0) scale3d(0.988, 0.988, 1);
     }
-    65% { opacity: 1; filter: blur(0); }
     100% {
         opacity: 1;
-        transform: translateY(0) scale(1);
-        filter: blur(0);
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
     }
 }
 
 @keyframes financeInnerReveal {
-    0% { opacity: 0; transform: translateY(9px); }
-    100% { opacity: 1; transform: translateY(0); }
+    0% {
+        opacity: 0;
+        transform: translate3d(0, 4px, 0);
+    }
+    100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
 }
 
-/* Os contêineres grandes entram primeiro */
+/* Os contêineres entram com curva suave idêntica ao botão de menu (0.34s) */
 .summary-card,
 .panel,
 .planning-card,
 .tip-card,
 .agenda-layout,
 .agenda-calendar-panel,
-.agenda-day-details-panel {
-    animation: financePanelEnter 2s cubic-bezier(.2,.75,.25,1) both;
+.agenda-day-details-panel,
+.gcal-action-bar,
+.recurring-alert-banner,
+.recurring-panel {
+    animation: financePanelEnter 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
     will-change: opacity, transform;
+    transform: translateZ(0);
 }
 
-/* Sequência em agenda */
-.agenda-calendar-panel { animation-delay: .05s; }
-.agenda-day-details-panel { animation-delay: .12s; }
+/* Sequência em agenda fluida */
+.agenda-calendar-panel { animation-delay: 0.03s; }
+.agenda-day-details-panel { animation-delay: 0.06s; }
 
-/* Pequena sequência entre cartões irmãos */
-.summary-grid > .summary-card:nth-child(1) { animation-delay: .04s; }
-.summary-grid > .summary-card:nth-child(2) { animation-delay: .05s; }
-.summary-grid > .summary-card:nth-child(3) { animation-delay: .09s; }
-.summary-grid > .summary-card:nth-child(4) { animation-delay: .13s; }
-.content-grid > .panel:nth-child(1) { animation-delay: .08s; }
-.content-grid > .panel:nth-child(2) { animation-delay: .13s; }
-.lower-grid > .panel:nth-child(1) { animation-delay: .13s; }
-.lower-grid > .panel:nth-child(2) { animation-delay: .18s; }
-.planning-grid > .planning-card:nth-child(1) { animation-delay: .05s; }
-.planning-grid > .planning-card:nth-child(2) { animation-delay: .10s; }
+/* Pequena sequência harmoniosa entre cartões irmãos */
+.summary-grid > .summary-card:nth-child(1) { animation-delay: 0.02s; }
+.summary-grid > .summary-card:nth-child(2) { animation-delay: 0.04s; }
+.summary-grid > .summary-card:nth-child(3) { animation-delay: 0.06s; }
+.summary-grid > .summary-card:nth-child(4) { animation-delay: 0.08s; }
+.content-grid > .panel:nth-child(1) { animation-delay: 0.04s; }
+.content-grid > .panel:nth-child(2) { animation-delay: 0.07s; }
+.lower-grid > .panel:nth-child(1) { animation-delay: 0.07s; }
+.lower-grid > .panel:nth-child(2) { animation-delay: 0.10s; }
+.planning-grid > .planning-card:nth-child(1) { animation-delay: 0.03s; }
+.planning-grid > .planning-card:nth-child(2) { animation-delay: 0.06s; }
 
-/* Conteúdo aparece logo após o painel, com uma cascata discreta */
+/* Conteúdo interno entra instantâneo e leve sem engasgos */
 .summary-card > *,
 .panel > *,
 .planning-card > *,
 .tip-card > *,
 .agenda-calendar-panel > *,
 .agenda-day-details-panel > * {
-    animation: financeInnerReveal 1.78s cubic-bezier(.2,.7,.25,1) both;
-    animation-delay: .08s;
+    animation: financeInnerReveal 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: 0.04s;
+    will-change: opacity;
 }
 
 .summary-card > *:nth-child(2),
 .panel > *:nth-child(2),
 .planning-card > *:nth-child(2),
-.tip-card > *:nth-child(2) { animation-delay: .12s; }
+.tip-card > *:nth-child(2) { animation-delay: 0.06s; }
 
 .summary-card > *:nth-child(3),
 .panel > *:nth-child(3),
 .planning-card > *:nth-child(3),
-.tip-card > *:nth-child(3) { animation-delay: .16s; }
+.tip-card > *:nth-child(3) { animation-delay: 0.08s; }
 
 .summary-card > *:nth-child(4),
 .panel > *:nth-child(4),
 .planning-card > *:nth-child(4),
-.tip-card > *:nth-child(4) { animation-delay: .20s; }
+.tip-card > *:nth-child(4) { animation-delay: 0.10s; }
 
 /* Não repetir animações em mudanças de estado nem prejudicar acessibilidade */
 @media (prefers-reduced-motion: reduce) {
@@ -3504,25 +3552,30 @@ body::-webkit-scrollbar,
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 42px;
-    height: 42px;
-    min-height: 42px;
+    width: 38px;
+    height: 38px;
+    min-height: 38px;
     padding: 0;
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 99px;
     background: var(--panel-light);
     color: var(--text);
     font-size: 16px;
     cursor: pointer;
-    transition: all .2s ease;
+    transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
     flex-shrink: 0;
+    box-sizing: border-box;
 }
 
 .privacy-btn:hover {
-    border-color: var(--purple);
+    border-color: rgba(148, 117, 255, 0.6);
     background: #223049;
     transform: translateY(-1px);
     color: #ffffff;
+}
+
+.privacy-btn:active {
+    transform: scale3d(0.96, 0.96, 1);
 }
 
 .privacy-btn .privacy-icon {
@@ -4264,6 +4317,10 @@ body.privacy-mode .breakdown-val {
     border-color: rgba(148, 117, 255, 0.3);
 }
 
+.period-tab-btn:active {
+    transform: scale3d(0.96, 0.96, 1);
+}
+
 .period-tab-btn.active {
     background: linear-gradient(135deg, rgba(124, 93, 250, 0.35) 0%, rgba(69, 214, 160, 0.25) 100%);
     border-color: #9475ff;
@@ -4330,6 +4387,10 @@ body.privacy-mode .breakdown-val {
     box-shadow: 0 8px 24px rgba(124, 93, 250, 0.6);
 }
 
+.gcal-create-btn:active {
+    transform: scale3d(0.96, 0.96, 1);
+}
+
 .gcal-create-icon {
     font-size: 24px;
     line-height: 1;
@@ -4353,6 +4414,10 @@ body.privacy-mode .breakdown-val {
 .gcal-today-btn:hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.3);
+}
+
+.gcal-today-btn:active {
+    transform: scale3d(0.96, 0.96, 1);
 }
 
 .gcal-nav-arrows {
@@ -4380,6 +4445,10 @@ body.privacy-mode .breakdown-val {
     background: rgba(255, 255, 255, 0.1);
     color: #ffffff;
     border-color: rgba(255, 255, 255, 0.25);
+}
+
+.gcal-nav-btn:active {
+    transform: scale3d(0.92, 0.92, 1);
 }
 
 .gcal-title {
@@ -4467,6 +4536,10 @@ body.privacy-mode .breakdown-val {
 
 .gcal-view-btn:hover {
     color: #ffffff;
+}
+
+.gcal-view-btn:active {
+    transform: scale3d(0.96, 0.96, 1);
 }
 
 .gcal-view-btn.active {
@@ -5440,7 +5513,9 @@ body.privacy-mode .breakdown-val {
 /* Responsividade Mobile da Agenda */
 @media (max-width: 768px) {
     .gcal-action-bar {
-        padding: 12px 14px;
+        margin: 18px 0 16px;
+        padding: 14px;
+        border-radius: 14px;
         gap: 12px;
     }
     .gcal-bar-left {
@@ -5618,7 +5693,7 @@ body.privacy-mode .breakdown-val {
     border: 1px solid rgba(245, 158, 11, 0.35);
     border-radius: var(--border-radius);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    animation: financePanelEnter 2s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: financePanelEnter 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .recurring-alert-banner.all-paid {
@@ -5679,7 +5754,7 @@ body.privacy-mode .breakdown-val {
 ========================================= */
 
 .recurring-panel {
-    animation: financePanelEnter 2s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: financePanelEnter 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .recurring-form {
@@ -9049,8 +9124,11 @@ body.privacy-mode .breakdown-val {
 .auth-trigger-btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 7px;
-    padding: 7px 14px;
+    height: 38px;
+    min-height: 38px;
+    padding: 0 16px;
     border-radius: 99px;
     background: linear-gradient(135deg, rgba(124, 93, 250, 0.22), rgba(148, 117, 255, 0.1));
     border: 1px solid rgba(148, 117, 255, 0.38);
@@ -9058,8 +9136,9 @@ body.privacy-mode .breakdown-val {
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.22s cubic-bezier(0.2, 0, 0, 1);
+    transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
     box-shadow: 0 2px 10px rgba(124, 93, 250, 0.15);
+    box-sizing: border-box;
 }
 
 .auth-trigger-btn:hover {
@@ -9070,7 +9149,7 @@ body.privacy-mode .breakdown-val {
 }
 
 .auth-trigger-btn:active {
-    transform: translateY(0) scale(0.97);
+    transform: scale3d(0.96, 0.96, 1);
 }
 
 .auth-trigger-icon {
@@ -9086,7 +9165,9 @@ body.privacy-mode .breakdown-val {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 5px 12px 5px 6px;
+    height: 38px;
+    min-height: 38px;
+    padding: 0 14px 0 6px;
     border-radius: 99px;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid var(--border);
@@ -9094,13 +9175,18 @@ body.privacy-mode .breakdown-val {
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+    transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
     max-width: 220px;
+    box-sizing: border-box;
 }
 
 .user-profile-btn:hover {
     background: rgba(255, 255, 255, 0.08);
     border-color: rgba(148, 117, 255, 0.4);
+}
+
+.user-profile-btn:active {
+    transform: scale3d(0.96, 0.96, 1);
 }
 
 .user-avatar {
