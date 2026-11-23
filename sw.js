@@ -9,7 +9,7 @@
  * ==============================================================================
  */
 
-const CACHE_NAME = "meu-financeiro-v4";
+const CACHE_NAME = "meu-financeiro-v5";
 
 const PRECACHE_ASSETS = [
     "./",

@@ -360,6 +360,63 @@
                     </div>
                 </article>
 
+                <!-- Painel de Instalação do Aplicativo (PWA) -->
+                <article class="panel pwa-install-panel" id="pwaInstallPanel" style="margin-top: 24px;">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>📱 Instalar Aplicativo (PWA)</h2>
+                            <p>Instale o Meu Financeiro no seu celular ou computador para acesso instantâneo, modo offline e visual em tela cheia.</p>
+                        </div>
+                        <div class="panel-actions">
+                            <span class="status-pill status-pwa-ready" id="pwaInstallStatusPill">Verificando...</span>
+                        </div>
+                    </div>
+
+                    <div class="pwa-install-body">
+                        <div class="pwa-install-info-box">
+                            <div class="pwa-install-icon" aria-hidden="true">📲</div>
+                            <div class="pwa-install-info-text">
+                                <strong id="pwaInstallHeadline">Instalação direta no dispositivo</strong>
+                                <p id="pwaInstallDesc">Tenha a experiência de um aplicativo nativo completo sem ocupar espaço pesado da memória e com carregamento instantâneo mesmo sem sinal de internet.</p>
+                            </div>
+                        </div>
+
+                        <div class="pwa-perks-grid">
+                            <div class="pwa-perk-card">
+                                <span class="pwa-perk-icon">⚡</span>
+                                <div class="pwa-perk-text">
+                                    <strong>Acesso Imediato</strong>
+                                    <span>Ícone na tela de início com 1 toque</span>
+                                </div>
+                            </div>
+                            <div class="pwa-perk-card">
+                                <span class="pwa-perk-icon">📶</span>
+                                <div class="pwa-perk-text">
+                                    <strong>100% Offline</strong>
+                                    <span>Consulte saldo e lance despesas offline</span>
+                                </div>
+                            </div>
+                            <div class="pwa-perk-card">
+                                <span class="pwa-perk-icon">🖥️</span>
+                                <div class="pwa-perk-text">
+                                    <strong>Tela Cheia Fluida</strong>
+                                    <span>Sem barras de navegação do browser</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pwa-actions-row">
+                            <button type="button" class="button button-primary" id="btnInstallPwaApp">
+                                📥 Instalar aplicativo
+                            </button>
+                            <button type="button" class="button button-secondary hidden" id="btnPwaIosInstructions">
+                                🍎 Como instalar no iPhone
+                            </button>
+                            <span class="pwa-status-hint" id="pwaStatusHint">Compatível com Android, iOS (Safari), Windows e Mac.</span>
+                        </div>
+                    </div>
+                </article>
+
                 <!-- Painel de Notificações do PWA -->
                 <article class="panel notification-panel" id="notificationPanel" style="margin-top: 24px;">
                     <div class="panel-heading">
@@ -410,6 +467,7 @@
                     <!-- Filtros rápidos por categoria -->
                     <div class="activity-filters-bar" id="activityFiltersBar">
                         <button type="button" class="activity-filter-pill active" data-activity-filter="all">Todos</button>
+                        <button type="button" class="activity-filter-pill" data-activity-filter="session">Sessões</button>
                         <button type="button" class="activity-filter-pill" data-activity-filter="transactions">Lançamentos</button>
                         <button type="button" class="activity-filter-pill" data-activity-filter="recurring">Contas Fixas</button>
                         <button type="button" class="activity-filter-pill" data-activity-filter="settings">Configurações</button>
@@ -577,6 +635,44 @@
 
             <div class="confirm-dialog-actions">
                 <button type="button" id="notificationBlockedOk" class="button button-primary">Entendi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Instruções de Instalação no iOS (iPhone / iPad) -->
+    <div class="confirm-dialog-backdrop hidden" id="pwaIosModal" role="dialog" aria-modal="true" aria-labelledby="pwaIosModalTitle">
+        <div class="confirm-dialog-card pwa-ios-modal-card">
+            <button type="button" id="pwaIosModalClose" class="confirm-dialog-close" aria-label="Fechar janela">×</button>
+            <div class="confirm-dialog-icon pwa-ios-icon" aria-hidden="true">🍎</div>
+            <p class="confirm-dialog-eyebrow">INSTALAÇÃO NO IPHONE / IPAD</p>
+            <h2 id="pwaIosModalTitle">Como adicionar à Tela de Início</h2>
+            
+            <div class="pwa-ios-modal-content">
+                <p>No navegador Safari do iOS, você pode instalar o aplicativo em 3 passos rápidos:</p>
+                <ol class="pwa-ios-steps">
+                    <li>
+                        <span class="pwa-step-num">1</span>
+                        <div class="pwa-step-desc">
+                            Toque no botão <strong>Compartilhar</strong> (ícone de quadrado com seta para cima <span style="font-size: 16px;">⎋</span> na barra inferior do Safari).
+                        </div>
+                    </li>
+                    <li>
+                        <span class="pwa-step-num">2</span>
+                        <div class="pwa-step-desc">
+                            Role a lista para baixo e toque em <strong>"Adicionar à Tela de Início"</strong> <span style="font-size: 16px;">➕</span>.
+                        </div>
+                    </li>
+                    <li>
+                        <span class="pwa-step-num">3</span>
+                        <div class="pwa-step-desc">
+                            No canto superior direito, toque em <strong>"Adicionar"</strong>. Pronto! O ícone do Meu Financeiro estará na tela do seu aparelho.
+                        </div>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="confirm-dialog-actions" style="margin-top: 18px;">
+                <button type="button" id="pwaIosModalOk" class="button button-primary" style="width: 100%;">Entendi ✓</button>
             </div>
         </div>
     </div>

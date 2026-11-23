@@ -3,6 +3,7 @@
  * MEU FINANCEIRO - MÓDULO DE RASTREABILIDADE & TRILHA DE AUDITORIA (LOGS)
  * ==============================================================================
  * Registra cronologicamente todas as ações do usuário e do sistema:
+ * - Sessão de acesso única (hora em que entrou e hora em que saiu do sistema)
  * - Adição, alteração e exclusão de lançamentos financeiros
  * - Marcação e alterações em contas fixas
  * - Ajustes salariais, benefícios e planejamento
@@ -13,6 +14,8 @@
 
 (function () {
     const ACTIVITY_STORAGE_KEY = "meuFinanceiro_activityLogs";
+    const SESSION_ID_KEY = "meuFinanceiro_current_session_id";
+    const SESSION_DATA_KEY = "meuFinanceiro_active_session_data";
     const MAX_LOGS = 350; // Mantém até 350 registros mais recentes localmente
 
     function safeGetLogs() {
@@ -49,20 +52,181 @@
         return "💻 Computador";
     }
 
+    function formatTimeHM(date) {
+        if (!date) return "";
+        const d = (date instanceof Date) ? date : new Date(date);
+        if (isNaN(d.getTime())) return "";
+        return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    }
+
     function sanitizeCsvCell(val) {
         const str = String(val ?? "");
         // Prevenção contra Injeção de Fórmulas em CSV (CWE-1236):
-        // Se a célula iniciar com '=', '+', '-', '@', tabulação ou retorno, prefixa com apóstrofe de escape (')
         if (/^[=+\-@\t\r]/.test(str)) {
             return `"'${str.replace(/"/g, '""')}"`;
         }
         return `"${str.replace(/"/g, '""')}"`;
     }
 
+    // =========================================================================
+    // GERENCIAMENTO INTELIGENTE DE SESSÃO (ENTROU E SAIU SEM REPETIÇÕES)
+    // =========================================================================
+
+    function finalizeSessionLog(sessionId, endTimeIso, startTimeIso) {
+        if (!sessionId) return;
+        const logs = safeGetLogs();
+        const index = logs.findIndex(l => l.id === sessionId);
+        if (index === -1) return;
+
+        const entry = logs[index];
+        const start = startTimeIso ? new Date(startTimeIso) : new Date(entry.details?.startTime || entry.timestamp);
+        const end = new Date(endTimeIso || Date.now());
+        const diffMs = Math.max(0, end - start);
+        const diffMin = Math.max(1, Math.round(diffMs / 60000));
+
+        entry.description = `Entrou às ${formatTimeHM(start)} • Saiu às ${formatTimeHM(end)} (Duração: ${diffMin} min)`;
+        if (!entry.details) entry.details = {};
+        entry.details.endTime = end.toISOString();
+        entry.details.lastActiveTime = end.toISOString();
+        entry.details.durationMinutes = diffMin;
+        entry.details.isActive = false;
+
+        safeSaveLogs(logs);
+        window.dispatchEvent(new CustomEvent("mf:activity-logged", { detail: entry }));
+    }
+
+    function recordSessionPause() {
+        const currentTabSessionId = sessionStorage.getItem(SESSION_ID_KEY);
+        if (!currentTabSessionId) return;
+
+        const now = new Date();
+        const nowIso = now.toISOString();
+
+        const sessionRaw = localStorage.getItem(SESSION_DATA_KEY);
+        let startTimeIso = nowIso;
+        if (sessionRaw) {
+            try {
+                const s = JSON.parse(sessionRaw);
+                startTimeIso = s.startTime || nowIso;
+                s.lastActiveTime = nowIso;
+                s.isActive = false;
+                localStorage.setItem(SESSION_DATA_KEY, JSON.stringify(s));
+            } catch (e) {}
+        }
+
+        finalizeSessionLog(currentTabSessionId, nowIso, startTimeIso);
+    }
+
+    function updateActiveSessionHeartbeat() {
+        const currentTabSessionId = sessionStorage.getItem(SESSION_ID_KEY);
+        if (!currentTabSessionId) return;
+
+        const now = new Date();
+        const nowIso = now.toISOString();
+
+        const sessionRaw = localStorage.getItem(SESSION_DATA_KEY);
+        let startTimeIso = nowIso;
+        if (sessionRaw) {
+            try {
+                const s = JSON.parse(sessionRaw);
+                startTimeIso = s.startTime || nowIso;
+                s.lastActiveTime = nowIso;
+                s.isActive = true;
+                localStorage.setItem(SESSION_DATA_KEY, JSON.stringify(s));
+            } catch (e) {}
+        }
+
+        // Mantém atualizado no log local
+        const logs = safeGetLogs();
+        const index = logs.findIndex(l => l.id === currentTabSessionId);
+        if (index !== -1) {
+            const start = new Date(startTimeIso);
+            logs[index].description = `Entrou às ${formatTimeHM(start)} • Sessão ativa agora`;
+            if (!logs[index].details) logs[index].details = {};
+            logs[index].details.lastActiveTime = nowIso;
+            logs[index].details.isActive = true;
+            safeSaveLogs(logs);
+            window.dispatchEvent(new CustomEvent("mf:activity-logged", { detail: logs[index] }));
+        }
+    }
+
+    function initSessionTracking() {
+        try {
+            const currentTabSessionId = sessionStorage.getItem(SESSION_ID_KEY);
+            const now = new Date();
+            const nowIso = now.toISOString();
+
+            if (!currentTabSessionId) {
+                // Nova sessão na aba/aplicativo iniciada
+                // Fecha a sessão anterior que tenha ficado pendente no localStorage
+                const prevSessionRaw = localStorage.getItem(SESSION_DATA_KEY);
+                if (prevSessionRaw) {
+                    try {
+                        const prevSession = JSON.parse(prevSessionRaw);
+                        if (prevSession && prevSession.id && prevSession.isActive) {
+                            finalizeSessionLog(prevSession.id, prevSession.lastActiveTime || nowIso, prevSession.startTime);
+                        }
+                    } catch (e) {}
+                }
+
+                const newSessionId = "sess_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5);
+                sessionStorage.setItem(SESSION_ID_KEY, newSessionId);
+
+                const sessionPayload = {
+                    id: newSessionId,
+                    startTime: nowIso,
+                    lastActiveTime: nowIso,
+                    isActive: true
+                };
+                localStorage.setItem(SESSION_DATA_KEY, JSON.stringify(sessionPayload));
+
+                // Registra o log único de entrada da sessão
+                ActivityLogger.logSession(
+                    newSessionId,
+                    nowIso,
+                    "SESSION_ACCESS",
+                    "Sessão no aplicativo",
+                    `Entrou às ${formatTimeHM(now)} • Sessão ativa agora`,
+                    {
+                        startTime: nowIso,
+                        lastActiveTime: nowIso,
+                        endTime: null,
+                        isActive: true
+                    }
+                );
+            } else {
+                // Já está na mesma sessão do navegador: apenas atualiza status ativo e evita nova entrada repetida!
+                updateActiveSessionHeartbeat();
+            }
+
+            // Escuta encerramento da página ou minimização
+            window.addEventListener("pagehide", () => {
+                recordSessionPause();
+            });
+
+            document.addEventListener("visibilitychange", () => {
+                if (document.visibilityState === "hidden") {
+                    recordSessionPause();
+                } else if (document.visibilityState === "visible") {
+                    updateActiveSessionHeartbeat();
+                }
+            });
+
+            // Atualiza batimento periódico
+            setInterval(() => {
+                if (document.visibilityState === "visible") {
+                    updateActiveSessionHeartbeat();
+                }
+            }, 25000);
+        } catch (e) {
+            console.warn("Erro no rastreamento de sessão:", e);
+        }
+    }
+
     const ActivityLogger = {
         /**
          * Registra uma nova atividade na trilha de auditoria
-         * @param {string} category - "transactions" | "recurring" | "settings" | "planning" | "auth" | "system"
+         * @param {string} category - "transactions" | "recurring" | "settings" | "planning" | "auth" | "system" | "session"
          * @param {string} action - Código da ação (ex: "TRANSACTION_CREATED")
          * @param {string} title - Título amigável da ação
          * @param {string} description - Descrição detalhada do evento
@@ -91,6 +255,35 @@
             // Se o usuário estiver autenticado no Supabase, tenta persistir na nuvem em segundo plano
             this.syncLogToCloud(entry);
 
+            return entry;
+        },
+
+        /**
+         * Registra ou atualiza especificamente o log de sessão de uso
+         */
+        logSession(id, timestamp, action, title, description, details = {}) {
+            const entry = {
+                id: id,
+                timestamp: timestamp || new Date().toISOString(),
+                category: "session",
+                action: action || "SESSION_ACCESS",
+                title: title || "Sessão no aplicativo",
+                description: description || "",
+                details: details || {},
+                user: getActorIdentity(),
+                device: getDeviceLabel()
+            };
+
+            const logs = safeGetLogs();
+            const existingIndex = logs.findIndex(l => l.id === id);
+            if (existingIndex !== -1) {
+                logs[existingIndex] = entry;
+            } else {
+                logs.unshift(entry);
+            }
+            safeSaveLogs(logs);
+
+            window.dispatchEvent(new CustomEvent("mf:activity-logged", { detail: entry }));
             return entry;
         },
 
@@ -176,6 +369,8 @@
 
         getCategoryBadge(category) {
             switch (category) {
+                case "session":
+                    return { label: "Sessão", icon: "🚪", className: "badge-session" };
                 case "transactions":
                     return { label: "Lançamento", icon: "➕", className: "badge-transactions" };
                 case "recurring":
@@ -209,4 +404,11 @@
     };
 
     window.MFActivityLogger = ActivityLogger;
+
+    // Inicializa o rastreamento automático de sessão
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initSessionTracking);
+    } else {
+        initSessionTracking();
+    }
 })();

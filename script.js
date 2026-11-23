@@ -1,5 +1,25 @@
 "use strict";
 
+// Captura global antecipada do evento de instalação do PWA
+window.deferredPwaPrompt = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    window.deferredPwaPrompt = e;
+    window.dispatchEvent(new CustomEvent("mf:pwa-prompt-available"));
+});
+window.addEventListener("appinstalled", () => {
+    window.deferredPwaPrompt = null;
+    if (window.MFActivityLogger) {
+        window.MFActivityLogger.log(
+            "system",
+            "PWA_INSTALLED",
+            "Aplicativo instalado",
+            "O Meu Financeiro foi instalado com sucesso no dispositivo"
+        );
+    }
+    window.dispatchEvent(new CustomEvent("mf:pwa-installed"));
+});
+
 const $ = (selector) => document.querySelector(selector);
 
 const STORAGE_KEY = "meuFinanceiro.v1";
@@ -7283,6 +7303,172 @@ function init() {
     }
 
     /* ============================================================
+       INSTALAÇÃO DO PWA (PROMPT NATIVO E SUPORTE A TODAS AS PLATAFORMAS)
+       ============================================================ */
+    function setupPwaInstall() {
+        const btnInstall = document.getElementById("btnInstallPwaApp");
+        const statusPill = document.getElementById("pwaInstallStatusPill");
+        const btnIosHelp = document.getElementById("btnPwaIosInstructions");
+        const iosModal = document.getElementById("pwaIosModal");
+        const iosModalClose = document.getElementById("pwaIosModalClose");
+        const iosModalOk = document.getElementById("pwaIosModalOk");
+        const hintText = document.getElementById("pwaStatusHint");
+        const headline = document.getElementById("pwaInstallHeadline");
+        const desc = document.getElementById("pwaInstallDesc");
+
+        if (!btnInstall && !statusPill) return;
+
+        const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent || "");
+        const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+
+        function updateInstallUI() {
+            if (isStandalone) {
+                if (statusPill) {
+                    statusPill.textContent = "🟢 Aplicativo instalado";
+                    statusPill.className = "status-pill status-pwa-installed";
+                }
+                if (btnInstall) {
+                    btnInstall.textContent = "✓ Aplicativo já instalado no aparelho";
+                    btnInstall.disabled = true;
+                    btnInstall.classList.add("btn-disabled");
+                }
+                if (hintText) {
+                    hintText.textContent = "Você já está navegando no aplicativo instalado do Meu Financeiro.";
+                }
+                if (headline) headline.textContent = "Aplicativo em execução";
+                if (desc) desc.textContent = "O Meu Financeiro já está instalado neste dispositivo com suporte a cache offline e funcionamento autônomo.";
+                if (btnIosHelp) btnIosHelp.classList.add("hidden");
+                return;
+            }
+
+            if (isIos) {
+                if (statusPill) {
+                    statusPill.textContent = "🍎 Disponível para iOS";
+                    statusPill.className = "status-pill status-pwa-ios";
+                }
+                if (btnInstall) {
+                    btnInstall.textContent = "📥 Como instalar no iPhone";
+                    btnInstall.disabled = false;
+                }
+                if (btnIosHelp) btnIosHelp.classList.remove("hidden");
+                if (hintText) {
+                    hintText.textContent = "No iPhone/iPad, adicione à Tela de Início pelo menu Compartilhar do Safari.";
+                }
+                return;
+            }
+
+            if (window.deferredPwaPrompt) {
+                if (statusPill) {
+                    statusPill.textContent = "🟡 Pronto para instalar";
+                    statusPill.className = "status-pill status-pwa-ready";
+                }
+                if (btnInstall) {
+                    btnInstall.textContent = "📥 Instalar aplicativo";
+                    btnInstall.disabled = false;
+                }
+                if (hintText) {
+                    hintText.textContent = "Clique para adicionar o Meu Financeiro diretamente na sua tela inicial.";
+                }
+            } else {
+                if (statusPill) {
+                    statusPill.textContent = "🟡 Disponível no navegador";
+                    statusPill.className = "status-pill status-pwa-ready";
+                }
+                if (btnInstall) {
+                    btnInstall.textContent = "📥 Instalar aplicativo";
+                    btnInstall.disabled = false;
+                }
+                if (hintText) {
+                    hintText.textContent = "Compatível com celulares Android, iOS, tablets e computadores.";
+                }
+            }
+        }
+
+        updateInstallUI();
+
+        window.addEventListener("mf:pwa-prompt-available", updateInstallUI);
+        window.addEventListener("mf:pwa-installed", () => {
+            updateInstallUI();
+            if (typeof showToast === "function") {
+                showToast("Parabéns! Aplicativo instalado com sucesso!");
+            }
+        });
+
+        // Clique no botão de instalar
+        if (btnInstall) {
+            btnInstall.addEventListener("click", async () => {
+                if (isStandalone) {
+                    if (typeof showToast === "function") {
+                        showToast("O aplicativo já está instalado neste aparelho.");
+                    }
+                    return;
+                }
+
+                if (isIos) {
+                    if (iosModal) iosModal.classList.remove("hidden");
+                    return;
+                }
+
+                if (window.deferredPwaPrompt) {
+                    try {
+                        const promptEvent = window.deferredPwaPrompt;
+                        promptEvent.prompt();
+                        const { outcome } = await promptEvent.userChoice;
+                        if (outcome === "accepted") {
+                            window.deferredPwaPrompt = null;
+                            if (window.MFActivityLogger) {
+                                window.MFActivityLogger.log(
+                                    "system",
+                                    "PWA_INSTALLED",
+                                    "Aplicativo instalado",
+                                    "O Meu Financeiro foi instalado com sucesso no dispositivo"
+                                );
+                            }
+                            if (typeof showToast === "function") {
+                                showToast("Aplicativo instalado com sucesso!");
+                            }
+                            updateInstallUI();
+                        } else {
+                            if (typeof showToast === "function") {
+                                showToast("Instalação cancelada. Você pode instalar quando quiser!");
+                            }
+                        }
+                    } catch (err) {
+                        console.warn("Erro ao exibir prompt de instalação PWA:", err);
+                    }
+                } else {
+                    // Navegadores que não expõem beforeinstallprompt no momento
+                    if (typeof showToast === "function") {
+                        showToast("Para instalar, toque nos 3 pontinhos do navegador e escolha 'Instalar aplicativo' ou 'Adicionar à tela inicial'.", 5000);
+                    }
+                }
+            });
+        }
+
+        // Modal iOS
+        if (btnIosHelp) {
+            btnIosHelp.addEventListener("click", () => {
+                if (iosModal) iosModal.classList.remove("hidden");
+            });
+        }
+        if (iosModalClose) {
+            iosModalClose.addEventListener("click", () => {
+                if (iosModal) iosModal.classList.add("hidden");
+            });
+        }
+        if (iosModalOk) {
+            iosModalOk.addEventListener("click", () => {
+                if (iosModal) iosModal.classList.add("hidden");
+            });
+        }
+        if (iosModal) {
+            iosModal.addEventListener("click", (e) => {
+                if (e.target === iosModal) iosModal.classList.add("hidden");
+            });
+        }
+    }
+
+    /* ============================================================
        NOTIFICAÇÕES DO PWA (TESTE E CONSENTIMENTO TRANSPARENTE)
        ============================================================ */
     function setupNotificationTest() {
@@ -7468,6 +7654,7 @@ function init() {
     }
 
     setupServiceWorker();
+    setupPwaInstall();
     setupNotificationTest();
     setupDeviceAndCloudSettings();
     setupActivityAuditPanel();

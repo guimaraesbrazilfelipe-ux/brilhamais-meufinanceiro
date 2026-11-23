@@ -142,7 +142,9 @@ function saveDeviceSession(user, keepLoggedIn = true) {
             keepLoggedIn: Boolean(keepLoggedIn)
         };
         localStorage.setItem(DEVICE_SESSION_KEY, JSON.stringify(payload));
-        if (window.MFActivityLogger) {
+        const alreadyLoggedThisSession = sessionStorage.getItem("mf_device_session_logged");
+        if (!alreadyLoggedThisSession && window.MFActivityLogger) {
+            sessionStorage.setItem("mf_device_session_logged", "true");
             window.MFActivityLogger.log(
                 "auth",
                 "DEVICE_SESSION_SAVED",
