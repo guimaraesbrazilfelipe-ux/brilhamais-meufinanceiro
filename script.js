@@ -1676,6 +1676,9 @@ function renderPlanning() {
         } else if (spent > budget) {
             budgetStatus.textContent =
                 `Você ultrapassou o limite em ${money(spent - budget)}.`;
+            if (window.MFNotifications && typeof window.MFNotifications.onBudgetAlert === "function") {
+                window.MFNotifications.onBudgetAlert("Orçamento Geral", budgetPercent);
+            }
         } else {
             budgetStatus.textContent =
                 `${money(budget - spent)} disponíveis de ${money(budget)} (${formatPercent(budgetPercent)} utilizado).`;
@@ -2214,6 +2217,9 @@ function payRecurringBill(billId, targetDate) {
             `Conta "${bill.name}" marcada como paga para ${formatDate(dateToPay)}`,
             { id: bill.id, name: bill.name, date: dateToPay }
         );
+    }
+    if (window.MFNotifications && typeof window.MFNotifications.onBillPaid === "function") {
+        window.MFNotifications.onBillPaid(bill, dateToPay);
     }
     showToast(`Conta "${bill.name}" marcada como paga para ${formatDate(dateToPay)}!`);
     renderAll();
@@ -5901,6 +5907,10 @@ function handleTransactionSubmit(event) {
         }
     }
 
+    if (!id && window.MFNotifications && typeof window.MFNotifications.onTransactionCreated === "function") {
+        window.MFNotifications.onTransactionCreated({ type, description, amount, category, date });
+    }
+
     sessionStorage.setItem("meuFinanceiro.date", date);
     sessionStorage.setItem("meuFinanceiro.month", date.slice(0, 7));
     if ($("#dashboardMonth")) {
@@ -7469,6 +7479,238 @@ function init() {
     }
 
     /* ============================================================
+       MÓDULO CENTRAL DE NOTIFICAÇÕES INTELIGENTES (PWA & SISTEMA)
+       ============================================================ */
+    const MF_NOTIF_PREFS_KEY = "meuFinanceiro_notification_preferences";
+    const MF_NOTIF_SENT_KEY = "meuFinanceiro_notifications_sent_log";
+
+    const MFNotifications = {
+        getPreferences() {
+            try {
+                const saved = localStorage.getItem(MF_NOTIF_PREFS_KEY);
+                if (saved) return JSON.parse(saved);
+            } catch (e) {}
+            return {
+                billsDue: true,
+                billsPaid: true,
+                newTransactions: true,
+                salary: true,
+                budgetLimit: true
+            };
+        },
+
+        savePreferences(prefs) {
+            try {
+                localStorage.setItem(MF_NOTIF_PREFS_KEY, JSON.stringify(prefs));
+            } catch (e) {}
+        },
+
+        hasPermission() {
+            return "Notification" in window && Notification.permission === "granted";
+        },
+
+        async send(title, body, options = {}) {
+            const fullOptions = {
+                body: body || "",
+                icon: "icons/icon-192.png",
+                badge: "icons/icon-192.png",
+                tag: options.tag || "mf-notification-" + Date.now(),
+                vibrate: options.vibrate || [100, 50, 100],
+                data: { url: options.url || "./index.html" },
+                ...options
+            };
+
+            let sent = false;
+
+            if (this.hasPermission()) {
+                if ("serviceWorker" in navigator) {
+                    try {
+                        const reg = await navigator.serviceWorker.ready;
+                        if (reg && typeof reg.showNotification === "function") {
+                            await reg.showNotification(title, fullOptions);
+                            sent = true;
+                        }
+                    } catch (e) {
+                        console.debug("Falha envio via SW:", e);
+                    }
+                }
+
+                if (!sent && typeof Notification === "function") {
+                    try {
+                        new Notification(title, fullOptions);
+                        sent = true;
+                    } catch (e) {
+                        console.debug("Falha envio via new Notification:", e);
+                    }
+                }
+            }
+
+            if (window.MFActivityLogger) {
+                window.MFActivityLogger.log(
+                    "system",
+                    "NOTIFICATION_DISPATCHED",
+                    title,
+                    body,
+                    { sent, tag: fullOptions.tag, url: fullOptions.data.url }
+                );
+            }
+
+            return sent;
+        },
+
+        onTransactionCreated(tx) {
+            if (!tx) return;
+            const prefs = this.getPreferences();
+            if (!prefs.newTransactions) return;
+
+            const isIncome = tx.type === "receita";
+            const title = isIncome ? "💰 Nova Receita Registrada!" : "💸 Nova Despesa Registrada!";
+            const prefix = isIncome ? "+" : "-";
+            const formattedAmount = (typeof money === "function") ? money(tx.amount) : `R$ ${Number(tx.amount).toFixed(2)}`;
+            const body = `${prefix}${formattedAmount} em "${tx.description}" (${tx.category || "Geral"}).`;
+
+            this.send(title, body, {
+                tag: `tx-${Date.now()}`,
+                url: "./lancamentos.html",
+                vibrate: isIncome ? [100, 50, 100] : [80, 40, 80]
+            });
+        },
+
+        onBillPaid(bill, date) {
+            if (!bill) return;
+            const prefs = this.getPreferences();
+            if (!prefs.billsPaid) return;
+
+            const formattedAmount = (typeof money === "function") ? money(bill.amount || 0) : `R$ ${Number(bill.amount).toFixed(2)}`;
+            const dateStr = (typeof formatDate === "function" && date) ? ` para ${formatDate(date)}` : "";
+            const title = "✅ Conta Marcada Como Paga!";
+            const body = `A conta "${bill.name}" (${formattedAmount})${dateStr} foi marcada como paga com sucesso!`;
+
+            this.send(title, body, {
+                tag: `bill-paid-${bill.id}-${date || Date.now()}`,
+                url: "./contas-fixas.html",
+                vibrate: [120, 60, 120]
+            });
+        },
+
+        checkBillsDue() {
+            const prefs = this.getPreferences();
+            if (!prefs.billsDue) return;
+            if (!this.hasPermission()) return;
+            if (!data || !Array.isArray(data.recurringBills) || data.recurringBills.length === 0) return;
+
+            const now = new Date();
+            const todayStr = (typeof todayISO === "function") ? todayISO() : now.toISOString().slice(0, 10);
+            const currentMonth = todayStr.slice(0, 7);
+
+            let sentLog = {};
+            try {
+                sentLog = JSON.parse(localStorage.getItem(MF_NOTIF_SENT_KEY) || "{}");
+            } catch (e) {}
+
+            data.recurringBills.forEach(bill => {
+                if (!bill || !bill.id) return;
+                const occ = (typeof getNextUnpaidOccurrence === "function") ? getNextUnpaidOccurrence(bill) : null;
+                if (!occ) return;
+
+                if (typeof isBillOccurrencePaid === "function" && isBillOccurrencePaid(bill, occ)) return;
+
+                const dedupeKey = `${bill.id}_${occ}_${todayStr}`;
+                if (sentLog[dedupeKey]) return;
+
+                const occDate = new Date(occ + "T12:00:00");
+                const diffTime = occDate.setHours(0,0,0,0) - now.setHours(0,0,0,0);
+                const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+                const amtStr = (typeof money === "function") ? money(typeof getBillAmount === "function" ? getBillAmount(bill, currentMonth) : bill.amount) : `R$ ${bill.amount}`;
+
+                if (diffDays === 0) {
+                    this.send(
+                        "⏳ Conta Fixa Vence Hoje!",
+                        `A conta "${bill.name}" (${amtStr}) vence hoje! Lembre-se de realizar o pagamento.`,
+                        {
+                            tag: `due-today-${bill.id}-${occ}`,
+                            url: "./contas-fixas.html",
+                            vibrate: [200, 100, 200]
+                        }
+                    );
+                    sentLog[dedupeKey] = true;
+                } else if (diffDays < 0 && occ.startsWith(currentMonth)) {
+                    this.send(
+                        "⚠️ Conta Fixa Vencida!",
+                        `A conta "${bill.name}" (${amtStr}) venceu em ${typeof formatDate === "function" ? formatDate(occ) : occ} e consta em aberto.`,
+                        {
+                            tag: `overdue-${bill.id}-${occ}`,
+                            url: "./contas-fixas.html",
+                            vibrate: [250, 120, 250, 120, 250]
+                        }
+                    );
+                    sentLog[dedupeKey] = true;
+                }
+            });
+
+            try {
+                localStorage.setItem(MF_NOTIF_SENT_KEY, JSON.stringify(sentLog));
+            } catch (e) {}
+        },
+
+        checkSalaryDay() {
+            const prefs = this.getPreferences();
+            if (!prefs.salary) return;
+            if (!this.hasPermission()) return;
+            if (!data || !data.salaryConfig || !Number(data.salaryConfig.amount)) return;
+
+            const now = new Date();
+            const currentDay = now.getDate();
+            const salaryDay = Number(data.salaryConfig.day || 5);
+
+            if (currentDay === salaryDay) {
+                const currentMonth = (typeof todayISO === "function") ? todayISO().slice(0, 7) : now.toISOString().slice(0, 7);
+                const salaryDedupeKey = `salary_credited_${currentMonth}`;
+                if (localStorage.getItem(salaryDedupeKey)) return;
+
+                const amt = Number(data.salaryConfig.amount);
+                const amtStr = (typeof money === "function") ? money(amt) : `R$ ${amt}`;
+                this.send(
+                    "🎉 Salário do Mês Creditado!",
+                    `Seu depósito programado de ${amtStr} foi registrado com sucesso no balanço!`,
+                    {
+                        tag: `salary-${currentMonth}`,
+                        url: "./index.html",
+                        vibrate: [150, 80, 150]
+                    }
+                );
+                try {
+                    localStorage.setItem(salaryDedupeKey, "true");
+                } catch (e) {}
+            }
+        },
+
+        onBudgetAlert(category, percentage) {
+            const prefs = this.getPreferences();
+            if (!prefs.budgetLimit) return;
+
+            const currentMonth = (typeof todayISO === "function") ? todayISO().slice(0, 7) : new Date().toISOString().slice(0, 7);
+            const budgetDedupeKey = `budget_limit_${category}_${currentMonth}`;
+            if (localStorage.getItem(budgetDedupeKey)) return;
+
+            this.send(
+                "🚨 Teto de Gastos Atingido!",
+                `A categoria "${category}" atingiu ${Math.round(percentage)}% do limite planejado para este mês.`,
+                {
+                    tag: `budget-${category}-${currentMonth}`,
+                    url: "./planejamento.html",
+                    vibrate: [200, 100, 200]
+                }
+            );
+            try {
+                localStorage.setItem(budgetDedupeKey, "true");
+            } catch (e) {}
+        }
+    };
+
+    window.MFNotifications = MFNotifications;
+
+    /* ============================================================
        NOTIFICAÇÕES DO PWA (TESTE E CONSENTIMENTO TRANSPARENTE)
        ============================================================ */
     function setupNotificationTest() {
@@ -7649,6 +7891,45 @@ function init() {
             });
         }
 
+        // Configuração das Preferências de Notificações
+        function setupNotificationPreferences() {
+            const prefBillsDue = document.getElementById("prefNotifBillsDue");
+            const prefBillsPaid = document.getElementById("prefNotifBillsPaid");
+            const prefNewTransactions = document.getElementById("prefNotifNewTransactions");
+            const prefSalary = document.getElementById("prefNotifSalary");
+            const prefBudgetLimit = document.getElementById("prefNotifBudgetLimit");
+
+            if (!prefBillsDue && !prefBillsPaid) return;
+
+            const prefs = MFNotifications.getPreferences();
+
+            if (prefBillsDue) prefBillsDue.checked = Boolean(prefs.billsDue);
+            if (prefBillsPaid) prefBillsPaid.checked = Boolean(prefs.billsPaid);
+            if (prefNewTransactions) prefNewTransactions.checked = Boolean(prefs.newTransactions);
+            if (prefSalary) prefSalary.checked = Boolean(prefs.salary);
+            if (prefBudgetLimit) prefBudgetLimit.checked = Boolean(prefs.budgetLimit);
+
+            function updatePrefs() {
+                const updated = {
+                    billsDue: prefBillsDue ? prefBillsDue.checked : true,
+                    billsPaid: prefBillsPaid ? prefBillsPaid.checked : true,
+                    newTransactions: prefNewTransactions ? prefNewTransactions.checked : true,
+                    salary: prefSalary ? prefSalary.checked : true,
+                    budgetLimit: prefBudgetLimit ? prefBudgetLimit.checked : true
+                };
+                MFNotifications.savePreferences(updated);
+                if (typeof showToast === "function") {
+                    showToast("Preferência de notificação salva!");
+                }
+            }
+
+            [prefBillsDue, prefBillsPaid, prefNewTransactions, prefSalary, prefBudgetLimit].forEach(input => {
+                if (input) input.addEventListener("change", updatePrefs);
+            });
+        }
+
+        setupNotificationPreferences();
+
         // Atualiza a interface sem jamais solicitar permissão automaticamente
         updateUI();
     }
@@ -7675,6 +7956,14 @@ function init() {
     setupWelcomeTutorial();
     setupQuickStartWizard();
     renderAll();
+
+    // Verificação de contas a vencer e dia de pagamento de salário para notificações
+    setTimeout(() => {
+        if (window.MFNotifications) {
+            if (typeof window.MFNotifications.checkBillsDue === "function") window.MFNotifications.checkBillsDue();
+            if (typeof window.MFNotifications.checkSalaryDay === "function") window.MFNotifications.checkSalaryDay();
+        }
+    }, 1500);
 
     // Se a página de lançamentos recebeu um ID para edição via query string (?edit=...)
     const urlParams = new URLSearchParams(window.location.search);

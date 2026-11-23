@@ -444,6 +444,55 @@
                             </button>
                             <span class="notification-hint-text" id="notificationHintText">Nenhuma permissão é solicitada automaticamente.</span>
                         </div>
+
+                        <!-- Preferências de Notificações em Tempo Real -->
+                        <div class="notification-preferences-section" style="margin-top: 18px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 16px;">
+                            <h3 style="font-size: 14px; margin-bottom: 6px; color: var(--text);">Escolha o que deseja receber</h3>
+                            <p style="font-size: 12.5px; color: var(--muted); margin-bottom: 14px;">Ative ou desative cada tipo de lembrete conforme sua preferência:</p>
+                            
+                            <div class="notification-preferences-grid">
+                                <label class="notification-pref-card" for="prefNotifBillsDue">
+                                    <input type="checkbox" id="prefNotifBillsDue" checked>
+                                    <span class="pref-switch"></span>
+                                    <div class="pref-info">
+                                        <strong>Contas a vencer e vencidas</strong>
+                                        <span>Lembretes no dia do vencimento e avisos de contas em atraso</span>
+                                    </div>
+                                </label>
+                                <label class="notification-pref-card" for="prefNotifBillsPaid">
+                                    <input type="checkbox" id="prefNotifBillsPaid" checked>
+                                    <span class="pref-switch"></span>
+                                    <div class="pref-info">
+                                        <strong>Contas fixas pagas</strong>
+                                        <span>Confirmação comemorativa ao marcar uma conta como paga</span>
+                                    </div>
+                                </label>
+                                <label class="notification-pref-card" for="prefNotifNewTransactions">
+                                    <input type="checkbox" id="prefNotifNewTransactions" checked>
+                                    <span class="pref-switch"></span>
+                                    <div class="pref-info">
+                                        <strong>Novos lançamentos</strong>
+                                        <span>Notificação ao registrar novas receitas e despesas</span>
+                                    </div>
+                                </label>
+                                <label class="notification-pref-card" for="prefNotifSalary">
+                                    <input type="checkbox" id="prefNotifSalary" checked>
+                                    <span class="pref-switch"></span>
+                                    <div class="pref-info">
+                                        <strong>Salário creditado</strong>
+                                        <span>Aviso festivo no dia programado do seu salário fixo</span>
+                                    </div>
+                                </label>
+                                <label class="notification-pref-card" for="prefNotifBudgetLimit">
+                                    <input type="checkbox" id="prefNotifBudgetLimit" checked>
+                                    <span class="pref-switch"></span>
+                                    <div class="pref-info">
+                                        <strong>Teto de gastos atingido</strong>
+                                        <span>Alerta preventivo ao atingir 100% da meta de uma categoria</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </article>
 

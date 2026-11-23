@@ -9,7 +9,7 @@
  * ==============================================================================
  */
 
-const CACHE_NAME = "meu-financeiro-v5";
+const CACHE_NAME = "meu-financeiro-v6";
 
 const PRECACHE_ASSETS = [
     "./",
@@ -140,21 +140,26 @@ self.addEventListener("fetch", (event) => {
     );
 });
 
-// 4. Notificações do PWA: Clique na notificação abre ou foca no Meu Financeiro
+// 4. Notificações do PWA: Clique na notificação abre ou foca no destino adequado
 self.addEventListener("notificationclick", (event) => {
     event.notification.close();
 
-    const targetUrl = "./index.html";
+    const targetUrl = (event.notification.data && event.notification.data.url) ? event.notification.data.url : "./index.html";
 
     event.waitUntil(
         clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-            // Se já tiver uma aba aberta, foca nela
+            // Se já tiver uma janela aberta, foca nela e redireciona para a página de destino
             for (const client of clientList) {
                 if ("focus" in client) {
+                    if ("navigate" in client && targetUrl) {
+                        try {
+                            client.navigate(targetUrl);
+                        } catch (e) {}
+                    }
                     return client.focus();
                 }
             }
-            // Se não tiver nenhuma aba aberta, abre uma nova
+            // Se não houver janela aberta, abre a página apropriada
             if (clients.openWindow) {
                 return clients.openWindow(targetUrl);
             }

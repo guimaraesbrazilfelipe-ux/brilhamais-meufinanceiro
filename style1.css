@@ -1963,15 +1963,15 @@ textarea:focus {
 }
 
 /* Mobile Modal Bottom Sheet / Central Dialog */
-@media (max-width: 650px) {
+@media (max-width: 768px) {
     .custom-datepicker.open {
         z-index: 100000 !important;
     }
 
     .datepicker-backdrop {
-        display: block;
-        position: fixed;
-        inset: 0;
+        display: block !important;
+        position: fixed !important;
+        inset: 0 !important;
         background: transparent !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
@@ -5777,7 +5777,7 @@ body.privacy-mode .breakdown-val {
 #recurringForm.category-drawer-open .category-field,
 #recurringForm .category-field.category-drawer-open {
     position: relative !important;
-    z-index: 20000 !important;
+    z-index: 30000 !important;
 }
 
 #recurringForm:has(#recurringCategoryPicker.open) .recurring-form-grid,
@@ -5792,7 +5792,7 @@ body.privacy-mode .breakdown-val {
 }
 
 #recurringForm .category-picker.open .category-drawer {
-    z-index: 20002 !important;
+    z-index: 30002 !important;
     pointer-events: auto !important;
     background: #17243a !important;
     box-shadow: 0 20px 48px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(148, 117, 255, 0.35) !important;
@@ -5802,15 +5802,15 @@ body.privacy-mode .breakdown-val {
 #recurringForm:has(#recurringFrequencyPicker.open) .recurring-form-grid,
 #recurringForm.frequency-drawer-open .recurring-form-grid {
     position: relative !important;
-    z-index: 20004 !important;
+    z-index: 30004 !important;
 }
 
 #recurringForm .frequency-picker.open {
-    z-index: 20005 !important;
+    z-index: 30005 !important;
 }
 
 #recurringForm .frequency-picker.open .frequency-drawer {
-    z-index: 20006 !important;
+    z-index: 30006 !important;
     pointer-events: auto !important;
 }
 
@@ -10356,4 +10356,88 @@ body.privacy-mode .breakdown-val {
     .pwa-perks-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* ============================================================
+   PREFERÊNCIAS DE NOTIFICAÇÕES (TOGGLE SWITCHES)
+   ============================================================ */
+
+.notification-preferences-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.notification-pref-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.notification-pref-card:hover {
+    background: rgba(124, 93, 250, 0.06);
+    border-color: rgba(124, 93, 250, 0.25);
+}
+
+.notification-pref-card input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.pref-switch {
+    width: 44px;
+    height: 24px;
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 99px;
+    position: relative;
+    flex-shrink: 0;
+    transition: background 0.25s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.25s ease;
+}
+
+.pref-switch::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    background: #94a3b8;
+    border-radius: 50%;
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), background 0.25s ease;
+}
+
+.notification-pref-card input[type="checkbox"]:checked + .pref-switch {
+    background: var(--purple, #7c5dfa);
+    border-color: var(--purple, #7c5dfa);
+}
+
+.notification-pref-card input[type="checkbox"]:checked + .pref-switch::after {
+    transform: translateX(20px);
+    background: #ffffff;
+}
+
+.pref-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.pref-info strong {
+    font-size: 13.5px;
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+.pref-info span {
+    font-size: 12px;
+    color: #94a3b8;
 }
