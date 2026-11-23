@@ -2221,6 +2221,9 @@ function payRecurringBill(billId, targetDate) {
     if (window.MFNotifications && typeof window.MFNotifications.onBillPaid === "function") {
         window.MFNotifications.onBillPaid(bill, dateToPay);
     }
+    if (window.MFAchievements && typeof window.MFAchievements.check === "function") {
+        window.MFAchievements.check();
+    }
     showToast(`Conta "${bill.name}" marcada como paga para ${formatDate(dateToPay)}!`);
     renderAll();
 }
@@ -2662,6 +2665,12 @@ function renderAll() {
     renderRecurringAlertBanner();
     renderReports();
     setupDemoBanner();
+    if (window.MFProjections && typeof window.MFProjections.renderDashboardWidgets === "function") {
+        window.MFProjections.renderDashboardWidgets();
+    }
+    if (window.MFFinanceSplit && typeof window.MFFinanceSplit.renderSplitWidget === "function") {
+        window.MFFinanceSplit.renderSplitWidget();
+    }
 }
 
 /* ==============================
@@ -5586,6 +5595,7 @@ function resetTransactionForm() {
     if ($("#type")) $("#type").value = "despesa";
     if ($("#category")) $("#category").value = "Alimentação";
     if ($("#customCategory")) $("#customCategory").value = "";
+    if ($("#splitType")) $("#splitType").value = "individual";
 
     const typeLabel = $("#typeLabel");
     if (typeLabel) typeLabel.textContent = "Despesa";
@@ -5667,6 +5677,7 @@ function editTransaction(id) {
     if ($("#transactionDate")) $("#transactionDate").value = transaction.date;
     syncDatePicker();
     if ($("#notes")) $("#notes").value = transaction.notes || "";
+    if ($("#splitType")) $("#splitType").value = transaction.splitType || "individual";
 
     const formTitle = $("#formTitle");
     if (formTitle) formTitle.textContent = "Editar lançamento";
@@ -5809,6 +5820,7 @@ function handleTransactionSubmit(event) {
     const category = customCategory || $("#category").value;
     const date = $("#transactionDate").value;
     const notes = $("#notes").value.trim();
+    const splitType = $("#splitType") ? $("#splitType").value : "individual";
 
     if (!["receita", "despesa"].includes(type)) {
         showToast("Selecione um tipo válido.");
@@ -5868,7 +5880,8 @@ function handleTransactionSubmit(event) {
             amount,
             category,
             date,
-            notes
+            notes,
+            splitType: splitType || "individual"
         };
     } else {
         data.transactions.push({
@@ -5878,7 +5891,8 @@ function handleTransactionSubmit(event) {
             amount,
             category,
             date,
-            notes
+            notes,
+            splitType: splitType || "individual"
         });
     }
 
@@ -5909,6 +5923,10 @@ function handleTransactionSubmit(event) {
 
     if (!id && window.MFNotifications && typeof window.MFNotifications.onTransactionCreated === "function") {
         window.MFNotifications.onTransactionCreated({ type, description, amount, category, date });
+    }
+
+    if (window.MFAchievements && typeof window.MFAchievements.check === "function") {
+        window.MFAchievements.check();
     }
 
     sessionStorage.setItem("meuFinanceiro.date", date);
@@ -7509,6 +7527,65 @@ function init() {
             return "Notification" in window && Notification.permission === "granted";
         },
 
+        isAppActive() {
+            return document.visibilityState === "visible" && (typeof document.hasFocus === "function" ? document.hasFocus() : true);
+        },
+
+        showInAppNotification(title, body, options = {}) {
+            let container = document.getElementById("mfInAppNotificationContainer");
+            if (!container) {
+                container = document.createElement("div");
+                container.id = "mfInAppNotificationContainer";
+                container.className = "mf-in-app-notif-container";
+                document.body.appendChild(container);
+            }
+
+            const notifEl = document.createElement("div");
+            notifEl.className = "mf-in-app-notif";
+            if (options.tag) notifEl.dataset.tag = options.tag;
+
+            const icon = options.iconEmoji || "🔔";
+            const url = options.url || options.data?.url || "";
+
+            notifEl.innerHTML = `
+                <div class="mf-notif-icon-circle">${icon}</div>
+                <div class="mf-notif-content">
+                    <strong class="mf-notif-title">${escapeHTML(title)}</strong>
+                    <p class="mf-notif-body">${escapeHTML(body)}</p>
+                </div>
+                <button type="button" class="mf-notif-close" aria-label="Fechar notificação">✕</button>
+            `;
+
+            if (url) {
+                notifEl.style.cursor = "pointer";
+                notifEl.addEventListener("click", (e) => {
+                    if (e.target.closest(".mf-notif-close")) return;
+                    window.location.href = url;
+                });
+            }
+
+            const closeBtn = notifEl.querySelector(".mf-notif-close");
+            if (closeBtn) {
+                closeBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    removeNotif();
+                });
+            }
+
+            function removeNotif() {
+                if (notifEl.classList.contains("fade-out")) return;
+                notifEl.classList.add("fade-out");
+                setTimeout(() => {
+                    if (notifEl.parentNode) notifEl.parentNode.removeChild(notifEl);
+                }, 260);
+            }
+
+            container.appendChild(notifEl);
+
+            // Auto-remover após 5 segundos
+            setTimeout(removeNotif, 5000);
+        },
+
         async send(title, body, options = {}) {
             const fullOptions = {
                 body: body || "",
@@ -7520,6 +7597,25 @@ function init() {
                 ...options
             };
 
+            // Se o usuário está DENTRO do site/app (aba visível e ativa),
+            // exibe notificação bonita no topo dentro do app, SEM disparar a do celular/sistema
+            if (this.isAppActive()) {
+                this.showInAppNotification(title, body, fullOptions);
+
+                if (window.MFActivityLogger) {
+                    window.MFActivityLogger.log(
+                        "system",
+                        "NOTIFICATION_IN_APP",
+                        title,
+                        body,
+                        { sentInApp: true, tag: fullOptions.tag, url: fullOptions.data.url }
+                    );
+                }
+                return true;
+            }
+
+            // Se o usuário está FORA do site/app (aba minimizada ou em segundo plano),
+            // dispara a notificação nativa do sistema/celular via Service Worker
             let sent = false;
 
             if (this.hasPermission()) {
@@ -7709,6 +7805,816 @@ function init() {
     };
 
     window.MFNotifications = MFNotifications;
+
+    /* ============================================================
+       SISTEMA DE CONQUISTAS GAMIFICADO (ESTILO MINECRAFT ADVANCEMENTS)
+       ============================================================ */
+    const MF_ACHIEVEMENTS_KEY = "meuFinanceiro_achievements_v1";
+    const MF_STREAK_KEY = "meuFinanceiro_daily_streak_v1";
+
+    const ACHIEVEMENT_DEFINITIONS = [
+        // 🌲 MUNDO EXTERIOR (OVERWORLD)
+        { id: "overworld_wood", title: "Pegando Madeira", desc: "Registre seu 1º lançamento (receita ou despesa).", category: "overworld", categoryName: "Mundo Exterior", icon: "🪵", xp: 50, tier: "common" },
+        { id: "overworld_shelter", title: "Construindo um Abrigo", desc: "Defina seu salário mensal nas configurações.", category: "overworld", categoryName: "Mundo Exterior", icon: "🏠", xp: 50, tier: "common" },
+        { id: "overworld_craft", title: "Bancada de Trabalho", desc: "Cadastre sua primeira conta fixa ou assinatura recorrente.", category: "overworld", categoryName: "Mundo Exterior", icon: "🪓", xp: 50, tier: "common" },
+        { id: "overworld_chest", title: "Baú de Segurança", desc: "Crie sua primeira meta financeira no Planejamento.", category: "overworld", categoryName: "Mundo Exterior", icon: "📦", xp: 50, tier: "common" },
+        { id: "overworld_torch", title: "Iluminando a Caverna", desc: "Ative o Modo Privacidade para ocultar valores na tela.", category: "overworld", categoryName: "Mundo Exterior", icon: "🔦", xp: 30, tier: "common" },
+        { id: "overworld_bed", title: "Ponto de Renascimento", desc: "Faça login com Supabase para sincronizar seus dados na nuvem.", category: "overworld", categoryName: "Mundo Exterior", icon: "🛏️", xp: 100, tier: "rare" },
+
+        // ⚔️ CAÇADOR DE BOLETOS (COMBATE)
+        { id: "combat_first_mob", title: "Primeiro Monstro", desc: "Pague sua primeira conta fixa no painel.", category: "combat", categoryName: "Caçador de Boletos", icon: "⚔️", xp: 50, tier: "common" },
+        { id: "combat_combo", title: "Combo Crítico", desc: "Pague 3 contas seguidas antes da data de vencimento.", category: "combat", categoryName: "Caçador de Boletos", icon: "🎯", xp: 100, tier: "rare" },
+        { id: "combat_exterminator", title: "Exterminador de Dívidas", desc: "Quite 100% das contas fixas do mês atual.", category: "combat", categoryName: "Caçador de Boletos", icon: "💥", xp: 150, tier: "epic" },
+        { id: "combat_iron_armor", title: "Armadura de Ferro", desc: "Passe o mês inteiro sem nenhuma conta em atraso.", category: "combat", categoryName: "Caçador de Boletos", icon: "🛡️", xp: 100, tier: "rare" },
+        { id: "combat_potion", title: "Poção de Cura", desc: "Cadastre uma receita extra ou rendimento avulso.", category: "combat", categoryName: "Caçador de Boletos", icon: "🧪", xp: 50, tier: "common" },
+        { id: "combat_shield_block", title: "Bloqueio Perfeito", desc: "Cancele ou exclua uma conta fixa que não usa mais.", category: "combat", categoryName: "Caçador de Boletos", icon: "🛑", xp: 50, tier: "common" },
+
+        // 💎 MINERADOR DE DIAMANTES (POUPANÇA & RIQUEZA)
+        { id: "wealth_iron", title: "Era do Ferro", desc: "Acumule um saldo positivo maior que R$ 500,00.", category: "wealth", categoryName: "Riqueza & Minérios", icon: "🪙", xp: 75, tier: "common" },
+        { id: "wealth_gold", title: "Pepita de Ouro", desc: "Economize pelo menos 10% da sua renda em um único mês.", category: "wealth", categoryName: "Riqueza & Minérios", icon: "🥇", xp: 100, tier: "rare" },
+        { id: "wealth_diamond", title: "DIAMANTES!", desc: "Economize mais de 20% da sua renda mensal.", category: "wealth", categoryName: "Riqueza & Minérios", icon: "💎", xp: 200, tier: "epic" },
+        { id: "wealth_fortune", title: "Encantamento Fortuna", desc: "Feche um mês com mais de R$ 1.000,00 de saldo líquido positivo.", category: "wealth", categoryName: "Riqueza & Minérios", icon: "✨", xp: 150, tier: "rare" },
+        { id: "wealth_netherite", title: "Netherite Puro", desc: "Acumule mais de R$ 5.000,00 em saldo total ou reserva.", category: "wealth", categoryName: "Riqueza & Minérios", icon: "🖤", xp: 300, tier: "legendary" },
+        { id: "wealth_beacon", title: "O Farol Luminoso", desc: "Atinga 100% do valor estipulado em uma meta financeira.", category: "wealth", categoryName: "Riqueza & Minérios", icon: "🗼", xp: 250, tier: "epic" },
+
+        // 🛡️ DEFESA INQUEBRÁVEL (PLANEJAMENTO & DISCIPLINA)
+        { id: "plan_shield", title: "Escudo Levantado", desc: "Defina limites/tetos de gastos para o seu mês no Planejamento.", category: "plan", categoryName: "Defesa & Tetos", icon: "🛡️", xp: 50, tier: "common" },
+        { id: "plan_guardian", title: "Guardião do Orçamento", desc: "Termine o mês sem estourar nenhum dos seus tetos de gastos.", category: "plan", categoryName: "Defesa & Tetos", icon: "🏰", xp: 150, tier: "epic" },
+        { id: "plan_no_spend", title: "Dia de Paz", desc: "Passe um dia útil inteiro sem registrar gastos supérfluos.", category: "plan", categoryName: "Defesa & Tetos", icon: "🕊️", xp: 75, tier: "rare" },
+        { id: "plan_peaceful_week", title: "Semana Pacífica", desc: "Acumule 3 'Dias Sem Gastos' dentro do mesmo mês.", category: "plan", categoryName: "Defesa & Tetos", icon: "🌿", xp: 150, tier: "epic" },
+        { id: "plan_prophet", title: "Radar do Futuro", desc: "Acesse e consulte a Projeção Financeira de 30/60/90 dias.", category: "plan", categoryName: "Defesa & Tetos", icon: "🔮", xp: 50, tier: "common" },
+
+        // 🏹 TRILHA DO AVENTUREIRO (STREAK & HÁBITOS)
+        { id: "streak_3", title: "Passos do Aventureiro", desc: "Mantenha uma sequência (streak) de 3 dias consecutivos no app.", category: "streak", categoryName: "Trilha & Streaks", icon: "🔥", xp: 50, tier: "common" },
+        { id: "streak_7", title: "Explorador Dedicado", desc: "Alcance 7 dias consecutivos mantendo o controle financeiro.", category: "streak", categoryName: "Trilha & Streaks", icon: "⚡", xp: 100, tier: "rare" },
+        { id: "streak_14", title: "Guerreiro da Disciplina", desc: "Alcance 14 dias seguidos de organização financeira ininterrupta.", category: "streak", categoryName: "Trilha & Streaks", icon: "🌟", xp: 200, tier: "epic" },
+        { id: "streak_30", title: "Lenda da Constância", desc: "Complete 30 dias consecutivos de streak!", category: "streak", categoryName: "Trilha & Streaks", icon: "👑", xp: 400, tier: "legendary" },
+        { id: "streak_century", title: "O Centurião", desc: "Registre mais de 100 lançamentos no total no Meu Financeiro.", category: "streak", categoryName: "Trilha & Streaks", icon: "📜", xp: 300, tier: "legendary" },
+
+        // ⚡ ENGENHEIRO DE REDSTONE (AUTOMAÇÃO & TRUQUES)
+        { id: "redstone_automator", title: "Circuito Automático", desc: "Importe um extrato bancário em formato OFX ou CSV.", category: "redstone", categoryName: "Redstone & Truques", icon: "⚙️", xp: 100, tier: "rare" },
+        { id: "redstone_scanner", title: "Linha Decodificada", desc: "Cole e decodifique um boleto pela linha digitável inteligente.", category: "redstone", categoryName: "Redstone & Truques", icon: "📠", xp: 75, tier: "common" },
+        { id: "redstone_signal", title: "Sinal de Redstone", desc: "Ative as notificações PWA do Meu Financeiro.", category: "redstone", categoryName: "Redstone & Truques", icon: "🔔", xp: 50, tier: "common" },
+        { id: "redstone_auditor", title: "Livro com Pena", desc: "Exporte um relatório de atividades ou planilha em CSV.", category: "redstone", categoryName: "Redstone & Truques", icon: "🪶", xp: 75, tier: "common" },
+        { id: "redstone_biometrics", title: "Cofre Encantado", desc: "Ative o bloqueio seguro por biometria ou PIN no app.", category: "redstone", categoryName: "Redstone & Truques", icon: "🔐", xp: 100, tier: "rare" },
+
+        // 👑 O FIM? O COMEÇO! (END-GAME)
+        { id: "end_dragon", title: "Liberdade Financeira", desc: "Feche 3 meses seguidos no azul com taxa de poupança acima de 10%.", category: "end", categoryName: "O Fim & Além", icon: "🐉", xp: 500, tier: "legendary" },
+        { id: "end_elytra", title: "Asas de Elytra", desc: "Acumule reservas suficientes para cobrir 3 meses de contas fixas.", category: "end", categoryName: "O Fim & Além", icon: "🪽", xp: 500, tier: "legendary" },
+        { id: "end_totem", title: "Totem da Imortalidade", desc: "Conclua uma Reserva de Emergência de pelo menos 6x seus custos mensais.", category: "end", categoryName: "O Fim & Além", icon: "🗿", xp: 400, tier: "legendary" }
+    ];
+
+    const MFAchievements = {
+        definitions: ACHIEVEMENT_DEFINITIONS,
+
+        getState() {
+            try {
+                const raw = localStorage.getItem(MF_ACHIEVEMENTS_KEY);
+                if (raw) return JSON.parse(raw);
+            } catch (e) {}
+            return {
+                unlocked: {}, // { [id]: { unlockedAt: ISO, xp: number } }
+                totalXP: 0,
+                streak: this.getStreak()
+            };
+        },
+
+        saveState(state) {
+            try {
+                localStorage.setItem(MF_ACHIEVEMENTS_KEY, JSON.stringify(state));
+            } catch (e) {}
+        },
+
+        getStreak() {
+            try {
+                const raw = localStorage.getItem(MF_STREAK_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    const today = (typeof todayISO === "function") ? todayISO() : new Date().toISOString().slice(0, 10);
+                    const lastDate = parsed.lastDate;
+
+                    if (lastDate === today) {
+                        return parsed.count || 1;
+                    }
+
+                    // Verifica se o último dia foi ontem
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yISO = yesterday.toISOString().slice(0, 10);
+
+                    if (lastDate === yISO) {
+                        return parsed.count || 1;
+                    }
+
+                    // Se passou mais de 1 dia, reinicia streak para 1
+                    return 1;
+                }
+            } catch (e) {}
+            return 1;
+        },
+
+        updateStreak() {
+            try {
+                const today = (typeof todayISO === "function") ? todayISO() : new Date().toISOString().slice(0, 10);
+                const raw = localStorage.getItem(MF_STREAK_KEY);
+                let current = { count: 1, lastDate: today };
+
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed.lastDate === today) {
+                        return parsed.count;
+                    }
+
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yISO = yesterday.toISOString().slice(0, 10);
+
+                    if (parsed.lastDate === yISO) {
+                        current.count = (parsed.count || 1) + 1;
+                    } else {
+                        current.count = 1;
+                    }
+                }
+
+                current.lastDate = today;
+                localStorage.setItem(MF_STREAK_KEY, JSON.stringify(current));
+                return current.count;
+            } catch (e) {
+                return 1;
+            }
+        },
+
+        getLevel(totalXP) {
+            const xp = Number(totalXP) || 0;
+            // Minecraft-like leveling: Level = floor(sqrt(XP / 40)) + 1
+            const level = Math.floor(Math.sqrt(xp / 40)) + 1;
+            const currentLevelMinXP = Math.round(Math.pow(level - 1, 2) * 40);
+            const nextLevelMinXP = Math.round(Math.pow(level, 2) * 40);
+            const levelXP = xp - currentLevelMinXP;
+            const neededXP = nextLevelMinXP - currentLevelMinXP;
+            const pct = Math.min(100, Math.max(0, Math.round((levelXP / (neededXP || 1)) * 100)));
+
+            const titles = [
+                "Novato das Moedas",
+                "Explorador de Economias",
+                "Mineiro de Trocos",
+                "Caçador de Despesas",
+                "Guardião do Orçamento",
+                "Poupador de Ferro",
+                "Colecionador de Ouro",
+                "Mestre dos Diamantes",
+                "Alquimista do Saldo",
+                "Lorde do Netherite",
+                "Lenda da Liberdade Financeira"
+            ];
+            const titleIndex = Math.min(titles.length - 1, Math.floor((level - 1) / 2));
+
+            return {
+                level,
+                title: titles[titleIndex],
+                xp,
+                levelXP,
+                neededXP,
+                pct
+            };
+        },
+
+        playChime() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                const now = ctx.currentTime;
+
+                const notes = [659.25, 783.99, 987.77, 1318.51]; // E5, G5, B5, E6 (arpejo mágico)
+                notes.forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+
+                    osc.type = "triangle";
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+
+                    gain.gain.setValueAtTime(0, now + idx * 0.08);
+                    gain.gain.linearRampToValueAtTime(0.2, now + idx * 0.08 + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.35);
+
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.36);
+                });
+            } catch (e) {
+                // Áudio opcional sem quebrar UI
+            }
+        },
+
+        showBanner(ach) {
+            let container = document.getElementById("mfAdvancementBannerContainer");
+            if (!container) {
+                container = document.createElement("div");
+                container.id = "mfAdvancementBannerContainer";
+                container.className = "mf-advancement-container";
+                document.body.appendChild(container);
+            }
+
+            const banner = document.createElement("div");
+            banner.className = `mf-advancement-banner tier-${ach.tier || "common"}`;
+            banner.innerHTML = `
+                <div class="advancement-icon-box">${ach.icon}</div>
+                <div class="advancement-text-box">
+                    <span class="advancement-header">🏆 Avanço Concluído!</span>
+                    <strong class="advancement-title">${escapeHTML(ach.title)}</strong>
+                    <span class="advancement-xp">+${ach.xp} XP</span>
+                </div>
+            `;
+
+            banner.addEventListener("click", () => {
+                window.location.href = "conquistas.html";
+            });
+
+            container.appendChild(banner);
+
+            setTimeout(() => {
+                banner.classList.add("fade-out");
+                setTimeout(() => {
+                    if (banner.parentNode) banner.parentNode.removeChild(banner);
+                }, 350);
+            }, 4500);
+        },
+
+        unlock(id) {
+            const def = this.definitions.find(d => d.id === id);
+            if (!def) return false;
+
+            const state = this.getState();
+            if (state.unlocked[id]) return false; // Já desbloqueada
+
+            state.unlocked[id] = {
+                unlockedAt: new Date().toISOString(),
+                xp: def.xp
+            };
+            state.totalXP = (state.totalXP || 0) + def.xp;
+            this.saveState(state);
+
+            // Efeito sonoro mágico sintetizado
+            this.playChime();
+
+            // Banner estilo Minecraft
+            this.showBanner(def);
+
+            // Notificação (respeitando regra in-app vs fora do app)
+            if (window.MFNotifications && typeof window.MFNotifications.send === "function") {
+                window.MFNotifications.send(
+                    `🏆 Conquista Desbloqueada: ${def.title}!`,
+                    `${def.desc} (+${def.xp} XP)`,
+                    {
+                        tag: `achievement-${id}`,
+                        url: "./conquistas.html",
+                        iconEmoji: def.icon
+                    }
+                );
+            }
+
+            if (window.MFActivityLogger) {
+                window.MFActivityLogger.log(
+                    "system",
+                    "ACHIEVEMENT_UNLOCKED",
+                    `Conquista: ${def.title}`,
+                    `${def.desc} (+${def.xp} XP)`,
+                    { achievementId: id, xp: def.xp }
+                );
+            }
+
+            window.dispatchEvent(new CustomEvent("mf:achievement-unlocked", { detail: def }));
+            return true;
+        },
+
+        check() {
+            if (!data) return;
+
+            const streak = this.updateStreak();
+            const txs = data.transactions || [];
+            const bills = data.recurringBills || [];
+            const curM = (typeof todayISO === "function") ? todayISO().slice(0, 7) : new Date().toISOString().slice(0, 7);
+
+            // 1. Mundo Exterior
+            if (txs.length >= 1) this.unlock("overworld_wood");
+            if (data.salaryConfig && Number(data.salaryConfig.amount) > 0) this.unlock("overworld_shelter");
+            if (bills.length >= 1) this.unlock("overworld_craft");
+            if (data.goals && data.goals.length >= 1) this.unlock("overworld_chest");
+            if (localStorage.getItem("meuFinanceiro_privacyMode") === "true") this.unlock("overworld_torch");
+            if (localStorage.getItem("meuFinanceiro_session") || (window.supabaseClient && window.supabaseClient.auth)) this.unlock("overworld_bed");
+
+            // 2. Caçador de Boletos
+            const totalPaidBills = bills.reduce((acc, b) => acc + (b.paidMonths ? b.paidMonths.length : 0), 0);
+            if (totalPaidBills >= 1) this.unlock("combat_first_mob");
+            if (totalPaidBills >= 3) this.unlock("combat_combo");
+            if (bills.length > 0 && bills.every(b => (b.paidMonths || []).includes(curM))) {
+                this.unlock("combat_exterminator");
+            }
+            if (txs.some(t => t.type === "receita" && t.category !== "Salário")) {
+                this.unlock("combat_potion");
+            }
+
+            // 3. Minerador de Diamantes
+            const currentBalance = (typeof calculateTotals === "function") ? calculateTotals().balance : 0;
+            if (currentBalance >= 500) this.unlock("wealth_iron");
+            if (currentBalance >= 1000) this.unlock("wealth_fortune");
+            if (currentBalance >= 5000) this.unlock("wealth_netherite");
+
+            const currentIncome = (typeof calculateTotals === "function") ? calculateTotals().income : 0;
+            if (currentIncome > 0 && currentBalance > 0) {
+                const saveRate = currentBalance / currentIncome;
+                if (saveRate >= 0.10) this.unlock("wealth_gold");
+                if (saveRate >= 0.20) this.unlock("wealth_diamond");
+            }
+
+            if (data.goals && data.goals.some(g => (g.current || 0) >= (g.target || 1))) {
+                this.unlock("wealth_beacon");
+            }
+
+            // 4. Defesa & Tetos
+            if (data.budgets && Object.keys(data.budgets).length > 0) this.unlock("plan_shield");
+            if (txs.length >= 100) this.unlock("streak_century");
+
+            // 5. Streaks
+            if (streak >= 3) this.unlock("streak_3");
+            if (streak >= 7) this.unlock("streak_7");
+            if (streak >= 14) this.unlock("streak_14");
+            if (streak >= 30) this.unlock("streak_30");
+
+            // 6. Redstone
+            if (localStorage.getItem("meuFinanceiro_used_ofx") === "true") this.unlock("redstone_automator");
+            if (localStorage.getItem("meuFinanceiro_used_barcode") === "true") this.unlock("redstone_scanner");
+            if (window.MFNotifications && window.MFNotifications.hasPermission()) this.unlock("redstone_signal");
+            if (localStorage.getItem("meuFinanceiro_app_lock_enabled") === "true") this.unlock("redstone_biometrics");
+        }
+    };
+
+    window.MFAchievements = MFAchievements;
+
+    /* ============================================================
+       MÓDULO DE AUTOMAÇÃO E LEITURA INTELIGENTE (OFX, CSV, BOLETO)
+       ============================================================ */
+    const MFAutomation = {
+        decodeBoleto(raw) {
+            const clean = String(raw || "").replace(/\D/g, "");
+            if (clean.length === 47) {
+                const bankCode = clean.slice(0, 3);
+                const banks = {
+                    "001": "Banco do Brasil", "033": "Santander", "104": "Caixa Econômica",
+                    "237": "Bradesco", "341": "Itaú Unibanco", "260": "Nubank",
+                    "077": "Banco Inter", "336": "C6 Bank", "756": "Sicoob", "748": "Sicredi"
+                };
+                const bankName = banks[bankCode] || `Boleto (${bankCode})`;
+                const factor = parseInt(clean.slice(33, 37), 10);
+                const valCents = parseInt(clean.slice(37, 47), 10);
+                const amount = valCents / 100;
+
+                let dueDate = "";
+                if (factor > 0) {
+                    const baseDate = new Date(1997, 9, 7);
+                    let targetDate = new Date(baseDate.getTime() + factor * 24 * 60 * 60 * 1000);
+                    if (targetDate.getFullYear() < 2024 && factor < 3000) {
+                        const base2 = new Date(2025, 1, 22);
+                        targetDate = new Date(base2.getTime() + (factor - 1000) * 24 * 60 * 60 * 1000);
+                    }
+                    dueDate = targetDate.toISOString().slice(0, 10);
+                }
+                return { valid: true, type: "bancario", bankName, amount: amount > 0 ? amount : null, dueDate: dueDate || null };
+            } else if (clean.length === 48) {
+                const segments = { "1": "IPTU / Prefeitura", "2": "Água / Saneamento", "3": "Energia Elétrica", "4": "Internet / Telefone" };
+                const bankName = segments[clean[1]] || "Concessionária";
+                const valCents = parseInt(clean.slice(4, 15), 10);
+                return { valid: true, type: "concessionaria", bankName, amount: valCents > 0 ? valCents / 100 : null, dueDate: null };
+            }
+            return { valid: false, error: "A linha digitável deve conter 47 ou 48 dígitos numéricos." };
+        },
+
+        suggestCategory(desc) {
+            const text = String(desc || "").toLowerCase();
+            if (/mercado|supermercado|ifood|restaurante|padaria|acougue|pizza|burguer|bar|lanche|cafe|alimento|hortifruti/.test(text)) return "Alimentação";
+            if (/uber|99app|posto|gasolina|etanol|combustivel|estacionamento|pedagio|auto/.test(text)) return "Transporte";
+            if (/enel|copel|sabesp|cemig|light|equatorial|caesb|sanepar|saae|agua|luz|energia/.test(text)) return "Água e luz";
+            if (/aluguel|condominio|iptu|reforma|gas/.test(text)) return "Moradia";
+            if (/netflix|spotify|prime|amazon|disney|youtube|apple|google|hbo|streaming/.test(text)) return "Assinaturas";
+            if (/drogaria|farmacia|consulta|exame|dentista|hospital|medico|remedio|drogasil/.test(text)) return "Saúde";
+            if (/faculdade|curso|udemy|livro|escola|mensalidade|educacao/.test(text)) return "Educação";
+            if (/cinema|show|ingresso|praia|viagem|hotel|lazer/.test(text)) return "Lazer";
+            if (/shopee|mercado livre|shein|zara|roupa|magazine|loja/.test(text)) return "Compras";
+            if (/salario|pro labore|remuneracao|adiantamento/.test(text)) return "Salário";
+            return "Outros";
+        },
+
+        parseOFX(content) {
+            const trns = [];
+            const regex = /<STMTTRN>([\s\S]*?)<\/STMTTRN>/gi;
+            let match;
+            while ((match = regex.exec(content)) !== null) {
+                const block = match[1];
+                const dateMatch = block.match(/<DTPOSTED>(\d{8})/i);
+                const amtMatch = block.match(/<TRNAMT>([^<\r\n]+)/i);
+                const memoMatch = block.match(/<(?:MEMO|NAME)>([^<\r\n]+)/i);
+
+                if (amtMatch) {
+                    const rawAmt = parseFloat(amtMatch[1].trim().replace(",", "."));
+                    const isExpense = rawAmt < 0;
+                    const absAmt = Math.abs(rawAmt);
+                    const desc = memoMatch ? memoMatch[1].trim() : (isExpense ? "Despesa Bancária" : "Depósito Bancário");
+                    let dateStr = (typeof todayISO === "function") ? todayISO() : new Date().toISOString().slice(0, 10);
+                    if (dateMatch) {
+                        const rawD = dateMatch[1];
+                        dateStr = `${rawD.slice(0, 4)}-${rawD.slice(4, 6)}-${rawD.slice(6, 8)}`;
+                    }
+                    trns.push({
+                        id: "ofx_" + Math.random().toString(36).slice(2, 9),
+                        type: isExpense ? "despesa" : "receita",
+                        description: desc,
+                        amount: absAmt,
+                        category: MFAutomation.suggestCategory(desc),
+                        date: dateStr,
+                        selected: true
+                    });
+                }
+            }
+            return trns;
+        },
+
+        parseCSV(content) {
+            const lines = content.split(/\r?\n/).filter(l => l.trim().length > 0);
+            if (lines.length < 2) return [];
+
+            const trns = [];
+            const sep = lines[0].includes(";") ? ";" : ",";
+
+            for (let i = 1; i < lines.length; i++) {
+                const cols = lines[i].split(sep).map(c => c.trim().replace(/^["']|["']$/g, ""));
+                if (cols.length < 2) continue;
+
+                let dateStr = cols.find(c => /^\d{2}[\/\-]\d{2}[\/\-]\d{4}$/.test(c) || /^\d{4}[\/\-]\d{2}[\/\-]\d{2}$/.test(c));
+                if (dateStr) {
+                    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+                        const p = dateStr.split("/");
+                        dateStr = `${p[2]}-${p[1]}-${p[0]}`;
+                    }
+                } else {
+                    dateStr = (typeof todayISO === "function") ? todayISO() : new Date().toISOString().slice(0, 10);
+                }
+
+                let valNum = 0;
+                let valIndex = -1;
+                for (let j = cols.length - 1; j >= 0; j--) {
+                    const cleaned = cols[j].replace("R$", "").replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
+                    const num = parseFloat(cleaned);
+                    if (!isNaN(num) && num !== 0) {
+                        valNum = num;
+                        valIndex = j;
+                        break;
+                    }
+                }
+
+                if (valNum === 0) continue;
+
+                let desc = cols.find((c, idx) => idx !== valIndex && c !== dateStr && c.length > 2) || "Lançamento Importado";
+                const isExpense = valNum < 0;
+                const absAmt = Math.abs(valNum);
+
+                trns.push({
+                    id: "csv_" + Math.random().toString(36).slice(2, 9),
+                    type: isExpense ? "despesa" : "receita",
+                    description: desc,
+                    amount: absAmt,
+                    category: MFAutomation.suggestCategory(desc),
+                    date: dateStr,
+                    selected: true
+                });
+            }
+            return trns;
+        }
+    };
+
+    window.MFAutomation = MFAutomation;
+
+    /* ============================================================
+       RADAR DE SALDO FUTURO & TERMÔMETRO DIÁRIO (PROJEÇÃO)
+       ============================================================ */
+    const MFProjections = {
+        getDailyDisposable() {
+            if (!data) return { amount: 0, status: "safe", daysLeft: 1 };
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+            const currentDay = now.getDate();
+            const daysLeft = Math.max(1, totalDaysInMonth - currentDay + 1);
+
+            const totals = (typeof calculateTotals === "function") ? calculateTotals() : { balance: 0, income: 0, expense: 0 };
+            const curM = (typeof todayISO === "function") ? todayISO().slice(0, 7) : new Date().toISOString().slice(0, 7);
+
+            // Contas fixas restantes a pagar no mês
+            const pendingBills = (data.recurringBills || [])
+                .filter(b => !(b.paidMonths || []).includes(curM))
+                .reduce((acc, b) => acc + Number(b.amount || 0), 0);
+
+            // Saldo líquido livre para os dias restantes
+            const freeBalance = Math.max(0, totals.balance - pendingBills);
+            const daily = Math.round((freeBalance / daysLeft) * 100) / 100;
+
+            let status = "safe";
+            if (daily <= 0) status = "danger";
+            else if (daily < 30) status = "warning";
+
+            return { amount: daily, status, daysLeft, freeBalance, pendingBills };
+        },
+
+        getRadarProjection() {
+            const totals = (typeof calculateTotals === "function") ? calculateTotals() : { balance: 0, income: 0, expense: 0 };
+            const baseSalary = data.salaryConfig && Number(data.salaryConfig.amount) ? Number(data.salaryConfig.amount) : totals.income;
+            const monthlyFixedBills = (data.recurringBills || []).reduce((acc, b) => acc + Number(b.amount || 0), 0);
+            const estimatedAvgExpense = Math.max(monthlyFixedBills, totals.expense);
+            const netMonthlyFlow = baseSalary - estimatedAvgExpense;
+
+            const curBalance = totals.balance;
+            const proj30 = Math.round(curBalance + netMonthlyFlow);
+            const proj60 = Math.round(curBalance + netMonthlyFlow * 2);
+            const proj90 = Math.round(curBalance + netMonthlyFlow * 3);
+
+            return {
+                current: curBalance,
+                d30: proj30,
+                d60: proj60,
+                d90: proj90,
+                netMonthlyFlow
+            };
+        },
+
+        renderDashboardWidgets() {
+            const thermoEl = document.getElementById("dailyBudgetThermometerCard");
+            if (thermoEl) {
+                const disp = this.getDailyDisposable();
+                const amtStr = (typeof money === "function") ? money(disp.amount) : `R$ ${disp.amount.toFixed(2)}`;
+                thermoEl.innerHTML = `
+                    <div class="thermometer-card-inner status-${disp.status}">
+                        <div class="thermometer-icon-box">🌡️</div>
+                        <div class="thermometer-info">
+                            <span class="thermometer-label">DISPONÍVEL PARA GASTAR HOJE</span>
+                            <div class="thermometer-value-row">
+                                <strong class="thermometer-val">${amtStr}</strong>
+                                <span class="thermometer-tag">${disp.status === "safe" ? "Confortável" : disp.status === "warning" ? "Atenção" : "Esgotado"}</span>
+                            </div>
+                            <span class="thermometer-sub">Restam ${disp.daysLeft} dias neste mês após reservar ${money ? money(disp.pendingBills) : "R$ " + disp.pendingBills} para contas fixas.</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const radarEl = document.getElementById("futureRadarCard");
+            if (radarEl) {
+                const radar = this.getRadarProjection();
+                radarEl.innerHTML = `
+                    <div class="radar-card-inner">
+                        <div class="radar-header">
+                            <div class="radar-title-box">
+                                <span class="radar-icon">🔮</span>
+                                <div>
+                                    <h3 class="radar-title">Radar de Saldo Futuro</h3>
+                                    <p class="radar-subtitle">Projeção estimada mantendo seu ritmo atual de receitas e custos fixos.</p>
+                                </div>
+                            </div>
+                            <span class="radar-trend-badge ${radar.netMonthlyFlow >= 0 ? 'positive' : 'negative'}">
+                                ${radar.netMonthlyFlow >= 0 ? '📈 Tendência Positiva' : '📉 Atenção aos Gastos'}
+                            </span>
+                        </div>
+                        <div class="radar-grid">
+                            <div class="radar-col">
+                                <span class="radar-step-lbl">Em 30 dias</span>
+                                <strong class="radar-step-val ${radar.d30 >= 0 ? 'income-text' : 'expense-text'}">${money ? money(radar.d30) : 'R$ ' + radar.d30}</strong>
+                            </div>
+                            <div class="radar-divider"></div>
+                            <div class="radar-col">
+                                <span class="radar-step-lbl">Em 60 dias</span>
+                                <strong class="radar-step-val ${radar.d60 >= 0 ? 'income-text' : 'expense-text'}">${money ? money(radar.d60) : 'R$ ' + radar.d60}</strong>
+                            </div>
+                            <div class="radar-divider"></div>
+                            <div class="radar-col">
+                                <span class="radar-step-lbl">Em 90 dias</span>
+                                <strong class="radar-step-val ${radar.d90 >= 0 ? 'income-text' : 'expense-text'}">${money ? money(radar.d90) : 'R$ ' + radar.d90}</strong>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    };
+
+    window.MFProjections = MFProjections;
+
+    /* ============================================================
+       FINANÇAS COMPARTILHADAS & ACERTO DE CONTAS (MODO CASAL)
+       ============================================================ */
+    const MFFinanceSplit = {
+        calculateSplit(monthStr) {
+            if (!data) return { totalShared: 0, myShare: 0, partnerShare: 0, balance: 0 };
+            const m = monthStr || ((typeof selectedMonth === "function") ? selectedMonth() : new Date().toISOString().slice(0, 7));
+            const txs = (data.transactions || []).filter(t => t.date && t.date.startsWith(m) && t.type === "despesa");
+
+            let paidByMeShared = 0;
+            let paidByPartner = 0;
+
+            txs.forEach(t => {
+                const amt = Number(t.amount || 0);
+                if (t.splitType === "shared_50") {
+                    paidByMeShared += amt;
+                } else if (t.splitType === "partner") {
+                    paidByPartner += amt;
+                }
+            });
+
+            const totalShared = paidByMeShared + paidByPartner;
+            const fairHalf = totalShared / 2;
+            const balance = paidByMeShared - fairHalf; // se positivo, parceiro deve me transferir; se negativo, eu devo transferir
+
+            return {
+                totalShared,
+                paidByMe: paidByMeShared,
+                paidByPartner,
+                fairHalf,
+                balance
+            };
+        },
+
+        renderSplitWidget(containerId) {
+            const el = document.getElementById(containerId || "financeSplitCard");
+            if (!el) return;
+
+            const split = this.calculateSplit();
+            if (split.totalShared === 0) {
+                el.innerHTML = `
+                    <div class="split-empty-card">
+                        <span class="split-empty-icon">👥</span>
+                        <p>Nenhuma despesa compartilhada registrada neste mês. Ao lançar uma despesa, selecione "Compartilhado (50%)" para calcular o acerto automaticamente.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const isPartnerDebtor = split.balance > 0;
+            const absBal = Math.abs(split.balance);
+            const balStr = (typeof money === "function") ? money(absBal) : `R$ ${absBal.toFixed(2)}`;
+
+            el.innerHTML = `
+                <div class="split-card-inner">
+                    <div class="split-header">
+                        <span class="split-icon">👥</span>
+                        <div>
+                            <h3 class="split-title">Acerto de Contas da Casa</h3>
+                            <p class="split-desc">Divisão equilibrada 50/50 das despesas compartilhadas deste mês.</p>
+                        </div>
+                    </div>
+                    <div class="split-summary-row">
+                        <div class="split-box">
+                            <span>Total compartilhado</span>
+                            <strong>${money ? money(split.totalShared) : 'R$ ' + split.totalShared}</strong>
+                        </div>
+                        <div class="split-box">
+                            <span>Sua parte (50%)</span>
+                            <strong>${money ? money(split.fairHalf) : 'R$ ' + split.fairHalf}</strong>
+                        </div>
+                        <div class="split-box ${isPartnerDebtor ? 'highlight-income' : 'highlight-expense'}">
+                            <span>${isPartnerDebtor ? 'A receber do parceiro(a)' : 'A transferir para parceiro(a)'}</span>
+                            <strong>${balStr}</strong>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    };
+
+    window.MFFinanceSplit = MFFinanceSplit;
+
+    /* ============================================================
+       SEGURANÇA & BIOMETRIA / PIN (WEBAUTHN)
+       ============================================================ */
+    const MFSecurity = {
+        isLockEnabled() {
+            return localStorage.getItem("meuFinanceiro_app_lock_enabled") === "true";
+        },
+
+        setLockEnabled(enabled, pin = "1234") {
+            if (enabled) {
+                localStorage.setItem("meuFinanceiro_app_lock_enabled", "true");
+                localStorage.setItem("meuFinanceiro_app_lock_pin", pin || "1234");
+                if (window.MFAchievements) window.MFAchievements.unlock("redstone_biometrics");
+            } else {
+                localStorage.removeItem("meuFinanceiro_app_lock_enabled");
+            }
+        },
+
+        checkAppLock() {
+            if (!this.isLockEnabled()) return;
+            if (sessionStorage.getItem("meuFinanceiro_unlocked_this_session") === "true") return;
+
+            let overlay = document.getElementById("appLockOverlay");
+            if (!overlay) {
+                overlay = document.createElement("div");
+                overlay.id = "appLockOverlay";
+                overlay.className = "app-lock-overlay";
+                overlay.innerHTML = `
+                    <div class="app-lock-card">
+                        <div class="app-lock-icon">🔐</div>
+                        <h2>Meu Financeiro Bloqueado</h2>
+                        <p>Digite seu PIN de segurança ou confirme sua identidade para desbloquear.</p>
+                        <input type="password" id="appLockPinInput" maxlength="8" placeholder="Digite seu PIN" class="app-lock-pin-input" autofocus>
+                        <button type="button" id="btnUnlockApp" class="button button-primary" style="width: 100%; margin-top: 14px;">Desbloquear</button>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+
+                const pinInput = overlay.querySelector("#appLockPinInput");
+                const btnUnlock = overlay.querySelector("#btnUnlockApp");
+
+                const attemptUnlock = () => {
+                    const savedPin = localStorage.getItem("meuFinanceiro_app_lock_pin") || "1234";
+                    if (pinInput.value === savedPin) {
+                        sessionStorage.setItem("meuFinanceiro_unlocked_this_session", "true");
+                        overlay.remove();
+                        if (typeof showToast === "function") showToast("App desbloqueado com sucesso!");
+                    } else {
+                        pinInput.value = "";
+                        pinInput.style.borderColor = "#ef4444";
+                        if (typeof showToast === "function") showToast("PIN incorreto. Tente novamente.");
+                    }
+                };
+
+                btnUnlock.addEventListener("click", attemptUnlock);
+                pinInput.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") attemptUnlock();
+                });
+            }
+        }
+    };
+
+    window.MFSecurity = MFSecurity;
+
+    function setupSecurityPanelUI() {
+        const toggleSwitch = document.getElementById("toggleAppLockSwitch");
+        const statusPill = document.getElementById("securityStatusPill");
+        const pinBox = document.getElementById("pinConfigBox");
+        const pinInput = document.getElementById("appLockPinInput");
+        const btnSavePin = document.getElementById("btnSaveAppLockPin");
+
+        if (!toggleSwitch && !statusPill) return;
+
+        const isEnabled = MFSecurity.isLockEnabled();
+        if (toggleSwitch) toggleSwitch.checked = isEnabled;
+        if (statusPill) {
+            statusPill.textContent = isEnabled ? "Ativado ✓" : "Desativado";
+            statusPill.className = isEnabled ? "status-pill status-synced" : "status-pill";
+        }
+        if (pinBox) {
+            pinBox.style.display = isEnabled ? "block" : "none";
+        }
+        if (pinInput) {
+            pinInput.value = localStorage.getItem("meuFinanceiro_app_lock_pin") || "1234";
+        }
+
+        if (toggleSwitch) {
+            toggleSwitch.addEventListener("change", () => {
+                const checked = toggleSwitch.checked;
+                if (checked) {
+                    const currentPin = (pinInput && pinInput.value.trim()) || "1234";
+                    MFSecurity.setLockEnabled(true, currentPin);
+                    if (statusPill) {
+                        statusPill.textContent = "Ativado ✓";
+                        statusPill.className = "status-pill status-synced";
+                    }
+                    if (pinBox) pinBox.style.display = "block";
+                    if (typeof showToast === "function") showToast("Bloqueio de tela ativado!");
+                } else {
+                    MFSecurity.setLockEnabled(false);
+                    if (statusPill) {
+                        statusPill.textContent = "Desativado";
+                        statusPill.className = "status-pill";
+                    }
+                    if (pinBox) pinBox.style.display = "none";
+                    if (typeof showToast === "function") showToast("Bloqueio de tela desativado.");
+                }
+            });
+        }
+
+        if (btnSavePin && pinInput) {
+            btnSavePin.addEventListener("click", () => {
+                const val = pinInput.value.trim();
+                if (val.length < 4) {
+                    if (typeof showToast === "function") showToast("O PIN deve ter no mínimo 4 dígitos.");
+                    return;
+                }
+                MFSecurity.setLockEnabled(true, val);
+                if (typeof showToast === "function") showToast("Novo PIN salvo com sucesso! 🔒");
+            });
+        }
+    }
 
     /* ============================================================
        NOTIFICAÇÕES DO PWA (TESTE E CONSENTIMENTO TRANSPARENTE)
@@ -7955,10 +8861,19 @@ function init() {
     setupDemoBanner();
     setupWelcomeTutorial();
     setupQuickStartWizard();
+    setupAchievementsPage();
+    setupAutomationModals();
+    setupSecurityPanelUI();
+    if (window.MFSecurity && typeof window.MFSecurity.checkAppLock === "function") {
+        window.MFSecurity.checkAppLock();
+    }
     renderAll();
 
-    // Verificação de contas a vencer e dia de pagamento de salário para notificações
+    // Verificação de conquistas e contas para notificações inteligentes
     setTimeout(() => {
+        if (window.MFAchievements && typeof window.MFAchievements.check === "function") {
+            window.MFAchievements.check();
+        }
         if (window.MFNotifications) {
             if (typeof window.MFNotifications.checkBillsDue === "function") window.MFNotifications.checkBillsDue();
             if (typeof window.MFNotifications.checkSalaryDay === "function") window.MFNotifications.checkSalaryDay();
@@ -7996,6 +8911,376 @@ function setupReports() {
     }
 }
 
+/* ============================================================
+   TELA DE CONQUISTAS GAMIFICADAS (conquistas.html)
+   ============================================================ */
+function setupAchievementsPage() {
+    const pageContainer = document.getElementById("achievementsPageContainer");
+    if (!pageContainer) return;
+
+    if (!window.MFAchievements) return;
+
+    let currentFilter = "all";
+
+    function render() {
+        const state = window.MFAchievements.getState();
+        const levelData = window.MFAchievements.getLevel(state.totalXP);
+        const streak = state.streak || window.MFAchievements.getStreak();
+        const defs = window.MFAchievements.definitions;
+
+        // Atualiza Hero e Barra de Nível
+        const levelBadge = document.getElementById("achCurrentLevelBadge");
+        if (levelBadge) levelBadge.textContent = levelData.level;
+
+        const levelTitle = document.getElementById("achCurrentLevelTitle");
+        if (levelTitle) levelTitle.textContent = levelData.title;
+
+        const levelXpText = document.getElementById("achCurrentXpText");
+        if (levelXpText) {
+            levelXpText.textContent = `${levelData.xp} XP Totais (${levelData.levelXP}/${levelData.neededXP} XP para o Nível ${levelData.level + 1})`;
+        }
+
+        const levelBar = document.getElementById("achLevelProgressBar");
+        if (levelBar) {
+            levelBar.style.width = `${levelData.pct}%`;
+        }
+
+        const streakVal = document.getElementById("achStreakValue");
+        if (streakVal) {
+            streakVal.textContent = `${streak} ${streak === 1 ? "dia" : "dias"}`;
+        }
+
+        const totalUnlocked = Object.keys(state.unlocked || {}).length;
+        const totalCount = defs.length;
+        const totalPct = Math.round((totalUnlocked / totalCount) * 100);
+
+        const countText = document.getElementById("achCountText");
+        if (countText) {
+            countText.textContent = `${totalUnlocked}/${totalCount} (${totalPct}%)`;
+        }
+
+        // Renderiza Grid de Conquistas
+        const grid = document.getElementById("achievementsGrid");
+        if (!grid) return;
+
+        const filteredDefs = currentFilter === "all" ? defs : defs.filter(d => d.category === currentFilter);
+
+        grid.innerHTML = filteredDefs.map(ach => {
+            const isUnlocked = Boolean(state.unlocked && state.unlocked[ach.id]);
+            const unlockedData = state.unlocked ? state.unlocked[ach.id] : null;
+            const unlockedDateStr = unlockedData ? new Date(unlockedData.unlockedAt).toLocaleDateString("pt-BR") : "";
+
+            return `
+                <div class="achievement-card tier-${ach.tier || "common"} ${isUnlocked ? "unlocked" : "locked"}" data-id="${ach.id}">
+                    <div class="ach-card-top">
+                        <div class="ach-icon-frame">
+                            <span class="ach-icon">${ach.icon}</span>
+                            ${isUnlocked ? `<span class="ach-check-badge">✓</span>` : `<span class="ach-lock-badge">🔒</span>`}
+                        </div>
+                        <div class="ach-tier-badge tier-${ach.tier || "common"}">${ach.categoryName}</div>
+                    </div>
+                    <div class="ach-card-body">
+                        <h4 class="ach-title">${escapeHTML(ach.title)}</h4>
+                        <p class="ach-desc">${escapeHTML(ach.desc)}</p>
+                    </div>
+                    <div class="ach-card-footer">
+                        <span class="ach-xp-tag">+${ach.xp} XP</span>
+                        <span class="ach-status-tag ${isUnlocked ? "status-unlocked" : "status-locked"}">${isUnlocked ? `✓ Desbloqueada em ${unlockedDateStr}` : `🔒 Bloqueada`}</span>
+                    </div>
+                </div>
+            `;
+        }).join("");
+    }
+
+    // Filtros por categoria
+    document.querySelectorAll(".ach-filter-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".ach-filter-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            currentFilter = btn.dataset.achFilter || "all";
+            render();
+        });
+    });
+
+    render();
+
+    window.addEventListener("mf:achievement-unlocked", () => {
+        render();
+    });
+}
+
+/* ============================================================
+   CONFIGURAÇÃO DOS MODAIS DE AUTOMAÇÃO (OFX / CSV / BOLETO)
+   ============================================================ */
+function setupAutomationModals() {
+    // 1. Decodificador de Boleto
+    const boletoModal = document.getElementById("boletoDecoderModal");
+    const boletoInput = document.getElementById("boletoBarcodeText");
+    const boletoBtnDec = document.getElementById("btnExecuteBoletoDecode");
+    const boletoResultBox = document.getElementById("boletoDecodeResultBox");
+    const boletoBtnApply = document.getElementById("btnApplyBoletoData");
+
+    let currentDecoded = null;
+    let targetForm = "transaction";
+
+    const openBoleto = (target = "transaction") => {
+        targetForm = target;
+        currentDecoded = null;
+        if (boletoInput) boletoInput.value = "";
+        if (boletoResultBox) boletoResultBox.innerHTML = "";
+        if (boletoBtnApply) boletoBtnApply.disabled = true;
+        if (boletoModal) boletoModal.classList.add("is-open");
+    };
+
+    const closeBoleto = () => {
+        if (boletoModal) boletoModal.classList.remove("is-open");
+    };
+
+    document.querySelectorAll("#btnOpenBoletoModal, .btn-open-boleto").forEach(b => {
+        b.addEventListener("click", () => openBoleto("transaction"));
+    });
+
+    const btnBoletoRec = document.getElementById("btnOpenBoletoRecurring");
+    if (btnBoletoRec) {
+        btnBoletoRec.addEventListener("click", () => openBoleto("recurring"));
+    }
+
+    if (boletoModal) {
+        const closeBtn = boletoModal.querySelector(".confirm-dialog-close, #btnCancelBoletoModal");
+        if (closeBtn) closeBtn.addEventListener("click", closeBoleto);
+        boletoModal.addEventListener("click", (e) => {
+            if (e.target === boletoModal) closeBoleto();
+        });
+    }
+
+    if (boletoBtnDec && boletoInput) {
+        boletoBtnDec.addEventListener("click", () => {
+            const raw = boletoInput.value.trim();
+            if (!raw) {
+                if (typeof showToast === "function") showToast("Cole a linha digitável do boleto primeiro.");
+                return;
+            }
+            const res = window.MFAutomation.decodeBoleto(raw);
+            if (!res.valid) {
+                if (typeof showToast === "function") showToast(res.error || "Linha digitável inválida.");
+                return;
+            }
+            currentDecoded = res;
+            if (boletoResultBox) {
+                const amtStr = res.amount ? (typeof money === "function" ? money(res.amount) : "R$ " + res.amount) : "Não identificado (valor livre)";
+                const dueStr = res.dueDate ? (typeof formatDate === "function" ? formatDate(res.dueDate) : res.dueDate) : "Não identificada";
+                boletoResultBox.innerHTML = `
+                    <div class="boleto-result-card">
+                        <div class="boleto-res-item"><span>Emissor / Banco:</span> <strong>${escapeHTML(res.bankName)}</strong></div>
+                        <div class="boleto-res-item"><span>Valor do boleto:</span> <strong>${amtStr}</strong></div>
+                        <div class="boleto-res-item"><span>Vencimento:</span> <strong>${dueStr}</strong></div>
+                    </div>
+                `;
+            }
+            if (boletoBtnApply) boletoBtnApply.disabled = false;
+        });
+    }
+
+    if (boletoBtnApply) {
+        boletoBtnApply.addEventListener("click", () => {
+            if (!currentDecoded) return;
+            if (targetForm === "recurring") {
+                const form = document.getElementById("recurringForm");
+                if (form) form.classList.remove("hidden");
+                const nameInp = document.getElementById("recurringName");
+                if (nameInp) nameInp.value = currentDecoded.bankName || "Boleto";
+                const amtInp = document.getElementById("recurringAmount");
+                if (amtInp && currentDecoded.amount) amtInp.value = currentDecoded.amount.toFixed(2);
+                const dateInp = document.getElementById("recurringDate");
+                if (dateInp && currentDecoded.dueDate) dateInp.value = currentDecoded.dueDate;
+                if (typeof syncDatePicker === "function") syncDatePicker();
+            } else {
+                const descInp = document.getElementById("description");
+                if (descInp) descInp.value = currentDecoded.bankName || "Boleto";
+                const amtInp = document.getElementById("amount");
+                if (amtInp && currentDecoded.amount) amtInp.value = currentDecoded.amount.toFixed(2);
+                const dateInp = document.getElementById("transactionDate");
+                if (dateInp && currentDecoded.dueDate) dateInp.value = currentDecoded.dueDate;
+                if (typeof syncDatePicker === "function") syncDatePicker();
+            }
+
+            localStorage.setItem("meuFinanceiro_used_barcode", "true");
+            if (window.MFAchievements) window.MFAchievements.unlock("redstone_scanner");
+            closeBoleto();
+            if (typeof showToast === "function") showToast("Dados do boleto preenchidos com sucesso! ⚡");
+        });
+    }
+
+    // 2. Importador de Extrato Bancário (OFX / CSV)
+    const extratoModal = document.getElementById("importExtratoModal");
+    const fileInput = document.getElementById("extratoFileInput");
+    const dropZone = document.getElementById("extratoDropZone");
+    const previewList = document.getElementById("extratoPreviewList");
+    const btnConfirmImport = document.getElementById("btnConfirmImportExtrato");
+
+    let parsedExtratoItems = [];
+
+    const openExtrato = () => {
+        parsedExtratoItems = [];
+        if (fileInput) fileInput.value = "";
+        if (previewList) previewList.innerHTML = `<p class="extrato-empty-msg">Arraste um arquivo .ofx ou .csv ou clique acima para visualizar os lançamentos.</p>`;
+        if (btnConfirmImport) btnConfirmImport.disabled = true;
+        if (extratoModal) extratoModal.classList.add("is-open");
+    };
+
+    const closeExtrato = () => {
+        if (extratoModal) extratoModal.classList.remove("is-open");
+    };
+
+    document.querySelectorAll("#btnOpenImportExtrato, .btn-open-extrato").forEach(b => {
+        b.addEventListener("click", openExtrato);
+    });
+
+    if (extratoModal) {
+        const closeBtn = extratoModal.querySelector(".confirm-dialog-close, #btnCancelExtratoModal");
+        if (closeBtn) closeBtn.addEventListener("click", closeExtrato);
+        extratoModal.addEventListener("click", (e) => {
+            if (e.target === extratoModal) closeExtrato();
+        });
+    }
+
+    const processFile = (file) => {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const content = e.target.result;
+            const ext = file.name.split(".").pop().toLowerCase();
+            let items = [];
+            if (ext === "ofx") {
+                items = window.MFAutomation.parseOFX(content);
+            } else {
+                items = window.MFAutomation.parseCSV(content);
+            }
+
+            if (!items || items.length === 0) {
+                if (typeof showToast === "function") showToast("Nenhuma transação válida encontrada no arquivo.");
+                return;
+            }
+
+            parsedExtratoItems = items;
+            renderExtratoPreview();
+            if (btnConfirmImport) btnConfirmImport.disabled = false;
+        };
+        reader.readAsText(file);
+    };
+
+    function renderExtratoPreview() {
+        if (!previewList) return;
+        previewList.innerHTML = `
+            <div class="extrato-table-wrap">
+                <table class="extrato-table">
+                    <thead>
+                        <tr>
+                            <th width="36"><input type="checkbox" id="extratoCheckAll" checked></th>
+                            <th>Data</th>
+                            <th>Descrição</th>
+                            <th>Categoria</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${parsedExtratoItems.map((item, idx) => `
+                            <tr>
+                                <td><input type="checkbox" class="extrato-item-check" data-idx="${idx}" ${item.selected ? 'checked' : ''}></td>
+                                <td>${typeof formatDate === 'function' ? formatDate(item.date) : item.date}</td>
+                                <td><strong>${escapeHTML(item.description)}</strong></td>
+                                <td><span class="category-tag">${item.category}</span></td>
+                                <td class="${item.type === 'receita' ? 'income-text' : 'expense-text'}">
+                                    ${item.type === 'receita' ? '+' : '-'}${typeof money === 'function' ? money(item.amount) : 'R$ ' + item.amount.toFixed(2)}
+                                </td>
+                            </tr>
+                        `).join("")}
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        const checkAll = previewList.querySelector("#extratoCheckAll");
+        if (checkAll) {
+            checkAll.addEventListener("change", (e) => {
+                const checked = e.target.checked;
+                parsedExtratoItems.forEach(i => i.selected = checked);
+                previewList.querySelectorAll(".extrato-item-check").forEach(c => c.checked = checked);
+            });
+        }
+
+        previewList.querySelectorAll(".extrato-item-check").forEach(c => {
+            c.addEventListener("change", (e) => {
+                const idx = parseInt(e.target.dataset.idx, 10);
+                if (parsedExtratoItems[idx]) parsedExtratoItems[idx].selected = e.target.checked;
+            });
+        });
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener("change", (e) => {
+            if (e.target.files && e.target.files[0]) processFile(e.target.files[0]);
+        });
+    }
+
+    if (dropZone) {
+        dropZone.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            dropZone.classList.add("drag-hover");
+        });
+        dropZone.addEventListener("dragleave", () => {
+            dropZone.classList.remove("drag-hover");
+        });
+        dropZone.addEventListener("drop", (e) => {
+            e.preventDefault();
+            dropZone.classList.remove("drag-hover");
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                processFile(e.dataTransfer.files[0]);
+            }
+        });
+    }
+
+    if (btnConfirmImport) {
+        btnConfirmImport.addEventListener("click", () => {
+            const selectedItems = parsedExtratoItems.filter(i => i.selected);
+            if (selectedItems.length === 0) {
+                if (typeof showToast === "function") showToast("Selecione pelo menos um lançamento para importar.");
+                return;
+            }
+
+            selectedItems.forEach(item => {
+                data.transactions.push({
+                    id: createId(),
+                    type: item.type,
+                    description: item.description,
+                    amount: item.amount,
+                    category: item.category,
+                    date: item.date,
+                    notes: "Importado via Extrato Bancário"
+                });
+            });
+
+            saveData();
+            localStorage.setItem("meuFinanceiro_used_ofx", "true");
+            if (window.MFAchievements) window.MFAchievements.unlock("redstone_automator");
+
+            if (window.MFActivityLogger) {
+                window.MFActivityLogger.log(
+                    "transactions",
+                    "EXTRATO_IMPORTED",
+                    "Extrato bancário importado",
+                    `${selectedItems.length} lançamentos adicionados via extrato.`,
+                    { count: selectedItems.length }
+                );
+            }
+
+            closeExtrato();
+            renderAll();
+            if (typeof showToast === "function") showToast(`${selectedItems.length} lançamentos importados com sucesso! 🎉`);
+        });
+    }
+}
+
 /* =========================================
    CONFIGURAÇÃO DAS CONTAS RECORRENTES
 ========================================= */
@@ -8018,7 +9303,16 @@ function setupRecurringCategoryPicker() {
         const form = $("#recurringForm");
         if (form) form.classList.remove("category-drawer-open");
         const field = picker.closest(".category-field");
-        if (field) field.classList.remove("category-drawer-open");
+        if (field) {
+            field.classList.remove("category-drawer-open");
+            field.style.zIndex = "";
+            field.style.position = "";
+        }
+        const grid = form ? form.querySelector(".recurring-form-grid") : null;
+        if (grid) {
+            grid.style.zIndex = "";
+            grid.style.pointerEvents = "";
+        }
     }
 
     function openDrawer() {
@@ -8030,6 +9324,11 @@ function setupRecurringCategoryPicker() {
             if (freqBtn) freqBtn.setAttribute("aria-expanded", "false");
             const form = $("#recurringForm");
             if (form) form.classList.remove("frequency-drawer-open");
+            const grid = form ? form.querySelector(".recurring-form-grid") : null;
+            if (grid) {
+                grid.style.zIndex = "";
+                grid.style.position = "";
+            }
         }
 
         picker.classList.add("open");
@@ -8037,7 +9336,16 @@ function setupRecurringCategoryPicker() {
         const form = $("#recurringForm");
         if (form) form.classList.add("category-drawer-open");
         const field = picker.closest(".category-field");
-        if (field) field.classList.add("category-drawer-open");
+        if (field) {
+            field.classList.add("category-drawer-open");
+            field.style.zIndex = "100000";
+            field.style.position = "relative";
+        }
+        const grid = form ? form.querySelector(".recurring-form-grid") : null;
+        if (grid) {
+            grid.style.zIndex = "1";
+            grid.style.pointerEvents = "none";
+        }
     }
 
     function sync(val) {
@@ -8111,6 +9419,16 @@ function setupRecurringFrequencyPicker() {
         button.setAttribute("aria-expanded", "false");
         const form = $("#recurringForm");
         if (form) form.classList.remove("frequency-drawer-open");
+        const grid = form ? form.querySelector(".recurring-form-grid") : null;
+        if (grid) {
+            grid.style.zIndex = "";
+            grid.style.position = "";
+        }
+        const catField = form ? form.querySelector(".category-field") : null;
+        if (catField) {
+            catField.style.zIndex = "";
+            catField.style.pointerEvents = "";
+        }
     }
 
     function openDrawer() {
@@ -8123,13 +9441,27 @@ function setupRecurringFrequencyPicker() {
             const form = $("#recurringForm");
             if (form) form.classList.remove("category-drawer-open");
             const field = catPicker.closest(".category-field");
-            if (field) field.classList.remove("category-drawer-open");
+            if (field) {
+                field.classList.remove("category-drawer-open");
+                field.style.zIndex = "";
+                field.style.position = "";
+            }
         }
 
         picker.classList.add("open");
         button.setAttribute("aria-expanded", "true");
         const form = $("#recurringForm");
         if (form) form.classList.add("frequency-drawer-open");
+        const grid = form ? form.querySelector(".recurring-form-grid") : null;
+        if (grid) {
+            grid.style.zIndex = "100000";
+            grid.style.position = "relative";
+        }
+        const catField = form ? form.querySelector(".category-field") : null;
+        if (catField) {
+            catField.style.zIndex = "1";
+            catField.style.pointerEvents = "none";
+        }
     }
 
     function sync(val) {

@@ -1986,6 +1986,9 @@ textarea:focus {
         opacity: 1;
         visibility: visible;
         pointer-events: auto;
+        background: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
 
     .datepicker-dropdown,
@@ -5773,11 +5776,15 @@ body.privacy-mode .breakdown-val {
 
 /* Correção de sobreposição no formulário de Contas Fixas (#recurringForm):
    Garante que a gaveta de categorias cubra totalmente a linha de frequência sem vazamentos visuais ou de clique */
+#recurringForm .category-field {
+    position: relative;
+}
+
 #recurringForm:has(#recurringCategoryPicker.open) .category-field,
 #recurringForm.category-drawer-open .category-field,
 #recurringForm .category-field.category-drawer-open {
     position: relative !important;
-    z-index: 30000 !important;
+    z-index: 100000 !important;
 }
 
 #recurringForm:has(#recurringCategoryPicker.open) .recurring-form-grid,
@@ -5791,27 +5798,48 @@ body.privacy-mode .breakdown-val {
     pointer-events: none !important;
 }
 
-#recurringForm .category-picker.open .category-drawer {
-    z-index: 30002 !important;
+#recurringForm .category-picker.open,
+#recurringCategoryPicker.open {
+    position: relative !important;
+    z-index: 100001 !important;
+}
+
+#recurringForm .category-picker.open .category-drawer,
+#recurringCategoryPicker.open .category-drawer {
+    z-index: 100002 !important;
     pointer-events: auto !important;
     background: #17243a !important;
-    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(148, 117, 255, 0.35) !important;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(148, 117, 255, 0.4) !important;
 }
 
 /* Quando o seletor de frequência estiver aberto, sua gaveta sobrepõe a categoria */
 #recurringForm:has(#recurringFrequencyPicker.open) .recurring-form-grid,
 #recurringForm.frequency-drawer-open .recurring-form-grid {
     position: relative !important;
-    z-index: 30004 !important;
+    z-index: 100000 !important;
+}
+
+#recurringForm:has(#recurringFrequencyPicker.open) .category-field,
+#recurringForm.frequency-drawer-open .category-field {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+#recurringForm:has(#recurringFrequencyPicker.open) .category-field *,
+#recurringForm.frequency-drawer-open .category-field * {
+    pointer-events: none !important;
 }
 
 #recurringForm .frequency-picker.open {
-    z-index: 30005 !important;
+    position: relative !important;
+    z-index: 100001 !important;
 }
 
 #recurringForm .frequency-picker.open .frequency-drawer {
-    z-index: 30006 !important;
+    z-index: 100002 !important;
     pointer-events: auto !important;
+    background: #17243a !important;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(148, 117, 255, 0.4) !important;
 }
 
 .recurring-frequency-badge {
@@ -10440,4 +10468,996 @@ body.privacy-mode .breakdown-val {
 .pref-info span {
     font-size: 12px;
     color: #94a3b8;
+}
+
+/* ============================================================
+   NOTIFICAÇÕES FLUTUANTES DENTRO DO APP (IN-APP NOTIFICATIONS)
+   ============================================================ */
+.mf-in-app-notif-container {
+    position: fixed;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: min(450px, 92vw);
+    pointer-events: none;
+}
+
+.mf-in-app-notif {
+    pointer-events: auto;
+    background: #152238;
+    border: 1px solid rgba(124, 93, 250, 0.45);
+    border-radius: 16px;
+    padding: 13px 16px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(148, 117, 255, 0.22);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    animation: mfNotifSlideDown 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+    transition: opacity 0.26s ease, transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+    backdrop-filter: blur(8px);
+}
+
+.mf-in-app-notif.fade-out {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.96);
+}
+
+.mf-notif-icon-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: rgba(124, 93, 250, 0.2);
+    border: 1px solid rgba(124, 93, 250, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    flex-shrink: 0;
+}
+
+.mf-notif-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.mf-notif-title {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #f8fafc;
+    margin-bottom: 2px;
+    line-height: 1.3;
+}
+
+.mf-notif-body {
+    margin: 0;
+    font-size: 12.5px;
+    color: #cbd5e1;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.mf-notif-close {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    border-radius: 6px;
+    transition: color 0.18s ease, background 0.18s ease;
+}
+
+.mf-notif-close:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+@keyframes mfNotifSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-22px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ============================================================
+   SISTEMA DE CONQUISTAS GAMIFICADO (MINECRAFT STYLE)
+   ============================================================ */
+.ach-hero-card {
+    background: linear-gradient(135deg, #131c2e 0%, #0d1524 100%);
+    border: 1px solid rgba(124, 93, 250, 0.35);
+    border-radius: 20px;
+    padding: 22px 24px;
+    margin-bottom: 22px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.ach-hero-card::before {
+    content: "";
+    position: absolute;
+    top: -40%;
+    right: -10%;
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(124, 93, 250, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.ach-hero-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.ach-level-badge-wrap {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.ach-level-box {
+    width: 58px;
+    height: 58px;
+    border-radius: 14px;
+    background: #090e18;
+    border: 2px solid #55ff55;
+    box-shadow: 0 0 16px rgba(85, 255, 85, 0.4), inset 0 0 12px rgba(85, 255, 85, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ach-level-num {
+    font-size: 28px;
+    font-weight: 900;
+    color: #55ff55;
+    text-shadow: 0 0 8px rgba(85, 255, 85, 0.8), 2px 2px 0 #000;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.ach-level-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.ach-level-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: 0.8px;
+}
+
+.ach-level-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    color: #f8fafc;
+    background: linear-gradient(90deg, #ffffff, #c4b5fd);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.ach-hero-stats {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ach-stat-pill {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ach-stat-icon {
+    font-size: 20px;
+}
+
+.ach-stat-texts {
+    display: flex;
+    flex-direction: column;
+}
+
+.ach-stat-lbl {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.ach-stat-val {
+    font-size: 14px;
+    color: #f1f5f9;
+    font-weight: 700;
+}
+
+/* Barra de XP estilo Minecraft */
+.minecraft-xp-bar-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.minecraft-xp-track {
+    width: 100%;
+    height: 12px;
+    background: #090e18;
+    border: 1px solid #2e3a4e;
+    border-radius: 99px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.minecraft-xp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #22c55e, #55ff55);
+    border-radius: 99px;
+    box-shadow: 0 0 12px rgba(85, 255, 85, 0.6);
+    transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.minecraft-xp-text {
+    font-size: 12px;
+    color: #94a3b8;
+    font-weight: 600;
+    text-align: right;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Barra de Categorias / Abas */
+.ach-categories-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-bottom: 22px;
+    scrollbar-width: none;
+}
+
+.ach-categories-bar::-webkit-scrollbar {
+    display: none;
+}
+
+.ach-filter-btn {
+    background: #101827;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 9px 16px;
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.ach-filter-btn:hover {
+    background: #172338;
+    color: #f1f5f9;
+    border-color: rgba(124, 93, 250, 0.3);
+}
+
+.ach-filter-btn.active {
+    background: var(--purple, #7c5dfa);
+    color: #ffffff;
+    border-color: var(--purple, #7c5dfa);
+    box-shadow: 0 4px 14px rgba(124, 93, 250, 0.4);
+}
+
+/* Grid de Conquistas */
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 16px;
+}
+
+.achievement-card {
+    background: #101928;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 14px;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    position: relative;
+}
+
+.achievement-card:hover {
+    transform: translateY(-3px);
+}
+
+.achievement-card.locked {
+    opacity: 0.65;
+    filter: grayscale(0.2);
+}
+
+.achievement-card.unlocked {
+    opacity: 1;
+    filter: none;
+}
+
+/* Tiers */
+.achievement-card.unlocked.tier-common {
+    border-color: rgba(148, 163, 184, 0.4);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.achievement-card.unlocked.tier-rare {
+    border-color: rgba(56, 189, 248, 0.5);
+    box-shadow: 0 8px 26px rgba(56, 189, 248, 0.15);
+}
+
+.achievement-card.unlocked.tier-epic {
+    border-color: rgba(168, 85, 247, 0.55);
+    box-shadow: 0 8px 28px rgba(168, 85, 247, 0.2);
+}
+
+.achievement-card.unlocked.tier-legendary {
+    border-color: rgba(245, 158, 11, 0.6);
+    box-shadow: 0 10px 32px rgba(245, 158, 11, 0.25);
+    background: linear-gradient(145deg, #162032 0%, #1a1b24 100%);
+}
+
+.ach-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.ach-icon-frame {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: #090e18;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    font-size: 24px;
+}
+
+.achievement-card.unlocked.tier-legendary .ach-icon-frame {
+    border-color: #f59e0b;
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.35);
+}
+
+.achievement-card.unlocked.tier-epic .ach-icon-frame {
+    border-color: #a855f7;
+    box-shadow: 0 0 14px rgba(168, 85, 247, 0.35);
+}
+
+.ach-check-badge {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #10b981;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #090e18;
+}
+
+.ach-lock-badge {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    font-size: 11px;
+}
+
+.ach-tier-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #94a3b8;
+}
+
+.ach-tier-badge.tier-legendary {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.ach-tier-badge.tier-epic {
+    background: rgba(168, 85, 247, 0.15);
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.ach-tier-badge.tier-rare {
+    background: rgba(56, 189, 248, 0.15);
+    color: #7dd3fc;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.ach-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ach-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.ach-desc {
+    margin: 0;
+    font-size: 12.5px;
+    color: #94a3b8;
+    line-height: 1.4;
+}
+
+.ach-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.ach-xp-tag {
+    font-size: 12px;
+    font-weight: 800;
+    color: #55ff55;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    background: rgba(85, 255, 85, 0.12);
+    border: 1px solid rgba(85, 255, 85, 0.25);
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.ach-status-tag {
+    font-size: 11px;
+    color: #64748b;
+}
+
+.ach-status-tag.status-unlocked {
+    color: #34d399;
+    font-weight: 600;
+}
+
+/* Banner Flutuante de Avanço Minecraft (Advancement Banner) */
+.mf-advancement-container {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 9999999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+}
+
+.mf-advancement-banner {
+    pointer-events: auto;
+    cursor: pointer;
+    background: #121824;
+    border: 2px solid #55ff55;
+    border-radius: 12px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(85, 255, 85, 0.35);
+    animation: advancementSlideIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    max-width: 360px;
+}
+
+.mf-advancement-banner.tier-legendary {
+    border-color: #f59e0b;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(245, 158, 11, 0.4);
+}
+
+.mf-advancement-banner.tier-epic {
+    border-color: #a855f7;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(168, 85, 247, 0.4);
+}
+
+.mf-advancement-banner.fade-out {
+    opacity: 0;
+    transform: translateX(40px) scale(0.95);
+}
+
+.advancement-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: #090e18;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.advancement-text-box {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.advancement-header {
+    font-size: 11px;
+    font-weight: 800;
+    color: #facc15;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.advancement-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.advancement-xp {
+    font-size: 11px;
+    font-weight: 800;
+    color: #55ff55;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+}
+
+@keyframes advancementSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(60px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 600px) {
+    .mf-advancement-container {
+        right: 12px;
+        left: 12px;
+        top: 14px;
+    }
+    .mf-advancement-banner {
+        max-width: 100%;
+    }
+}
+
+/* ============================================================
+   WIDGETS DAS 6 NOVAS IDEIAS E PROJEÇÕES
+   ============================================================ */
+
+/* 1. Termômetro Diário de Gastos */
+.thermometer-card-inner {
+    background: linear-gradient(135deg, rgba(20, 31, 51, 0.95), rgba(16, 24, 39, 0.95));
+    border: 1px solid rgba(124, 93, 250, 0.28);
+    border-radius: 16px;
+    padding: 18px 22px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.thermometer-card-inner:hover {
+    border-color: rgba(124, 93, 250, 0.45);
+    transform: translateY(-2px);
+}
+
+.thermometer-card-inner.status-safe {
+    border-left: 5px solid #10b981;
+}
+
+.thermometer-card-inner.status-warning {
+    border-left: 5px solid #f59e0b;
+}
+
+.thermometer-card-inner.status-danger {
+    border-left: 5px solid #ef4444;
+}
+
+.thermometer-icon-box {
+    font-size: 32px;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: rgba(124, 93, 250, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.thermometer-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.thermometer-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    color: var(--muted, #94a3b8);
+    display: block;
+    margin-bottom: 2px;
+}
+
+.thermometer-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.thermometer-val {
+    font-size: 24px;
+    font-weight: 800;
+    color: #f8fafc;
+}
+
+.thermometer-tag {
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 20px;
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-warning .thermometer-tag {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.status-danger .thermometer-tag {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.thermometer-sub {
+    font-size: 12px;
+    color: #94a3b8;
+    display: block;
+    margin-top: 4px;
+}
+
+/* 2. Radar de Saldo Futuro */
+.radar-card-inner {
+    background: linear-gradient(135deg, rgba(20, 31, 51, 0.95), rgba(16, 24, 39, 0.95));
+    border: 1px solid rgba(124, 93, 250, 0.28);
+    border-radius: 18px;
+    padding: 22px 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.radar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.radar-title-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.radar-icon {
+    font-size: 26px;
+}
+
+.radar-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.radar-subtitle {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.radar-trend-badge {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.radar-trend-badge.positive {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.radar-trend-badge.negative {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.radar-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    align-items: center;
+    gap: 12px;
+}
+
+.radar-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+}
+
+.radar-step-lbl {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.radar-step-val {
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.radar-divider {
+    width: 1px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 600px) {
+    .radar-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .radar-divider {
+        display: none;
+    }
+    .radar-col {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 10px;
+    }
+}
+
+/* 3. Acerto de Contas & Finanças Compartilhadas */
+.split-card-inner {
+    background: linear-gradient(135deg, rgba(20, 31, 51, 0.95), rgba(16, 24, 39, 0.95));
+    border: 1px solid rgba(124, 93, 250, 0.28);
+    border-radius: 18px;
+    padding: 22px 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.split-empty-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.split-empty-icon {
+    font-size: 28px;
+}
+
+.split-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.split-icon {
+    font-size: 26px;
+}
+
+.split-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.split-subtitle {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.split-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.split-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.split-lbl {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.split-val {
+    font-size: 16px;
+    font-weight: 700;
+    color: #f1f5f9;
+}
+
+.split-settlement-bar {
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.split-settlement-bar.in-favor {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.split-settlement-bar.against {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.split-settlement-bar.settled {
+    background: rgba(148, 117, 255, 0.1);
+    border: 1px solid rgba(148, 117, 255, 0.3);
+}
+
+.split-settlement-text {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #f8fafc;
+}
+
+/* 4. Overlay de Bloqueio por PIN/Biometria (App Lock) */
+.app-lock-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999999;
+    background: rgba(9, 14, 24, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: appLockFadeIn 0.3s ease both;
+}
+
+@keyframes appLockFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.app-lock-card {
+    background: #141f33;
+    border: 1px solid rgba(124, 93, 250, 0.45);
+    border-radius: 24px;
+    padding: 32px 28px;
+    width: min(100%, 360px);
+    text-align: center;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(124, 93, 250, 0.25);
+}
+
+.app-lock-icon {
+    font-size: 42px;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.app-lock-title {
+    margin: 0 0 6px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.app-lock-sub {
+    font-size: 12.5px;
+    color: #94a3b8;
+    margin: 0 0 22px;
+}
+
+/* 5. Estilos para Boletos e Extrato */
+.boleto-result-card {
+    background: rgba(124, 93, 250, 0.08);
+    border: 1px solid rgba(124, 93, 250, 0.3);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    animation: modalBackdropFadeIn 0.2s ease both;
+}
+
+.extrato-preview-container {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(124, 93, 250, 0.4) transparent;
+}
+
+.extrato-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 12.5px;
+}
+
+.extrato-item-row:last-child {
+    border-bottom: none;
 }

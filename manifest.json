@@ -60,6 +60,30 @@
           "sizes": "192x192"
         }
       ]
+    },
+    {
+      "name": "Contas Fixas",
+      "short_name": "Contas Fixas",
+      "description": "Gerenciar contas recorrentes e assinaturas",
+      "url": "./contas-fixas.html",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Conquistas & Hábitos",
+      "short_name": "Conquistas",
+      "description": "Ver avanços, XP e nível financeiro",
+      "url": "./conquistas.html",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }
