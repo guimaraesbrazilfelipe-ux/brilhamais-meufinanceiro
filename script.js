@@ -7539,11 +7539,29 @@ function setupRecurringCategoryPicker() {
     function closeDrawer() {
         picker.classList.remove("open");
         button.setAttribute("aria-expanded", "false");
+        const form = $("#recurringForm");
+        if (form) form.classList.remove("category-drawer-open");
+        const field = picker.closest(".category-field");
+        if (field) field.classList.remove("category-drawer-open");
     }
 
     function openDrawer() {
+        // Se o seletor de frequência estiver aberto, fecha antes
+        const freqPicker = $("#recurringFrequencyPicker");
+        if (freqPicker && freqPicker.classList.contains("open")) {
+            freqPicker.classList.remove("open");
+            const freqBtn = $("#recurringFrequencyPickerButton");
+            if (freqBtn) freqBtn.setAttribute("aria-expanded", "false");
+            const form = $("#recurringForm");
+            if (form) form.classList.remove("frequency-drawer-open");
+        }
+
         picker.classList.add("open");
         button.setAttribute("aria-expanded", "true");
+        const form = $("#recurringForm");
+        if (form) form.classList.add("category-drawer-open");
+        const field = picker.closest(".category-field");
+        if (field) field.classList.add("category-drawer-open");
     }
 
     function sync(val) {
@@ -7615,11 +7633,27 @@ function setupRecurringFrequencyPicker() {
     function closeDrawer() {
         picker.classList.remove("open");
         button.setAttribute("aria-expanded", "false");
+        const form = $("#recurringForm");
+        if (form) form.classList.remove("frequency-drawer-open");
     }
 
     function openDrawer() {
+        // Se a categoria estiver aberta, fecha antes
+        const catPicker = $("#recurringCategoryPicker");
+        if (catPicker && catPicker.classList.contains("open")) {
+            catPicker.classList.remove("open");
+            const catBtn = $("#recurringCategoryPickerButton");
+            if (catBtn) catBtn.setAttribute("aria-expanded", "false");
+            const form = $("#recurringForm");
+            if (form) form.classList.remove("category-drawer-open");
+            const field = catPicker.closest(".category-field");
+            if (field) field.classList.remove("category-drawer-open");
+        }
+
         picker.classList.add("open");
         button.setAttribute("aria-expanded", "true");
+        const form = $("#recurringForm");
+        if (form) form.classList.add("frequency-drawer-open");
     }
 
     function sync(val) {

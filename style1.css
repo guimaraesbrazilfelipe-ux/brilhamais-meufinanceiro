@@ -1501,6 +1501,11 @@ textarea:focus {
     z-index: 3;
 }
 
+.category-field:has(.category-picker.open),
+.category-field.category-drawer-open {
+    z-index: 20000 !important;
+}
+
 .category-controls {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -1967,9 +1972,9 @@ textarea:focus {
         display: block;
         position: fixed;
         inset: 0;
-        background: rgba(5, 8, 15, 0.78);
-        backdrop-filter: blur(6px);
-        -webkit-backdrop-filter: blur(6px);
+        background: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
         z-index: 100001 !important;
         opacity: 0;
         visibility: hidden;
@@ -2328,9 +2333,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         display: block;
         position: fixed;
         inset: 0;
-        background: rgba(8, 12, 20, 0.75);
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
+        background: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
         z-index: 100000;
         opacity: 0;
         visibility: hidden;
@@ -5766,11 +5771,47 @@ body.privacy-mode .breakdown-val {
     overflow: visible;
 }
 
+/* Correção de sobreposição no formulário de Contas Fixas (#recurringForm):
+   Garante que a gaveta de categorias cubra totalmente a linha de frequência sem vazamentos visuais ou de clique */
+#recurringForm:has(#recurringCategoryPicker.open) .category-field,
+#recurringForm.category-drawer-open .category-field,
+#recurringForm .category-field.category-drawer-open {
+    position: relative !important;
+    z-index: 20000 !important;
+}
+
+#recurringForm:has(#recurringCategoryPicker.open) .recurring-form-grid,
+#recurringForm.category-drawer-open .recurring-form-grid {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+#recurringForm:has(#recurringCategoryPicker.open) .recurring-form-grid *,
+#recurringForm.category-drawer-open .recurring-form-grid * {
+    pointer-events: none !important;
+}
+
 #recurringForm .category-picker.open .category-drawer {
     z-index: 20002 !important;
     pointer-events: auto !important;
     background: #17243a !important;
     box-shadow: 0 20px 48px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(148, 117, 255, 0.35) !important;
+}
+
+/* Quando o seletor de frequência estiver aberto, sua gaveta sobrepõe a categoria */
+#recurringForm:has(#recurringFrequencyPicker.open) .recurring-form-grid,
+#recurringForm.frequency-drawer-open .recurring-form-grid {
+    position: relative !important;
+    z-index: 20004 !important;
+}
+
+#recurringForm .frequency-picker.open {
+    z-index: 20005 !important;
+}
+
+#recurringForm .frequency-picker.open .frequency-drawer {
+    z-index: 20006 !important;
+    pointer-events: auto !important;
 }
 
 .recurring-frequency-badge {
@@ -6285,9 +6326,9 @@ body.privacy-mode .breakdown-val {
 /* Responsividade Mobile para o Timepicker */
 @media (max-width: 600px) {
     .timepicker-backdrop {
-        background: rgba(7, 11, 18, 0.75);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+        background: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
 
     .timepicker-popover {
