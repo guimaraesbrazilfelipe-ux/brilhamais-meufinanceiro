@@ -9,7 +9,7 @@
  * ==============================================================================
  */
 
-const CACHE_NAME = "meu-financeiro-v6";
+const CACHE_NAME = "meu-financeiro-v7";
 
 const PRECACHE_ASSETS = [
     "./",
@@ -20,6 +20,7 @@ const PRECACHE_ASSETS = [
     "relatorios.html",
     "historico.html",
     "planejamento.html",
+    "conquistas.html",
     "configuracoes.html",
     "offline.html",
     "style1.css",

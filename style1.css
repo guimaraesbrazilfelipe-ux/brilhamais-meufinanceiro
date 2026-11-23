@@ -23,6 +23,9 @@ html {
     scroll-behavior: smooth;
     scroll-padding-top: 24px;
     overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    height: 100%;
 }
 
 body {
@@ -33,6 +36,10 @@ body {
     font-size: 14px;
     line-height: 1.5;
     overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    min-height: 100%;
 }
 
 button, input, select, textarea {
@@ -1969,7 +1976,7 @@ textarea:focus {
     }
 
     .datepicker-backdrop {
-        display: block !important;
+        display: none !important;
         position: fixed !important;
         inset: 0 !important;
         background: transparent !important;
@@ -1978,14 +1985,14 @@ textarea:focus {
         z-index: 100001 !important;
         opacity: 0;
         visibility: hidden;
-        pointer-events: none;
-        transition: opacity 0.25s ease, visibility 0.25s ease;
+        pointer-events: none !important;
     }
 
     .custom-datepicker.open .datepicker-backdrop {
-        opacity: 1;
-        visibility: visible;
-        pointer-events: auto;
+        display: block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
         background: transparent !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
@@ -2333,7 +2340,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     }
 
     .monthpicker-backdrop {
-        display: block;
+        display: none !important;
         position: fixed;
         inset: 0;
         background: transparent !important;
@@ -2342,14 +2349,14 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         z-index: 100000;
         opacity: 0;
         visibility: hidden;
-        pointer-events: none;
-        transition: opacity 0.25s ease, visibility 0.25s ease;
+        pointer-events: none !important;
     }
 
     .custom-monthpicker.open .monthpicker-backdrop {
-        opacity: 1;
-        visibility: visible;
-        pointer-events: auto;
+        display: block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
     }
 
     .monthpicker-dropdown {
@@ -2535,7 +2542,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
     /* Fundo escuro do menu mobile (filho direto do body) */
     .mobile-menu-backdrop {
-        display: block !important;
+        display: none !important;
         position: fixed !important;
         inset: 0 !important;
         width: 100vw !important;
@@ -2553,6 +2560,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     }
 
     body.mobile-nav-open .mobile-menu-backdrop {
+        display: block !important;
         opacity: 1 !important;
         visibility: visible !important;
         pointer-events: auto !important;
@@ -2580,11 +2588,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch !important;
         visibility: hidden !important;
+        pointer-events: none !important;
     }
 
     body.mobile-nav-open .mobile-menu-drawer {
         transform: translate3d(0, 0, 0) !important;
         visibility: visible !important;
+        pointer-events: auto !important;
     }
 
     /* Animação fluida em cascata para os links da gaveta */
@@ -6067,10 +6077,17 @@ body.privacy-mode .breakdown-val {
 
 /* Backdrop para fechar o timepicker */
 .timepicker-backdrop {
+    display: none !important;
     position: fixed;
     inset: 0;
     z-index: 10000;
     background: transparent;
+    pointer-events: none !important;
+}
+
+.timepicker-backdrop:not(.hidden) {
+    display: block !important;
+    pointer-events: auto !important;
 }
 
 /* Popover Flutuante do Seletor de Horário */
