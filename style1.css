@@ -1581,7 +1581,7 @@ textarea:focus {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transform: translateY(14px) scale(.98);
+    transform: translateY(18px) scale(.97);
     transform-origin: bottom center;
     padding: 6px;
     border: 1px solid var(--border);
@@ -1589,9 +1589,9 @@ textarea:focus {
     background: #17243a;
     box-shadow: 0 16px 32px #0005;
     transition:
-        opacity .2s ease,
-        transform .28s cubic-bezier(.2, .8, .2, 1),
-        visibility .2s;
+        opacity .38s ease,
+        transform .48s cubic-bezier(.16, 1, .3, 1),
+        visibility .38s;
     z-index: 50;
 }
 
@@ -1752,8 +1752,8 @@ textarea:focus {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transform: translateY(-6px) scale(0.98);
-    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s;
+    transform: translateY(-8px) scale(0.97);
+    transition: opacity 0.42s cubic-bezier(0.16, 1, 0.3, 1), transform 0.48s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.42s;
 }
 
 .custom-datepicker.open .datepicker-dropdown {
@@ -2013,11 +2013,11 @@ textarea:focus {
         padding: 18px 16px !important;
         box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(124, 93, 250, 0.25) !important;
         z-index: 100002 !important; /* Sempre acima do backdrop (100001) */
-        transform: translate(-50%, -46%) scale(0.95) !important;
+        transform: translate(-50%, -46%) scale(0.94) !important;
         opacity: 0 !important;
         visibility: hidden !important;
         pointer-events: none !important;
-        transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s !important;
+        transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.52s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.45s !important;
     }
 
     .custom-datepicker.open .datepicker-dropdown,
@@ -2218,8 +2218,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transform: translateY(-6px) scale(0.98);
-    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s;
+    transform: translateY(-8px) scale(0.97);
+    transition: opacity 0.42s cubic-bezier(0.16, 1, 0.3, 1), transform 0.48s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.42s;
 }
 
 .custom-monthpicker.open .monthpicker-dropdown {
@@ -2583,7 +2583,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         padding: 20px 18px 24px !important;
         box-shadow: -14px 0 40px rgba(0, 0, 0, 0.65) !important;
         transform: translate3d(105%, 0, 0) !important;
-        transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.35s ease !important;
+        transition: transform 0.52s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.52s ease !important;
         will-change: transform;
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch !important;
@@ -2599,20 +2599,22 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
     /* Animação fluida em cascata para os links da gaveta */
     body.mobile-nav-open .mobile-menu-drawer .nav-link {
-        animation: mobileNavSlideIn 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+        animation: mobileNavSlideIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
-    body.mobile-nav-open .mobile-menu-drawer .nav-link:nth-child(1) { animation-delay: 0.04s; }
-    body.mobile-nav-open .mobile-menu-drawer .nav-link:nth-child(2) { animation-delay: 0.07s; }
-    body.mobile-nav-open .mobile-menu-drawer .nav-link:nth-child(3) { animation-delay: 0.10s; }
-    body.mobile-nav-open .mobile-menu-drawer .nav-link:nth-child(4) { animation-delay: 0.13s; }
-    body.mobile-nav-open .mobile-menu-drawer .nav-link:nth-child(5) { animation-delay: 0.16s; }
-    body.mobile-nav-open .mobile-menu-drawer .nav-link:nth-child(6) { animation-delay: 0.19s; }
-    body.mobile-nav-open .mobile-menu-drawer .nav-link:nth-child(7) { animation-delay: 0.22s; }
+    body.mobile-nav-open .mobile-menu-drawer .nav-link:nth-child(1) { animation-delay: 0.08s; }
+    body.mobile-nav-open .mobile-menu-drawer .nav-link:nth-child(2) { animation-delay: 0.14s; }
+    body.mobile-nav-open .mobile-menu-drawer .nav-link:nth-child(3) { animation-delay: 0.20s; }
+    body.mobile-nav-open .mobile-menu-drawer .nav-link:nth-child(4) { animation-delay: 0.26s; }
+    body.mobile-nav-open .mobile-menu-drawer .nav-link:nth-child(5) { animation-delay: 0.32s; }
+    body.mobile-nav-open .mobile-menu-drawer .nav-link:nth-child(6) { animation-delay: 0.38s; }
+    body.mobile-nav-open .mobile-menu-drawer .nav-link:nth-child(7) { animation-delay: 0.44s; }
+    body.mobile-nav-open .mobile-menu-drawer .nav-link:nth-child(8) { animation-delay: 0.50s; }
+    body.mobile-nav-open .mobile-menu-drawer .nav-link:nth-child(9) { animation-delay: 0.56s; }
 
     @keyframes mobileNavSlideIn {
         from {
             opacity: 0;
-            transform: translate3d(20px, 0, 0);
+            transform: translate3d(24px, 0, 0);
         }
         to {
             opacity: 1;
@@ -3150,45 +3152,45 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .main-content {
-    animation: pageContentEnter 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: pageContentEnter 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
     will-change: opacity, transform;
 }
 
 @keyframes pageContentEnter {
     0% {
         opacity: 0;
-        transform: translate3d(0, 8px, 0);
+        transform: translate3d(0, 20px, 0);
     }
     100% {
         opacity: 1;
-        transform: none;
+        transform: translate3d(0, 0, 0);
     }
 }
 
-/* Entrada moderna, fluida e acelerada por GPU a 60fps (sem blur pesado) */
+/* Entrada moderna, fluida e acelerada por GPU a 60fps (suave e perceptível em qualquer tela) */
 @keyframes financePanelEnter {
     0% {
         opacity: 0;
-        transform: translate3d(0, 14px, 0) scale3d(0.988, 0.988, 1);
+        transform: translate3d(0, 24px, 0) scale3d(0.98, 0.98, 1);
     }
     100% {
         opacity: 1;
-        transform: none;
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
     }
 }
 
 @keyframes financeInnerReveal {
     0% {
         opacity: 0;
-        transform: translate3d(0, 4px, 0);
+        transform: translate3d(0, 10px, 0);
     }
     100% {
         opacity: 1;
-        transform: none;
+        transform: translate3d(0, 0, 0);
     }
 }
 
-/* Os contêineres entram com curva suave idêntica ao botão de menu (0.34s) */
+/* Os contêineres entram com curva suave cinematográfica (0.95s) */
 .summary-card,
 .panel,
 .planning-card,
@@ -3199,52 +3201,52 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .gcal-action-bar,
 .recurring-alert-banner,
 .recurring-panel {
-    animation: financePanelEnter 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: financePanelEnter 0.95s cubic-bezier(0.16, 1, 0.3, 1) both;
     will-change: opacity, transform;
 }
 
 /* Sequência em agenda fluida */
-.agenda-calendar-panel { animation-delay: 0.03s; }
-.agenda-day-details-panel { animation-delay: 0.06s; }
+.agenda-calendar-panel { animation-delay: 0.08s; }
+.agenda-day-details-panel { animation-delay: 0.18s; }
 
-/* Pequena sequência harmoniosa entre cartões irmãos */
-.summary-grid > .summary-card:nth-child(1) { animation-delay: 0.02s; }
-.summary-grid > .summary-card:nth-child(2) { animation-delay: 0.04s; }
-.summary-grid > .summary-card:nth-child(3) { animation-delay: 0.06s; }
-.summary-grid > .summary-card:nth-child(4) { animation-delay: 0.08s; }
-.content-grid > .panel:nth-child(1) { animation-delay: 0.04s; }
-.content-grid > .panel:nth-child(2) { animation-delay: 0.07s; }
-.lower-grid > .panel:nth-child(1) { animation-delay: 0.07s; }
-.lower-grid > .panel:nth-child(2) { animation-delay: 0.10s; }
-.planning-grid > .planning-card:nth-child(1) { animation-delay: 0.03s; }
-.planning-grid > .planning-card:nth-child(2) { animation-delay: 0.06s; }
+/* Cascata harmoniosa perceptível entre cartões irmãos */
+.summary-grid > .summary-card:nth-child(1) { animation-delay: 0.06s; }
+.summary-grid > .summary-card:nth-child(2) { animation-delay: 0.14s; }
+.summary-grid > .summary-card:nth-child(3) { animation-delay: 0.22s; }
+.summary-grid > .summary-card:nth-child(4) { animation-delay: 0.30s; }
+.content-grid > .panel:nth-child(1) { animation-delay: 0.12s; }
+.content-grid > .panel:nth-child(2) { animation-delay: 0.22s; }
+.lower-grid > .panel:nth-child(1) { animation-delay: 0.22s; }
+.lower-grid > .panel:nth-child(2) { animation-delay: 0.34s; }
+.planning-grid > .planning-card:nth-child(1) { animation-delay: 0.08s; }
+.planning-grid > .planning-card:nth-child(2) { animation-delay: 0.18s; }
 
-/* Conteúdo interno entra instantâneo e leve sem engasgos */
+/* Conteúdo interno entra em cascata suave */
 .summary-card > *,
 .panel > *,
 .planning-card > *,
 .tip-card > *,
 .agenda-calendar-panel > *,
 .agenda-day-details-panel > * {
-    animation: financeInnerReveal 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
-    animation-delay: 0.04s;
-    will-change: opacity;
+    animation: financeInnerReveal 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: 0.08s;
+    will-change: opacity, transform;
 }
 
 .summary-card > *:nth-child(2),
 .panel > *:nth-child(2),
 .planning-card > *:nth-child(2),
-.tip-card > *:nth-child(2) { animation-delay: 0.06s; }
+.tip-card > *:nth-child(2) { animation-delay: 0.15s; }
 
 .summary-card > *:nth-child(3),
 .panel > *:nth-child(3),
 .planning-card > *:nth-child(3),
-.tip-card > *:nth-child(3) { animation-delay: 0.08s; }
+.tip-card > *:nth-child(3) { animation-delay: 0.22s; }
 
 .summary-card > *:nth-child(4),
 .panel > *:nth-child(4),
 .planning-card > *:nth-child(4),
-.tip-card > *:nth-child(4) { animation-delay: 0.10s; }
+.tip-card > *:nth-child(4) { animation-delay: 0.29s; }
 
 /* Não repetir animações em mudanças de estado nem prejudicar acessibilidade */
 @media (prefers-reduced-motion: reduce) {
@@ -3293,7 +3295,7 @@ body.dialog-open { overflow: hidden; }
     opacity: 0;
     visibility: hidden;
     overflow-y: auto;
-    transition: opacity .22s ease, visibility .22s ease;
+    transition: opacity .45s ease, visibility .45s ease;
 }
 .confirm-dialog.is-open {
     opacity: 1;
@@ -3307,8 +3309,8 @@ body.dialog-open { overflow: hidden; }
     border-radius: 22px;
     background: linear-gradient(145deg, #1c2a40, #121d2f 78%);
     box-shadow: 0 28px 90px rgba(0, 0, 0, .48), 0 0 0 1px rgba(255,255,255,.025) inset;
-    transform: translateY(14px) scale(.98);
-    transition: transform .26s cubic-bezier(.2,.8,.2,1);
+    transform: translateY(22px) scale(.96);
+    transition: transform .52s cubic-bezier(.16, 1, .3, 1);
 }
 .confirm-dialog.is-open .confirm-dialog-card { transform: translateY(0) scale(1); }
 .confirm-dialog-close {
@@ -5709,7 +5711,7 @@ body.privacy-mode .breakdown-val {
     border: 1px solid rgba(245, 158, 11, 0.35);
     border-radius: var(--border-radius);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    animation: financePanelEnter 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: financePanelEnter 0.95s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .recurring-alert-banner.all-paid {
@@ -5770,7 +5772,7 @@ body.privacy-mode .breakdown-val {
 ========================================= */
 
 .recurring-panel {
-    animation: financePanelEnter 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: financePanelEnter 0.95s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .recurring-form {
@@ -6103,7 +6105,7 @@ body.privacy-mode .breakdown-val {
     border-radius: 16px;
     padding: 16px;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
-    animation: tpFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: tpFadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1);
     box-sizing: border-box;
 }
 
@@ -6387,7 +6389,7 @@ body.privacy-mode .breakdown-val {
         border-radius: 20px 20px 0 0 !important;
         border-bottom: none !important;
         padding: 20px 18px max(20px, env(safe-area-inset-bottom)) !important;
-        animation: tpSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        animation: tpSlideUp 0.52s cubic-bezier(0.16, 1, 0.3, 1) !important;
         z-index: 10001 !important;
     }
 
@@ -9411,7 +9413,7 @@ body.privacy-mode .breakdown-val {
     place-items: center;
     z-index: 100000;
     padding: 16px;
-    animation: modalBackdropFadeIn 0.22s ease forwards;
+    animation: modalBackdropFadeIn 0.45s ease forwards;
 }
 
 @keyframes modalBackdropFadeIn {
@@ -9428,11 +9430,11 @@ body.privacy-mode .breakdown-val {
     padding: 30px 28px 26px;
     position: relative;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
-    animation: modalSlideUp 0.25s cubic-bezier(0.2, 0, 0, 1) forwards;
+    animation: modalSlideUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes modalSlideUp {
-    from { opacity: 0; transform: translateY(16px) scale(0.96); }
+    from { opacity: 0; transform: translateY(24px) scale(0.95); }
     to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
@@ -10513,14 +10515,14 @@ body.privacy-mode .breakdown-val {
     display: flex;
     align-items: flex-start;
     gap: 12px;
-    animation: mfNotifSlideDown 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
-    transition: opacity 0.26s ease, transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+    animation: mfNotifSlideDown 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     backdrop-filter: blur(8px);
 }
 
 .mf-in-app-notif.fade-out {
     opacity: 0;
-    transform: translateY(-16px) scale(0.96);
+    transform: translateY(-20px) scale(0.95);
 }
 
 .mf-notif-icon-circle {
@@ -10992,8 +10994,8 @@ body.privacy-mode .breakdown-val {
     align-items: center;
     gap: 14px;
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(85, 255, 85, 0.35);
-    animation: advancementSlideIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    animation: advancementSlideIn 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
     max-width: 360px;
 }
 
