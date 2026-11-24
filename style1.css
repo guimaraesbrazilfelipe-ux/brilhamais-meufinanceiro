@@ -684,6 +684,78 @@ a {
         z-index: 1001;
         pointer-events: none;
     }
+
+    /* Ajuste para telas de laptop e monitores compactos (altura <= 800px) */
+    @media (max-height: 800px) {
+        .sidebar {
+            padding: 10px 14px 10px !important;
+        }
+        .sidebar-header {
+            margin: 0 0 8px 0 !important;
+            min-height: 38px !important;
+        }
+        .brand-icon {
+            width: 38px !important;
+            height: 38px !important;
+        }
+        .navigation {
+            gap: 3px !important;
+        }
+        .nav-link {
+            height: 37px !important;
+            min-height: 37px !important;
+        }
+        .nav-link .nav-icon {
+            width: 37px !important;
+            height: 37px !important;
+            min-width: 37px !important;
+            font-size: 17px !important;
+        }
+        .sidebar-bottom {
+            padding-top: 8px !important;
+        }
+        .bottom-toggle-btn {
+            height: 37px !important;
+            min-height: 37px !important;
+        }
+        .bottom-toggle-btn .toggle-icon-wrap {
+            width: 37px !important;
+            height: 37px !important;
+            min-width: 37px !important;
+        }
+
+        html.sidebar-collapsed .brand-icon,
+        body.sidebar-collapsed .brand-icon {
+            width: 38px !important;
+            height: 38px !important;
+        }
+
+        html.sidebar-collapsed .desktop-navigation .nav-link,
+        body.sidebar-collapsed .desktop-navigation .nav-link {
+            width: 38px !important;
+            height: 38px !important;
+            min-height: 38px !important;
+        }
+
+        html.sidebar-collapsed .desktop-navigation .nav-icon,
+        body.sidebar-collapsed .desktop-navigation .nav-icon {
+            width: 38px !important;
+            height: 38px !important;
+        }
+
+        html.sidebar-collapsed .bottom-toggle-btn,
+        body.sidebar-collapsed .bottom-toggle-btn {
+            width: 38px !important;
+            height: 38px !important;
+            min-height: 38px !important;
+        }
+
+        html.sidebar-collapsed .bottom-toggle-btn .toggle-icon-wrap,
+        body.sidebar-collapsed .bottom-toggle-btn .toggle-icon-wrap {
+            width: 38px !important;
+            height: 38px !important;
+        }
+    }
 }
 
 @keyframes tooltipFadeIn {
@@ -10708,9 +10780,9 @@ body.privacy-mode .breakdown-val {
     position: absolute;
     top: -40%;
     right: -10%;
-    width: 250px;
-    height: 250px;
-    background: radial-gradient(circle, rgba(124, 93, 250, 0.15) 0%, transparent 70%);
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(circle, rgba(124, 93, 250, 0.2) 0%, transparent 70%);
     pointer-events: none;
 }
 
@@ -10732,10 +10804,10 @@ body.privacy-mode .breakdown-val {
 .ach-level-box {
     width: 58px;
     height: 58px;
-    border-radius: 14px;
-    background: #090e18;
-    border: 2px solid #55ff55;
-    box-shadow: 0 0 16px rgba(85, 255, 85, 0.4), inset 0 0 12px rgba(85, 255, 85, 0.2);
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(124, 93, 250, 0.25), rgba(56, 189, 248, 0.15));
+    border: 2px solid #7c5dfa;
+    box-shadow: 0 0 20px rgba(124, 93, 250, 0.45), inset 0 0 12px rgba(124, 93, 250, 0.25);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -10745,9 +10817,9 @@ body.privacy-mode .breakdown-val {
 .ach-level-num {
     font-size: 28px;
     font-weight: 900;
-    color: #55ff55;
-    text-shadow: 0 0 8px rgba(85, 255, 85, 0.8), 2px 2px 0 #000;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    color: #ffffff;
+    text-shadow: 0 0 10px rgba(124, 93, 250, 0.9), 0 2px 6px rgba(0, 0, 0, 0.7);
+    font-family: inherit;
 }
 
 .ach-level-info {
@@ -10758,9 +10830,9 @@ body.privacy-mode .breakdown-val {
 
 .ach-level-label {
     font-size: 11px;
-    font-weight: 700;
-    color: #94a3b8;
-    letter-spacing: 0.8px;
+    font-weight: 800;
+    color: #a78bfa;
+    letter-spacing: 1px;
 }
 
 .ach-level-title {
@@ -10809,41 +10881,72 @@ body.privacy-mode .breakdown-val {
     font-weight: 700;
 }
 
-/* Barra de XP estilo Minecraft */
-.minecraft-xp-bar-container {
+/* Barra de XP e Progresso BrilhaCash */
+.ach-xp-bar-container {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
 }
 
-.minecraft-xp-track {
+.ach-xp-track {
     width: 100%;
-    height: 12px;
+    height: 14px;
     background: #090e18;
-    border: 1px solid #2e3a4e;
+    border: 1px solid rgba(124, 93, 250, 0.3);
     border-radius: 99px;
     overflow: hidden;
     position: relative;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.8);
 }
 
-.minecraft-xp-fill {
+.ach-xp-fill {
     height: 100%;
-    background: linear-gradient(90deg, #22c55e, #55ff55);
+    background: linear-gradient(90deg, #7c5dfa 0%, #a855f7 50%, #38bdf8 100%);
     border-radius: 99px;
-    box-shadow: 0 0 12px rgba(85, 255, 85, 0.6);
-    transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 0 16px rgba(124, 93, 250, 0.65);
+    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
 }
 
-.minecraft-xp-text {
-    font-size: 12px;
+.ach-xp-fill::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+    animation: achXpShimmer 2.5s infinite;
+}
+
+@keyframes achXpShimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.ach-xp-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ach-xp-tag-current {
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #c4b5fd;
+    background: rgba(124, 93, 250, 0.18);
+    border: 1px solid rgba(124, 93, 250, 0.35);
+    padding: 3px 10px;
+    border-radius: 99px;
+    letter-spacing: 0.5px;
+}
+
+.ach-xp-text {
+    font-size: 12.5px;
     color: #94a3b8;
     font-weight: 600;
     text-align: right;
-    font-family: ui-monospace, SFMono-Regular, monospace;
 }
 
-/* Barra de Categorias / Abas */
+/* Barra de Categorias */
 .ach-categories-bar {
     display: flex;
     align-items: center;
@@ -10871,20 +10974,21 @@ body.privacy-mode .breakdown-val {
     display: flex;
     align-items: center;
     gap: 6px;
-    transition: all 0.2s ease;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .ach-filter-btn:hover {
     background: #172338;
     color: #f1f5f9;
-    border-color: rgba(124, 93, 250, 0.3);
+    border-color: rgba(124, 93, 250, 0.35);
+    transform: translateY(-1px);
 }
 
 .ach-filter-btn.active {
     background: var(--purple, #7c5dfa);
     color: #ffffff;
     border-color: var(--purple, #7c5dfa);
-    box-shadow: 0 4px 14px rgba(124, 93, 250, 0.4);
+    box-shadow: 0 4px 16px rgba(124, 93, 250, 0.45);
 }
 
 /* Grid de Conquistas */
@@ -10903,7 +11007,7 @@ body.privacy-mode .breakdown-val {
     flex-direction: column;
     justify-content: space-between;
     gap: 14px;
-    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease;
     position: relative;
 }
 
@@ -10912,8 +11016,8 @@ body.privacy-mode .breakdown-val {
 }
 
 .achievement-card.locked {
-    opacity: 0.65;
-    filter: grayscale(0.2);
+    opacity: 0.68;
+    filter: grayscale(0.15);
 }
 
 .achievement-card.unlocked {
@@ -10921,32 +11025,41 @@ body.privacy-mode .breakdown-val {
     filter: none;
 }
 
-/* Tiers */
+/* Tiers BrilhaCash: Bronze, Prata, Ouro, Diamante */
 .achievement-card.unlocked.tier-common {
-    border-color: rgba(148, 163, 184, 0.4);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    border-color: rgba(205, 127, 50, 0.45);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 14px rgba(205, 127, 50, 0.12);
 }
 
 .achievement-card.unlocked.tier-rare {
     border-color: rgba(56, 189, 248, 0.5);
-    box-shadow: 0 8px 26px rgba(56, 189, 248, 0.15);
+    box-shadow: 0 8px 26px rgba(56, 189, 248, 0.18);
 }
 
 .achievement-card.unlocked.tier-epic {
-    border-color: rgba(168, 85, 247, 0.55);
-    box-shadow: 0 8px 28px rgba(168, 85, 247, 0.2);
+    border-color: rgba(245, 158, 11, 0.6);
+    box-shadow: 0 8px 28px rgba(245, 158, 11, 0.22);
 }
 
 .achievement-card.unlocked.tier-legendary {
-    border-color: rgba(245, 158, 11, 0.6);
-    box-shadow: 0 10px 32px rgba(245, 158, 11, 0.25);
-    background: linear-gradient(145deg, #162032 0%, #1a1b24 100%);
+    border-color: rgba(168, 85, 247, 0.65);
+    box-shadow: 0 10px 32px rgba(168, 85, 247, 0.28);
+    background: linear-gradient(145deg, #162038 0%, #121528 100%);
 }
 
 .ach-card-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 10px;
+}
+
+.ach-tags-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .ach-icon-frame {
@@ -10963,13 +11076,18 @@ body.privacy-mode .breakdown-val {
 }
 
 .achievement-card.unlocked.tier-legendary .ach-icon-frame {
-    border-color: #f59e0b;
-    box-shadow: 0 0 14px rgba(245, 158, 11, 0.35);
+    border-color: #a855f7;
+    box-shadow: 0 0 14px rgba(168, 85, 247, 0.4);
 }
 
 .achievement-card.unlocked.tier-epic .ach-icon-frame {
-    border-color: #a855f7;
-    box-shadow: 0 0 14px rgba(168, 85, 247, 0.35);
+    border-color: #f59e0b;
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.4);
+}
+
+.achievement-card.unlocked.tier-rare .ach-icon-frame {
+    border-color: #38bdf8;
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
 }
 
 .ach-check-badge {
@@ -10997,36 +11115,53 @@ body.privacy-mode .breakdown-val {
 }
 
 .ach-tier-badge {
-    font-size: 11px;
-    font-weight: 700;
-    padding: 4px 10px;
+    font-size: 10.5px;
+    font-weight: 800;
+    padding: 3px 8px;
     border-radius: 99px;
-    background: rgba(255, 255, 255, 0.06);
-    color: #94a3b8;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
 }
 
-.ach-tier-badge.tier-legendary {
-    background: rgba(245, 158, 11, 0.15);
-    color: #fbbf24;
-    border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-.ach-tier-badge.tier-epic {
-    background: rgba(168, 85, 247, 0.15);
-    color: #c084fc;
-    border: 1px solid rgba(168, 85, 247, 0.3);
+.ach-tier-badge.tier-common {
+    background: rgba(205, 127, 50, 0.16);
+    color: #e59866;
+    border: 1px solid rgba(205, 127, 50, 0.35);
 }
 
 .ach-tier-badge.tier-rare {
-    background: rgba(56, 189, 248, 0.15);
+    background: rgba(56, 189, 248, 0.16);
     color: #7dd3fc;
-    border: 1px solid rgba(56, 189, 248, 0.3);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.ach-tier-badge.tier-epic {
+    background: rgba(245, 158, 11, 0.16);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.ach-tier-badge.tier-legendary {
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    box-shadow: 0 0 8px rgba(168, 85, 247, 0.25);
+}
+
+.ach-category-tag {
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .ach-card-body {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
 }
 
 .ach-title {
@@ -11040,7 +11175,7 @@ body.privacy-mode .breakdown-val {
     margin: 0;
     font-size: 12.5px;
     color: #94a3b8;
-    line-height: 1.4;
+    line-height: 1.45;
 }
 
 .ach-card-footer {
@@ -11054,10 +11189,9 @@ body.privacy-mode .breakdown-val {
 .ach-xp-tag {
     font-size: 12px;
     font-weight: 800;
-    color: #55ff55;
-    font-family: ui-monospace, SFMono-Regular, monospace;
-    background: rgba(85, 255, 85, 0.12);
-    border: 1px solid rgba(85, 255, 85, 0.25);
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.3);
     padding: 3px 8px;
     border-radius: 6px;
 }
@@ -11072,7 +11206,7 @@ body.privacy-mode .breakdown-val {
     font-weight: 600;
 }
 
-/* Banner Flutuante de Avanço Minecraft (Advancement Banner) */
+/* Banner Toast Flutuante de Conquistas BrilhaCash */
 .mf-advancement-container {
     position: fixed;
     top: 24px;
@@ -11087,27 +11221,33 @@ body.privacy-mode .breakdown-val {
 .mf-advancement-banner {
     pointer-events: auto;
     cursor: pointer;
-    background: #121824;
-    border: 2px solid #55ff55;
-    border-radius: 12px;
-    padding: 12px 18px;
+    background: rgba(18, 24, 38, 0.96);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(124, 93, 250, 0.6);
+    border-radius: 16px;
+    padding: 13px 18px;
     display: flex;
     align-items: center;
     gap: 14px;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(85, 255, 85, 0.35);
-    animation: advancementSlideIn 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
-    transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-    max-width: 360px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(124, 93, 250, 0.35);
+    animation: advancementSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    max-width: 380px;
 }
 
 .mf-advancement-banner.tier-legendary {
-    border-color: #f59e0b;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(245, 158, 11, 0.4);
+    border-color: rgba(168, 85, 247, 0.8);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(168, 85, 247, 0.45);
 }
 
 .mf-advancement-banner.tier-epic {
-    border-color: #a855f7;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(168, 85, 247, 0.4);
+    border-color: rgba(245, 158, 11, 0.8);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(245, 158, 11, 0.45);
+}
+
+.mf-advancement-banner.tier-rare {
+    border-color: rgba(56, 189, 248, 0.8);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 25px rgba(56, 189, 248, 0.35);
 }
 
 .mf-advancement-banner.fade-out {
@@ -11118,7 +11258,7 @@ body.privacy-mode .breakdown-val {
 .advancement-icon-box {
     width: 44px;
     height: 44px;
-    border-radius: 10px;
+    border-radius: 12px;
     background: #090e18;
     border: 1px solid rgba(255, 255, 255, 0.15);
     display: flex;
@@ -11131,15 +11271,32 @@ body.privacy-mode .breakdown-val {
 .advancement-text-box {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 3px;
+}
+
+.advancement-header-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .advancement-header {
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 800;
-    color: #facc15;
+    color: #a78bfa;
     text-transform: uppercase;
-    letter-spacing: 0.6px;
+    letter-spacing: 0.8px;
+}
+
+.advancement-tier-tag {
+    font-size: 9.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #fbbf24;
+    background: rgba(245, 158, 11, 0.16);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    padding: 1px 6px;
+    border-radius: 99px;
 }
 
 .advancement-title {
@@ -11149,10 +11306,10 @@ body.privacy-mode .breakdown-val {
 }
 
 .advancement-xp {
-    font-size: 11px;
+    font-size: 11.5px;
     font-weight: 800;
-    color: #55ff55;
-    font-family: ui-monospace, SFMono-Regular, monospace;
+    color: #38bdf8;
+}
 }
 
 @keyframes advancementSlideIn {

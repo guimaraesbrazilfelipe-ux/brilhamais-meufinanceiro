@@ -7820,61 +7820,61 @@ function init() {
     window.MFNotifications = MFNotifications;
 
     /* ============================================================
-       SISTEMA DE CONQUISTAS GAMIFICADO (ESTILO MINECRAFT ADVANCEMENTS)
+       SISTEMA DE CONQUISTAS GAMIFICADO BRILHACASH
        ============================================================ */
     const MF_ACHIEVEMENTS_KEY = "meuFinanceiro_achievements_v1";
     const MF_STREAK_KEY = "meuFinanceiro_daily_streak_v1";
 
     const ACHIEVEMENT_DEFINITIONS = [
-        // 🌲 MUNDO EXTERIOR (OVERWORLD)
-        { id: "overworld_wood", title: "Pegando Madeira", desc: "Registre seu 1º lançamento (receita ou despesa).", category: "overworld", categoryName: "Mundo Exterior", icon: "🪵", xp: 50, tier: "common" },
-        { id: "overworld_shelter", title: "Construindo um Abrigo", desc: "Defina seu salário mensal nas configurações.", category: "overworld", categoryName: "Mundo Exterior", icon: "🏠", xp: 50, tier: "common" },
-        { id: "overworld_craft", title: "Bancada de Trabalho", desc: "Cadastre sua primeira conta fixa ou assinatura recorrente.", category: "overworld", categoryName: "Mundo Exterior", icon: "🪓", xp: 50, tier: "common" },
-        { id: "overworld_chest", title: "Baú de Segurança", desc: "Crie sua primeira meta financeira no Planejamento.", category: "overworld", categoryName: "Mundo Exterior", icon: "📦", xp: 50, tier: "common" },
-        { id: "overworld_torch", title: "Iluminando a Caverna", desc: "Ative o Modo Privacidade para ocultar valores na tela.", category: "overworld", categoryName: "Mundo Exterior", icon: "🔦", xp: 30, tier: "common" },
-        { id: "overworld_bed", title: "Ponto de Renascimento", desc: "Faça login com Supabase para sincronizar seus dados na nuvem.", category: "overworld", categoryName: "Mundo Exterior", icon: "🛏️", xp: 100, tier: "rare" },
+        // 🌱 FUNDAÇÃO & HÁBITOS ESSENCIAIS
+        { id: "overworld_wood", title: "Primeiro Registro", desc: "Registre seu 1º lançamento (receita ou despesa) no BrilhaCash.", category: "overworld", categoryName: "Fundação", icon: "🌱", xp: 50, tier: "common" },
+        { id: "overworld_shelter", title: "Base Sólida", desc: "Defina sua renda mensal nas configurações para guiar o orçamento.", category: "overworld", categoryName: "Fundação", icon: "🏛️", xp: 50, tier: "common" },
+        { id: "overworld_craft", title: "Engrenagem Fixa", desc: "Cadastre sua primeira conta fixa ou assinatura recorrente.", category: "overworld", categoryName: "Fundação", icon: "⚙️", xp: 50, tier: "common" },
+        { id: "overworld_chest", title: "Cofre de Sonhos", desc: "Crie sua primeira meta financeira no Planejamento.", category: "overworld", categoryName: "Fundação", icon: "🎯", xp: 50, tier: "common" },
+        { id: "overworld_torch", title: "Escudo de Privacidade", desc: "Ative o Modo Privacidade para ocultar valores na tela.", category: "overworld", categoryName: "Fundação", icon: "🛡️", xp: 30, tier: "common" },
+        { id: "overworld_bed", title: "Sincronia na Nuvem", desc: "Faça login com Supabase para manter seus dados seguros em qualquer lugar.", category: "overworld", categoryName: "Fundação", icon: "☁️", xp: 100, tier: "rare" },
 
-        // ⚔️ CAÇADOR DE BOLETOS (COMBATE)
-        { id: "combat_first_mob", title: "Primeiro Monstro", desc: "Pague sua primeira conta fixa no painel.", category: "combat", categoryName: "Caçador de Boletos", icon: "⚔️", xp: 50, tier: "common" },
-        { id: "combat_combo", title: "Combo Crítico", desc: "Pague 3 contas seguidas antes da data de vencimento.", category: "combat", categoryName: "Caçador de Boletos", icon: "🎯", xp: 100, tier: "rare" },
-        { id: "combat_exterminator", title: "Exterminador de Dívidas", desc: "Quite 100% das contas fixas do mês atual.", category: "combat", categoryName: "Caçador de Boletos", icon: "💥", xp: 150, tier: "epic" },
-        { id: "combat_iron_armor", title: "Armadura de Ferro", desc: "Passe o mês inteiro sem nenhuma conta em atraso.", category: "combat", categoryName: "Caçador de Boletos", icon: "🛡️", xp: 100, tier: "rare" },
-        { id: "combat_potion", title: "Poção de Cura", desc: "Cadastre uma receita extra ou rendimento avulso.", category: "combat", categoryName: "Caçador de Boletos", icon: "🧪", xp: 50, tier: "common" },
-        { id: "combat_shield_block", title: "Bloqueio Perfeito", desc: "Cancele ou exclua uma conta fixa que não usa mais.", category: "combat", categoryName: "Caçador de Boletos", icon: "🛑", xp: 50, tier: "common" },
+        // ⚔️ CAÇADOR DE BOLETOS & GASTOS
+        { id: "combat_first_mob", title: "Boleto Aniquilado", desc: "Pague e liquide sua primeira conta fixa no painel.", category: "combat", categoryName: "Caçador de Boletos", icon: "⚔️", xp: 50, tier: "common" },
+        { id: "combat_combo", title: "Pontualidade Tripla", desc: "Pague 3 contas seguidas antes ou no dia do vencimento.", category: "combat", categoryName: "Caçador de Boletos", icon: "⚡", xp: 100, tier: "rare" },
+        { id: "combat_exterminator", title: "Mês Impecável", desc: "Quite 100% de todas as contas fixas do mês atual.", category: "combat", categoryName: "Caçador de Boletos", icon: "💥", xp: 150, tier: "epic" },
+        { id: "combat_iron_armor", title: "Imunidade a Juros", desc: "Passe o mês inteiro sem deixar nenhuma conta vencer em atraso.", category: "combat", categoryName: "Caçador de Boletos", icon: "🛡️", xp: 100, tier: "rare" },
+        { id: "combat_potion", title: "Injeção de Capital", desc: "Cadastre uma receita extra ou rendimento avulso no sistema.", category: "combat", categoryName: "Caçador de Boletos", icon: "🧪", xp: 50, tier: "common" },
+        { id: "combat_shield_block", title: "Corte Estratégico", desc: "Cancele ou exclua uma despesa recorrente que não agrega valor.", category: "combat", categoryName: "Caçador de Boletos", icon: "✂️", xp: 50, tier: "common" },
 
-        // 💎 MINERADOR DE DIAMANTES (POUPANÇA & RIQUEZA)
-        { id: "wealth_iron", title: "Era do Ferro", desc: "Acumule um saldo positivo maior que R$ 500,00.", category: "wealth", categoryName: "Riqueza & Minérios", icon: "🪙", xp: 75, tier: "common" },
-        { id: "wealth_gold", title: "Pepita de Ouro", desc: "Economize pelo menos 10% da sua renda em um único mês.", category: "wealth", categoryName: "Riqueza & Minérios", icon: "🥇", xp: 100, tier: "rare" },
-        { id: "wealth_diamond", title: "DIAMANTES!", desc: "Economize mais de 20% da sua renda mensal.", category: "wealth", categoryName: "Riqueza & Minérios", icon: "💎", xp: 200, tier: "epic" },
-        { id: "wealth_fortune", title: "Encantamento Fortuna", desc: "Feche um mês com mais de R$ 1.000,00 de saldo líquido positivo.", category: "wealth", categoryName: "Riqueza & Minérios", icon: "✨", xp: 150, tier: "rare" },
-        { id: "wealth_netherite", title: "Netherite Puro", desc: "Acumule mais de R$ 5.000,00 em saldo total ou reserva.", category: "wealth", categoryName: "Riqueza & Minérios", icon: "🖤", xp: 300, tier: "legendary" },
-        { id: "wealth_beacon", title: "O Farol Luminoso", desc: "Atinga 100% do valor estipulado em uma meta financeira.", category: "wealth", categoryName: "Riqueza & Minérios", icon: "🗼", xp: 250, tier: "epic" },
+        // 💎 MESTRIA PATRIMONIAL & APORTES
+        { id: "wealth_iron", title: "Primeira Reserva", desc: "Acumule um saldo positivo em conta superior a R$ 500,00.", category: "wealth", categoryName: "Mestria & Patrimônio", icon: "🪙", xp: 75, tier: "common" },
+        { id: "wealth_gold", title: "Mentalidade Poupador", desc: "Economize e retenha pelo menos 10% da sua renda em um mês.", category: "wealth", categoryName: "Mestria & Patrimônio", icon: "🥇", xp: 100, tier: "rare" },
+        { id: "wealth_diamond", title: "Aportador de Elite", desc: "Poupe mais de 20% da sua renda mensal líquida.", category: "wealth", categoryName: "Mestria & Patrimônio", icon: "💎", xp: 200, tier: "epic" },
+        { id: "wealth_fortune", title: "Superávit Notável", desc: "Feche um mês com mais de R$ 1.000,00 de saldo líquido positivo.", category: "wealth", categoryName: "Mestria & Patrimônio", icon: "📈", xp: 150, tier: "rare" },
+        { id: "wealth_netherite", title: "Patrimônio Blindado", desc: "Acumule mais de R$ 5.000,00 de patrimônio líquido em caixa.", category: "wealth", categoryName: "Mestria & Patrimônio", icon: "🏆", xp: 300, tier: "legendary" },
+        { id: "wealth_beacon", title: "Meta Conquistada", desc: "Atinga 100% do objetivo estipulado em uma meta financeira.", category: "wealth", categoryName: "Mestria & Patrimônio", icon: "✨", xp: 250, tier: "epic" },
 
-        // 🛡️ DEFESA INQUEBRÁVEL (PLANEJAMENTO & DISCIPLINA)
-        { id: "plan_shield", title: "Escudo Levantado", desc: "Defina limites/tetos de gastos para o seu mês no Planejamento.", category: "plan", categoryName: "Defesa & Tetos", icon: "🛡️", xp: 50, tier: "common" },
-        { id: "plan_guardian", title: "Guardião do Orçamento", desc: "Termine o mês sem estourar nenhum dos seus tetos de gastos.", category: "plan", categoryName: "Defesa & Tetos", icon: "🏰", xp: 150, tier: "epic" },
-        { id: "plan_no_spend", title: "Dia de Paz", desc: "Passe um dia útil inteiro sem registrar gastos supérfluos.", category: "plan", categoryName: "Defesa & Tetos", icon: "🕊️", xp: 75, tier: "rare" },
-        { id: "plan_peaceful_week", title: "Semana Pacífica", desc: "Acumule 3 'Dias Sem Gastos' dentro do mesmo mês.", category: "plan", categoryName: "Defesa & Tetos", icon: "🌿", xp: 150, tier: "epic" },
-        { id: "plan_prophet", title: "Radar do Futuro", desc: "Acesse e consulte a Projeção Financeira de 30/60/90 dias.", category: "plan", categoryName: "Defesa & Tetos", icon: "🔮", xp: 50, tier: "common" },
+        // 🛡️ BLINDAGEM ORÇAMENTÁRIA & TETOS
+        { id: "plan_shield", title: "Teto Orçamentário", desc: "Defina limites de gastos por categoria no Planejamento.", category: "plan", categoryName: "Blindagem & Tetos", icon: "🛡️", xp: 50, tier: "common" },
+        { id: "plan_guardian", title: "Disciplina Rigorosa", desc: "Feche o mês sem estourar nenhum dos seus tetos orçamentários.", category: "plan", categoryName: "Blindagem & Tetos", icon: "🏰", xp: 150, tier: "epic" },
+        { id: "plan_no_spend", title: "Consumo Consciente", desc: "Passe um dia útil sem registrar nenhuma despesa supérflua.", category: "plan", categoryName: "Blindagem & Tetos", icon: "🧘", xp: 75, tier: "rare" },
+        { id: "plan_peaceful_week", title: "Semana Equilibrada", desc: "Acumule 3 dias de consumo consciente dentro do mesmo mês.", category: "plan", categoryName: "Blindagem & Tetos", icon: "🌿", xp: 150, tier: "epic" },
+        { id: "plan_prophet", title: "Visão Preditiva", desc: "Consulte a Projeção Financeira de 30/60/90 dias.", category: "plan", categoryName: "Blindagem & Tetos", icon: "🔮", xp: 50, tier: "common" },
 
-        // 🏹 TRILHA DO AVENTUREIRO (STREAK & HÁBITOS)
-        { id: "streak_3", title: "Passos do Aventureiro", desc: "Mantenha uma sequência (streak) de 3 dias consecutivos no app.", category: "streak", categoryName: "Trilha & Streaks", icon: "🔥", xp: 50, tier: "common" },
-        { id: "streak_7", title: "Explorador Dedicado", desc: "Alcance 7 dias consecutivos mantendo o controle financeiro.", category: "streak", categoryName: "Trilha & Streaks", icon: "⚡", xp: 100, tier: "rare" },
-        { id: "streak_14", title: "Guerreiro da Disciplina", desc: "Alcance 14 dias seguidos de organização financeira ininterrupta.", category: "streak", categoryName: "Trilha & Streaks", icon: "🌟", xp: 200, tier: "epic" },
-        { id: "streak_30", title: "Lenda da Constância", desc: "Complete 30 dias consecutivos de streak!", category: "streak", categoryName: "Trilha & Streaks", icon: "👑", xp: 400, tier: "legendary" },
-        { id: "streak_century", title: "O Centurião", desc: "Registre mais de 100 lançamentos no total no BrilhaCash.", category: "streak", categoryName: "Trilha & Streaks", icon: "📜", xp: 300, tier: "legendary" },
+        // 🔥 CONSTÂNCIA, HÁBITOS & STREAK
+        { id: "streak_3", title: "Passos da Disciplina", desc: "Mantenha uma sequência ativa de 3 dias consecutivos no app.", category: "streak", categoryName: "Constância & Foco", icon: "🔥", xp: 50, tier: "common" },
+        { id: "streak_7", title: "Semana Imbatível", desc: "Complete 7 dias consecutivos acompanhando suas finanças.", category: "streak", categoryName: "Constância & Foco", icon: "⚡", xp: 100, tier: "rare" },
+        { id: "streak_14", title: "Hábito Consolidado", desc: "Mantenha 14 dias seguidos de organização financeira ininterrupta.", category: "streak", categoryName: "Constância & Foco", icon: "🌟", xp: 200, tier: "epic" },
+        { id: "streak_30", title: "Mestre da Constância", desc: "Complete 30 dias consecutivos de foco inabalável!", category: "streak", categoryName: "Constância & Foco", icon: "👑", xp: 400, tier: "legendary" },
+        { id: "streak_century", title: "Clube dos 100", desc: "Registre mais de 100 movimentações totais no BrilhaCash.", category: "streak", categoryName: "Constância & Foco", icon: "📜", xp: 300, tier: "legendary" },
 
-        // ⚡ ENGENHEIRO DE REDSTONE (AUTOMAÇÃO & TRUQUES)
-        { id: "redstone_automator", title: "Circuito Automático", desc: "Importe um extrato bancário em formato OFX ou CSV.", category: "redstone", categoryName: "Redstone & Truques", icon: "⚙️", xp: 100, tier: "rare" },
-        { id: "redstone_scanner", title: "Linha Decodificada", desc: "Cole e decodifique um boleto pela linha digitável inteligente.", category: "redstone", categoryName: "Redstone & Truques", icon: "📠", xp: 75, tier: "common" },
-        { id: "redstone_signal", title: "Sinal de Redstone", desc: "Ative as notificações PWA do BrilhaCash.", category: "redstone", categoryName: "Redstone & Truques", icon: "🔔", xp: 50, tier: "common" },
-        { id: "redstone_auditor", title: "Livro com Pena", desc: "Exporte um relatório de atividades ou planilha em CSV.", category: "redstone", categoryName: "Redstone & Truques", icon: "🪶", xp: 75, tier: "common" },
-        { id: "redstone_biometrics", title: "Cofre Encantado", desc: "Ative o bloqueio seguro por biometria ou PIN no app.", category: "redstone", categoryName: "Redstone & Truques", icon: "🔐", xp: 100, tier: "rare" },
+        // ⚡ AUTOMAÇÃO, INTELIGÊNCIA & TECH
+        { id: "redstone_automator", title: "Automação Bancária", desc: "Importe um extrato bancário em formato OFX ou CSV.", category: "redstone", categoryName: "Automação & Tech", icon: "⚙️", xp: 100, tier: "rare" },
+        { id: "redstone_scanner", title: "Decodificador Ágil", desc: "Cole e decodifique um boleto pela linha digitável inteligente.", category: "redstone", categoryName: "Automação & Tech", icon: "📠", xp: 75, tier: "common" },
+        { id: "redstone_signal", title: "Sentinela Ativo", desc: "Ative as notificações push do BrilhaCash para alertas em tempo real.", category: "redstone", categoryName: "Automação & Tech", icon: "🔔", xp: 50, tier: "common" },
+        { id: "redstone_auditor", title: "Auditoria Financeira", desc: "Exporte um relatório de atividades ou planilha em formato CSV.", category: "redstone", categoryName: "Automação & Tech", icon: "📊", xp: 75, tier: "common" },
+        { id: "redstone_biometrics", title: "Cofre Biométrico", desc: "Ative o bloqueio seguro por biometria ou PIN no app.", category: "redstone", categoryName: "Automação & Tech", icon: "🔐", xp: 100, tier: "rare" },
 
-        // 👑 O FIM? O COMEÇO! (END-GAME)
-        { id: "end_dragon", title: "Liberdade Financeira", desc: "Feche 3 meses seguidos no azul com taxa de poupança acima de 10%.", category: "end", categoryName: "O Fim & Além", icon: "🐉", xp: 500, tier: "legendary" },
-        { id: "end_elytra", title: "Asas de Elytra", desc: "Acumule reservas suficientes para cobrir 3 meses de contas fixas.", category: "end", categoryName: "O Fim & Além", icon: "🪽", xp: 500, tier: "legendary" },
-        { id: "end_totem", title: "Totem da Imortalidade", desc: "Conclua uma Reserva de Emergência de pelo menos 6x seus custos mensais.", category: "end", categoryName: "O Fim & Além", icon: "🗿", xp: 400, tier: "legendary" }
+        // 👑 LIBERDADE SUPREMA & INDEPENDÊNCIA
+        { id: "end_dragon", title: "Rumo à Independência", desc: "Feche 3 meses seguidos no azul com taxa de poupança superior a 10%.", category: "end", categoryName: "Liberdade Suprema", icon: "👑", xp: 500, tier: "legendary" },
+        { id: "end_elytra", title: "Voo da Tranquilidade", desc: "Acumule reservas suficientes para cobrir 3 meses de contas fixas.", category: "end", categoryName: "Liberdade Suprema", icon: "🦅", xp: 500, tier: "legendary" },
+        { id: "end_totem", title: "Segurança Vitalícia", desc: "Estruture uma Reserva de Emergência de pelo menos 6x seus custos mensais.", category: "end", categoryName: "Liberdade Suprema", icon: "💎", xp: 400, tier: "legendary" }
     ];
 
     const MFAchievements = {
@@ -7968,17 +7968,17 @@ function init() {
             const pct = Math.min(100, Math.max(0, Math.round((levelXP / (neededXP || 1)) * 100)));
 
             const titles = [
-                "Novato das Moedas",
-                "Explorador de Economias",
-                "Mineiro de Trocos",
-                "Caçador de Despesas",
+                "Iniciante Consciente",
+                "Organizador Ativo",
+                "Poupador em Ascensão",
+                "Estrategista de Gastos",
                 "Guardião do Orçamento",
-                "Poupador de Ferro",
-                "Colecionador de Ouro",
-                "Mestre dos Diamantes",
-                "Alquimista do Saldo",
-                "Lorde do Netherite",
-                "Lenda da Liberdade Financeira"
+                "Investidor Focado",
+                "Mestre da Disciplina",
+                "Construtor de Patrimônio",
+                "Soberano Financeiro",
+                "Lenda da Prosperidade",
+                "Lenda da Liberdade Suprema"
             ];
             const titleIndex = Math.min(titles.length - 1, Math.floor((level - 1) / 2));
 
@@ -8031,12 +8031,23 @@ function init() {
                 document.body.appendChild(container);
             }
 
+            const tierNames = {
+                common: "Bronze",
+                rare: "Prata",
+                epic: "Ouro",
+                legendary: "Diamante"
+            };
+            const tierLabel = tierNames[ach.tier] || "Marco";
+
             const banner = document.createElement("div");
             banner.className = `mf-advancement-banner tier-${ach.tier || "common"}`;
             banner.innerHTML = `
                 <div class="advancement-icon-box">${ach.icon}</div>
                 <div class="advancement-text-box">
-                    <span class="advancement-header">🏆 Avanço Concluído!</span>
+                    <div class="advancement-header-line">
+                        <span class="advancement-header">✨ CONQUISTA DESBLOQUEADA!</span>
+                        <span class="advancement-tier-tag">${tierLabel}</span>
+                    </div>
                     <strong class="advancement-title">${escapeHTML(ach.title)}</strong>
                     <span class="advancement-xp">+${ach.xp} XP</span>
                 </div>
@@ -8958,6 +8969,11 @@ function setupAchievementsPage() {
             levelBar.style.width = `${levelData.pct}%`;
         }
 
+        const levelXpTag = document.getElementById("achCurrentXpTag");
+        if (levelXpTag) {
+            levelXpTag.textContent = `Nível ${levelData.level}`;
+        }
+
         const streakVal = document.getElementById("achStreakValue");
         if (streakVal) {
             streakVal.textContent = `${streak} ${streak === 1 ? "dia" : "dias"}`;
@@ -8978,19 +8994,30 @@ function setupAchievementsPage() {
 
         const filteredDefs = currentFilter === "all" ? defs : defs.filter(d => d.category === currentFilter);
 
+        const tierDisplayNames = {
+            common: "Bronze",
+            rare: "Prata",
+            epic: "Ouro",
+            legendary: "Diamante"
+        };
+
         grid.innerHTML = filteredDefs.map(ach => {
             const isUnlocked = Boolean(state.unlocked && state.unlocked[ach.id]);
             const unlockedData = state.unlocked ? state.unlocked[ach.id] : null;
             const unlockedDateStr = unlockedData ? new Date(unlockedData.unlockedAt).toLocaleDateString("pt-BR") : "";
+            const tierName = tierDisplayNames[ach.tier] || "Comum";
 
             return `
                 <div class="achievement-card tier-${ach.tier || "common"} ${isUnlocked ? "unlocked" : "locked"}" data-id="${ach.id}">
                     <div class="ach-card-top">
                         <div class="ach-icon-frame">
                             <span class="ach-icon">${ach.icon}</span>
-                            ${isUnlocked ? `<span class="ach-check-badge">✓</span>` : `<span class="ach-lock-badge">🔒</span>`}
+                            ${isUnlocked ? `<span class="ach-check-badge" title="Concluída">✓</span>` : `<span class="ach-lock-badge" title="Bloqueada">🔒</span>`}
                         </div>
-                        <div class="ach-tier-badge tier-${ach.tier || "common"}">${ach.categoryName}</div>
+                        <div class="ach-tags-group">
+                            <span class="ach-tier-badge tier-${ach.tier || "common"}">${tierName}</span>
+                            <span class="ach-category-tag">${ach.categoryName}</span>
+                        </div>
                     </div>
                     <div class="ach-card-body">
                         <h4 class="ach-title">${escapeHTML(ach.title)}</h4>
@@ -8998,7 +9025,7 @@ function setupAchievementsPage() {
                     </div>
                     <div class="ach-card-footer">
                         <span class="ach-xp-tag">+${ach.xp} XP</span>
-                        <span class="ach-status-tag ${isUnlocked ? "status-unlocked" : "status-locked"}">${isUnlocked ? `✓ Desbloqueada em ${unlockedDateStr}` : `🔒 Bloqueada`}</span>
+                        <span class="ach-status-tag ${isUnlocked ? "status-unlocked" : "status-locked"}">${isUnlocked ? `✓ Conquistada (${unlockedDateStr})` : `🔒 Em progresso`}</span>
                     </div>
                 </div>
             `;
