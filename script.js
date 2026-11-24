@@ -32,32 +32,32 @@ const COLORS = [
 ];
 
 const EXPENSE_CATEGORIES = [
-    { name: "Alimentação", icon: "🛒" },
-    { name: "Moradia", icon: "🏠" },
-    { name: "Contas da casa", icon: "💡" },
-    { name: "Transporte", icon: "🚗" },
-    { name: "Saúde", icon: "💊" },
-    { name: "Comunicação", icon: "📱" },
-    { name: "Dívidas & Empréstimos", icon: "💳" },
-    { name: "Educação", icon: "📚" },
-    { name: "Lazer", icon: "🎮" },
-    { name: "Compras", icon: "🛍️" },
-    { name: "Cuidados Pessoais", icon: "✂️" },
-    { name: "Assinaturas", icon: "📲" },
-    { name: "Investimentos", icon: "📈" },
-    { name: "Outros", icon: "📦" }
+    { name: "Alimentação", icon: "🛒", desc: "Supermercado, feiras, delivery e restaurantes" },
+    { name: "Moradia", icon: "🏠", desc: "Aluguel, condomínio, IPTU e reparos" },
+    { name: "Contas da casa", icon: "💡", desc: "Energia elétrica, água, gás e internet" },
+    { name: "Transporte", icon: "🚗", desc: "Combustível, Uber, transporte público e IPVA" },
+    { name: "Saúde", icon: "💊", desc: "Farmácia, consultas, exames e plano de saúde" },
+    { name: "Comunicação", icon: "📱", desc: "Plano de celular, recargas e telefonia" },
+    { name: "Dívidas & Empréstimos", icon: "💳", desc: "Fatura de cartão, empréstimos e parcelamentos" },
+    { name: "Educação", icon: "📚", desc: "Cursos, faculdade, livros e materiais" },
+    { name: "Lazer", icon: "🎮", desc: "Cinema, viagens, passeios, jogos e bares" },
+    { name: "Compras", icon: "🛍️", desc: "Roupas, calçados, eletrônicos e presentes" },
+    { name: "Cuidados Pessoais", icon: "✂️", desc: "Barbearia, salão, cosméticos e higiene" },
+    { name: "Assinaturas", icon: "📲", desc: "Netflix, Spotify, Prime, YouTube e apps" },
+    { name: "Investimentos", icon: "📈", desc: "Aportes em reserva, renda fixa e ações" },
+    { name: "Outros", icon: "📦", desc: "Despesas diversas e imprevistos diários" }
 ];
 
 const INCOME_CATEGORIES = [
-    { name: "Freelance / Bico", icon: "💻" },
-    { name: "Vendas / Desapego", icon: "🏷️" },
-    { name: "Rendimentos / Dividendos", icon: "📈" },
-    { name: "Bônus / Premiação", icon: "🎁" },
-    { name: "Reembolso", icon: "🔄" },
-    { name: "Presente / Doação", icon: "🎉" },
-    { name: "Aluguel / Locação", icon: "🔑" },
-    { name: "Prestação de serviços", icon: "🛠️" },
-    { name: "Outros", icon: "📦" }
+    { name: "Freelance / Bico", icon: "💻", desc: "Serviços extras e projetos autônomos" },
+    { name: "Vendas / Desapego", icon: "🏷️", desc: "Venda de produtos, usados e desapegos" },
+    { name: "Rendimentos / Dividendos", icon: "📈", desc: "Rendimento de investimentos, CDI e juros" },
+    { name: "Bônus / Premiação", icon: "🎁", desc: "PLR, bonificações e comissões extras" },
+    { name: "Reembolso", icon: "🔄", desc: "Devoluções de dinheiro e estornos" },
+    { name: "Presente / Doação", icon: "🎉", desc: "Valores recebidos de amigos e familiares" },
+    { name: "Aluguel / Locação", icon: "🔑", desc: "Renda de imóveis e locação de bens" },
+    { name: "Prestação de serviços", icon: "🛠️", desc: "Consultorias, manutenções e suporte" },
+    { name: "Outros", icon: "📦", desc: "Outras entradas de receita extra" }
 ];
 
 const CATEGORY_ICONS = {
@@ -1328,10 +1328,16 @@ function setupReportPeriodPicker() {
         currentReportPeriod = targetVal;
         select.value = targetVal;
 
-        const option = [...select.options].find((item) => item.value === targetVal);
-        if (option) {
-            label.textContent = option.textContent;
-        }
+        const iconEl = $("#reportPeriodPickerIcon");
+        const periodMap = {
+            this_week: { icon: "📅", text: "Esta semana" },
+            this_month: { icon: "🗓️", text: "Este mês" },
+            this_year: { icon: "📆", text: "Este ano" },
+            last_2_years: { icon: "📈", text: "Últimos 2 anos" }
+        };
+        const cur = periodMap[targetVal] || periodMap.this_month;
+        label.textContent = cur.text;
+        if (iconEl) iconEl.textContent = cur.icon;
 
         options.querySelectorAll(".category-option").forEach((btn) => {
             const isSelected = btn.dataset.value === targetVal;
@@ -2705,29 +2711,25 @@ function openCategoryDrawer() {
 function syncCategoryPicker(value) {
     const select = $("#category");
     const label = $("#categoryPickerLabel");
+    const iconEl = $("#categoryPickerIcon");
     const customInput = $("#customCategory");
 
     if (!select || !label) return;
 
-    const option = [...select.options].find(
-        (item) => item.value === value
-    );
+    const type = $("#type") ? $("#type").value : "despesa";
+    const categories = type === "receita" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+    const cat = categories.find((c) => c.name === value) || { name: value || "Outros", icon: CATEGORY_ICONS[value] || "📦" };
 
-    if (option) {
-        select.value = value;
-        label.textContent = option.textContent;
-    } else {
-        select.value = "Outros";
-        label.textContent = "📦 Outros";
+    select.value = cat.name;
+    label.textContent = cat.name;
+    if (iconEl) iconEl.textContent = cat.icon;
 
-        if (customInput) {
-            customInput.value = value || "";
-        }
+    if (!categories.some((c) => c.name === value)) {
+        if (customInput) customInput.value = value || "";
     }
 
     document.querySelectorAll(".category-option").forEach((button) => {
         const selected = button.dataset.value === select.value;
-
         button.classList.toggle("selected", selected);
         button.setAttribute("aria-selected", String(selected));
     });
@@ -2737,6 +2739,7 @@ function renderCategoryOptions(type = "despesa", selectedValue = null) {
     const select = $("#category");
     const drawer = $("#categoryOptions");
     const label = $("#categoryPickerLabel");
+    const iconEl = $("#categoryPickerIcon");
     const customInput = $("#customCategory");
 
     if (!select || !drawer) return;
@@ -2761,19 +2764,27 @@ function renderCategoryOptions(type = "despesa", selectedValue = null) {
     categories.forEach((cat) => {
         const btn = document.createElement("button");
         btn.type = "button";
-        btn.className = "category-option";
+        btn.className = "category-option split-option";
         btn.setAttribute("role", "option");
         btn.dataset.value = cat.name;
-        btn.textContent = `${cat.icon} ${cat.name}`;
         const isSelected = cat.name === targetValue;
         btn.classList.toggle("selected", isSelected);
         btn.setAttribute("aria-selected", String(isSelected));
+        btn.innerHTML = `
+            <div class="split-option-icon-box">${cat.icon}</div>
+            <div class="split-option-text">
+                <strong class="split-option-title">${cat.name}</strong>
+                <span class="split-option-desc">${cat.desc || "Categoria de lançamento"}</span>
+            </div>
+            <span class="split-option-check" aria-hidden="true">✓</span>
+        `;
         drawer.appendChild(btn);
     });
 
     const selectedCat = categories.find((c) => c.name === targetValue) || categories[0];
+    if (iconEl) iconEl.textContent = selectedCat.icon;
     if (label) {
-        label.textContent = `${selectedCat.icon} ${selectedCat.name}`;
+        label.textContent = selectedCat.name;
     }
 
     if (customInput) {
@@ -4497,11 +4508,16 @@ function setupGcalQuickModal() {
     function syncGcalCategory(val) {
         if (!catSelect || !catLabel || !catOptions) return;
         catSelect.value = val;
+        const iconEl = $("#gcalQuickCategoryPickerIcon");
         const opt = [...catSelect.options].find((o) => o.value === val);
         if (opt) {
-            catLabel.textContent = opt.textContent;
+            const pureText = opt.textContent.replace(/^[\p{Emoji}\s]+/u, "").trim();
+            catLabel.textContent = pureText;
+            const iconMatch = opt.textContent.match(/^[\p{Emoji}\u200d]+/u);
+            if (iconEl && iconMatch) iconEl.textContent = iconMatch[0].trim();
         } else {
             catLabel.textContent = val;
+            if (iconEl) iconEl.textContent = "📦";
         }
 
         catOptions.querySelectorAll(".category-option").forEach((btn) => {
@@ -4517,7 +4533,7 @@ function setupGcalQuickModal() {
         let categories = EXPENSE_CATEGORIES;
         if (type === "receita") {
             categories = [
-                { name: "Salário", icon: "💰" },
+                { name: "Salário", icon: "💰", desc: "Remuneração mensal e adiantamentos" },
                 ...INCOME_CATEGORIES
             ];
         }
@@ -4539,19 +4555,28 @@ function setupGcalQuickModal() {
         categories.forEach((cat) => {
             const btn = document.createElement("button");
             btn.type = "button";
-            btn.className = "category-option";
+            btn.className = "category-option split-option";
             btn.setAttribute("role", "option");
             btn.dataset.value = cat.name;
-            btn.textContent = `${cat.icon} ${cat.name}`;
             const isSelected = cat.name === targetValue;
             btn.classList.toggle("selected", isSelected);
             btn.setAttribute("aria-selected", String(isSelected));
+            btn.innerHTML = `
+                <div class="split-option-icon-box">${cat.icon}</div>
+                <div class="split-option-text">
+                    <strong class="split-option-title">${cat.name}</strong>
+                    <span class="split-option-desc">${cat.desc || "Categoria de lançamento"}</span>
+                </div>
+                <span class="split-option-check" aria-hidden="true">✓</span>
+            `;
             catOptions.appendChild(btn);
         });
 
         const activeCat = categories.find((c) => c.name === targetValue) || categories[0];
+        const iconEl = $("#gcalQuickCategoryPickerIcon");
+        if (iconEl && activeCat) iconEl.textContent = activeCat.icon;
         if (activeCat) {
-            catLabel.textContent = `${activeCat.icon} ${activeCat.name}`;
+            catLabel.textContent = activeCat.name;
         }
     }
 
@@ -4559,9 +4584,26 @@ function setupGcalQuickModal() {
         if (!freqSelect || !freqLabel || !freqOptions) return;
         const targetVal = val || "monthly";
         freqSelect.value = targetVal;
-        freqLabel.textContent = FREQ_LABEL_MAP[targetVal] || "🔄 Mensal";
+        const iconEl = $("#gcalQuickFrequencyPickerIcon");
+        const map = {
+            monthly: { icon: "🔄", text: "Mensal" },
+            weekly: { icon: "📅", text: "Semanal" },
+            biweekly: { icon: "🗓️", text: "Quinzenal" },
+            bimonthly: { icon: "⏳", text: "Bimestral" },
+            quarterly: { icon: "📈", text: "Trimestral" },
+            semiannual: { icon: "📆", text: "Semestral" },
+            annual: { icon: "🎯", text: "Anual" }
+        };
+        const cur = map[targetVal] || map.monthly;
+        freqLabel.textContent = cur.text;
+        if (iconEl) iconEl.textContent = cur.icon;
 
         freqOptions.querySelectorAll(".category-option").forEach((btn) => {
+            const isSelected = btn.dataset.value === targetVal;
+            btn.classList.toggle("selected", isSelected);
+            btn.setAttribute("aria-selected", String(isSelected));
+        });
+    }
             const isSelected = btn.dataset.value === targetVal;
             btn.classList.toggle("selected", isSelected);
             btn.setAttribute("aria-selected", String(isSelected));
@@ -7054,7 +7096,12 @@ function init() {
                 if (!option) return;
 
                 typeFilter.value = option.dataset.value;
-                filterLabel.textContent = option.textContent.trim();
+                const titleEl = option.querySelector(".split-option-title");
+                const iconBox = option.querySelector(".split-option-icon-box");
+                const filterIcon = $("#typeFilterIcon");
+                if (filterIcon && iconBox) filterIcon.textContent = iconBox.textContent.trim();
+                filterLabel.textContent = titleEl ? titleEl.textContent.trim() : option.textContent.trim();
+
                 filterOptions.querySelectorAll(".filter-select-option").forEach((item) => {
                     const selected = item === option;
                     item.classList.toggle("selected", selected);
@@ -7091,7 +7138,12 @@ function init() {
                 if (!option) return;
 
                 typeSelect.value = option.dataset.value;
-                typeLabel.textContent = option.textContent.trim();
+                const titleEl = option.querySelector(".split-option-title");
+                const iconBox = option.querySelector(".split-option-icon-box");
+                const typeIcon = $("#typeIcon");
+                if (typeIcon && iconBox) typeIcon.textContent = iconBox.textContent.trim();
+                typeLabel.textContent = titleEl ? titleEl.textContent.trim() : option.textContent.trim();
+
                 typeOptions.querySelectorAll(".filter-select-option").forEach((item) => {
                     const selected = item === option;
                     item.classList.toggle("selected", selected);
@@ -9523,12 +9575,17 @@ function setupRecurringCategoryPicker() {
 
     function sync(val) {
         const option = [...select.options].find((item) => item.value === val);
+        const iconEl = $("#recurringCategoryPickerIcon");
         if (option) {
             select.value = val;
-            label.textContent = option.textContent;
+            const pureText = option.textContent.replace(/^[\p{Emoji}\s]+/u, "").trim();
+            label.textContent = pureText;
+            const iconMatch = option.textContent.match(/^[\p{Emoji}\u200d]+/u);
+            if (iconEl && iconMatch) iconEl.textContent = iconMatch[0].trim();
         } else {
             select.value = "Outros";
-            label.textContent = "📦 Outros";
+            label.textContent = "Outros";
+            if (iconEl) iconEl.textContent = "📦";
             customInput.value = val || "";
         }
 
@@ -9639,11 +9696,20 @@ function setupRecurringFrequencyPicker() {
 
     function sync(val) {
         const targetVal = val || select.value || "monthly";
-        const option = [...select.options].find((item) => item.value === targetVal);
-        if (option) {
-            select.value = targetVal;
-            label.textContent = option.textContent;
-        }
+        const iconEl = $("#recurringFrequencyPickerIcon");
+        const freqMap = {
+            monthly: { icon: "🔄", text: "Mensal" },
+            weekly: { icon: "📅", text: "Semanal" },
+            biweekly: { icon: "🗓️", text: "Quinzenal" },
+            bimonthly: { icon: "⏳", text: "Bimestral" },
+            quarterly: { icon: "📈", text: "Trimestral" },
+            semiannual: { icon: "📆", text: "Semestral" },
+            annual: { icon: "🎯", text: "Anual" }
+        };
+        const cur = freqMap[targetVal] || freqMap.monthly;
+        select.value = targetVal;
+        label.textContent = cur.text;
+        if (iconEl) iconEl.textContent = cur.icon;
 
         options.querySelectorAll(".category-option").forEach((btn) => {
             const isSelected = btn.dataset.value === select.value;

@@ -371,7 +371,7 @@
                         </div>
                         <div class="field">
                             <label for="recurringFrequencyPickerButton">Frequência</label>
-                            <div class="category-picker frequency-picker" id="recurringFrequencyPicker">
+                            <div class="category-picker frequency-picker split-picker" id="recurringFrequencyPicker">
                                 <select id="recurringFrequency" class="category-native-select" aria-hidden="true" tabindex="-1">
                                     <option value="monthly" selected>🔄 Mensal (a cada 1 mês)</option>
                                     <option value="weekly">📅 Semanal (a cada 1 semana)</option>
@@ -382,60 +382,70 @@
                                     <option value="annual">🎯 Anual (a cada 1 ano)</option>
                                 </select>
 
-                                <button type="button" id="recurringFrequencyPickerButton" class="category-picker-button" aria-haspopup="listbox" aria-expanded="false" aria-controls="recurringFrequencyOptions">
-                                    <span id="recurringFrequencyPickerLabel">🔄 Mensal (a cada 1 mês)</span>
-                                    <span class="category-chevron" aria-hidden="true">▾</span>
+                                <button type="button" id="recurringFrequencyPickerButton" class="category-picker-button split-picker-button" aria-haspopup="listbox" aria-expanded="false" aria-controls="recurringFrequencyOptions">
+                                    <span class="split-picker-button-left">
+                                        <span class="split-picker-icon" id="recurringFrequencyPickerIcon" aria-hidden="true">🔄</span>
+                                        <span class="split-picker-label" id="recurringFrequencyPickerLabel">Mensal</span>
+                                    </span>
+                                    <span class="category-chevron" aria-hidden="true">⌄</span>
                                 </button>
 
-                                <div class="category-drawer frequency-drawer" id="recurringFrequencyOptions" role="listbox" aria-label="Escolha a frequência">
-                                    <button type="button" class="category-option selected" role="option" aria-selected="true" data-value="monthly">
-                                        <span class="freq-opt-icon">🔄</span>
-                                        <div class="freq-opt-text">
-                                            <strong>Mensal</strong>
-                                            <span>A cada 1 mês (padrão)</span>
+                                <div class="category-drawer frequency-drawer split-drawer" id="recurringFrequencyOptions" role="listbox" aria-label="Escolha a frequência">
+                                    <button type="button" class="category-option split-option selected" role="option" aria-selected="true" data-value="monthly">
+                                        <div class="split-option-icon-box">🔄</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Mensal</strong>
+                                            <span class="split-option-desc">A cada 1 mês (padrão de contas e assinaturas)</span>
                                         </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
                                     </button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="weekly">
-                                        <span class="freq-opt-icon">📅</span>
-                                        <div class="freq-opt-text">
-                                            <strong>Semanal</strong>
-                                            <span>A cada 7 dias</span>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-value="weekly">
+                                        <div class="split-option-icon-box">📅</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Semanal</strong>
+                                            <span class="split-option-desc">A cada 7 dias corridos</span>
                                         </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
                                     </button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="biweekly">
-                                        <span class="freq-opt-icon">🗓️</span>
-                                        <div class="freq-opt-text">
-                                            <strong>Quinzenal</strong>
-                                            <span>A cada 14 dias (2 semanas)</span>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-value="biweekly">
+                                        <div class="split-option-icon-box">🗓️</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Quinzenal</strong>
+                                            <span class="split-option-desc">A cada 14 dias (2 semanas)</span>
                                         </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
                                     </button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="bimonthly">
-                                        <span class="freq-opt-icon">⏳</span>
-                                        <div class="freq-opt-text">
-                                            <strong>Bimestral</strong>
-                                            <span>A cada 2 meses</span>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-value="bimonthly">
+                                        <div class="split-option-icon-box">⏳</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Bimestral</strong>
+                                            <span class="split-option-desc">A cada 2 meses</span>
                                         </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
                                     </button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="quarterly">
-                                        <span class="freq-opt-icon">📈</span>
-                                        <div class="freq-opt-text">
-                                            <strong>Trimestral</strong>
-                                            <span>A cada 3 meses</span>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-value="quarterly">
+                                        <div class="split-option-icon-box">📈</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Trimestral</strong>
+                                            <span class="split-option-desc">A cada 3 meses</span>
                                         </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
                                     </button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="semiannual">
-                                        <span class="freq-opt-icon">📆</span>
-                                        <div class="freq-opt-text">
-                                            <strong>Semestral</strong>
-                                            <span>A cada 6 meses</span>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-value="semiannual">
+                                        <div class="split-option-icon-box">📆</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Semestral</strong>
+                                            <span class="split-option-desc">A cada 6 meses</span>
                                         </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
                                     </button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="annual">
-                                        <span class="freq-opt-icon">🎯</span>
-                                        <div class="freq-opt-text">
-                                            <strong>Anual</strong>
-                                            <span>A cada 1 ano (12 meses)</span>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-value="annual">
+                                        <div class="split-option-icon-box">🎯</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Anual</strong>
+                                            <span class="split-option-desc">A cada 1 ano (12 meses)</span>
                                         </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
                                     </button>
                                 </div>
                             </div>
@@ -446,7 +456,7 @@
                     <div class="field category-field" style="margin-top: 14px;">
                         <label for="recurringCategoryPickerButton">Categoria</label>
                         <div class="category-controls">
-                            <div class="category-picker" id="recurringCategoryPicker">
+                            <div class="category-picker split-picker" id="recurringCategoryPicker">
                                 <select id="recurringCategory" class="category-native-select" aria-hidden="true" tabindex="-1">
                                     <option value="Assinaturas" selected>🍿 Assinaturas</option>
                                     <option value="Moradia">🏠 Moradia</option>
@@ -461,23 +471,103 @@
                                     <option value="Outros">📦 Outros</option>
                                 </select>
 
-                                <button type="button" id="recurringCategoryPickerButton" class="category-picker-button" aria-haspopup="listbox" aria-expanded="false" aria-controls="recurringCategoryOptions">
-                                    <span id="recurringCategoryPickerLabel">🍿 Assinaturas</span>
-                                    <span class="category-chevron" aria-hidden="true">▾</span>
+                                <button type="button" id="recurringCategoryPickerButton" class="category-picker-button split-picker-button" aria-haspopup="listbox" aria-expanded="false" aria-controls="recurringCategoryOptions">
+                                    <span class="split-picker-button-left">
+                                        <span class="split-picker-icon" id="recurringCategoryPickerIcon" aria-hidden="true">🍿</span>
+                                        <span class="split-picker-label" id="recurringCategoryPickerLabel">Assinaturas</span>
+                                    </span>
+                                    <span class="category-chevron" aria-hidden="true">⌄</span>
                                 </button>
 
-                                <div class="category-drawer" id="recurringCategoryOptions" role="listbox" aria-label="Escolha uma categoria">
-                                    <button type="button" class="category-option selected" role="option" aria-selected="true" data-value="Assinaturas">🍿 Assinaturas</button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Moradia">🏠 Moradia</button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Água e luz">💡 Água e luz</button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Transporte">🚗 Transporte</button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Saúde">💊 Saúde</button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Educação">📚 Educação</button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Lazer">🎉 Lazer</button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Alimentação">🍔 Alimentação</button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Compras">🛍️ Compras</button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Investimentos">📈 Investimentos</button>
-                                    <button type="button" class="category-option" role="option" aria-selected="false" data-value="Outros">📦 Outros</button>
+                                <div class="category-drawer split-drawer" id="recurringCategoryOptions" role="listbox" aria-label="Escolha uma categoria">
+                                    <button type="button" class="category-option split-option selected" role="option" aria-selected="true" data-value="Assinaturas">
+                                        <div class="split-option-icon-box">🍿</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Assinaturas</strong>
+                                            <span class="split-option-desc">Netflix, Spotify, Prime, YouTube e apps</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-value="Moradia">
+                                        <div class="split-option-icon-box">🏠</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Moradia</strong>
+                                            <span class="split-option-desc">Aluguel, condomínio, IPTU e reparos</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-value="Água e luz">
+                                        <div class="split-option-icon-box">💡</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Água e luz</strong>
+                                            <span class="split-option-desc">Energia elétrica, água, gás e internet</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-value="Transporte">
+                                        <div class="split-option-icon-box">🚗</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Transporte</strong>
+                                            <span class="split-option-desc">Combustível, Uber, transporte público e IPVA</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-value="Saúde">
+                                        <div class="split-option-icon-box">💊</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Saúde</strong>
+                                            <span class="split-option-desc">Farmácia, consultas, exames e plano de saúde</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-value="Educação">
+                                        <div class="split-option-icon-box">📚</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Educação</strong>
+                                            <span class="split-option-desc">Cursos, faculdade, livros e materiais</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-value="Lazer">
+                                        <div class="split-option-icon-box">🎉</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Lazer</strong>
+                                            <span class="split-option-desc">Clubes, cinema, passeios e esportes</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-value="Alimentação">
+                                        <div class="split-option-icon-box">🍔</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Alimentação</strong>
+                                            <span class="split-option-desc">Supermercado recorrente e vale alimentação</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-value="Compras">
+                                        <div class="split-option-icon-box">🛍️</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Compras</strong>
+                                            <span class="split-option-desc">Parcelas fixas, carnês e compras programadas</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-value="Investimentos">
+                                        <div class="split-option-icon-box">📈</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Investimentos</strong>
+                                            <span class="split-option-desc">Aportes programados em reserva e fundos</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-value="Outros">
+                                        <div class="split-option-icon-box">📦</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Outros</strong>
+                                            <span class="split-option-desc">Outros compromissos fixos e recorrentes</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
                                 </div>
                             </div>
 

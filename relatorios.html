@@ -164,10 +164,10 @@
                     </div>
                 </div>
 
-                <!-- Seletor Moderno de Período dos Relatórios (Estilo Contas Fixas) -->
+                <!-- Seletor Moderno de Período dos Relatórios (Estilo Contas Fixas / Parceiro) -->
                 <div class="toolbar-item report-period-control">
                     <label for="reportPeriodPickerButton">Período de análise</label>
-                    <div class="category-picker frequency-picker report-period-picker" id="reportPeriodPicker">
+                    <div class="category-picker frequency-picker report-period-picker split-picker" id="reportPeriodPicker">
                         <select id="reportPeriodSelect" class="category-native-select" aria-hidden="true" tabindex="-1">
                             <option value="this_week">📅 Esta semana</option>
                             <option value="this_month" selected>🗓️ Este mês</option>
@@ -175,39 +175,46 @@
                             <option value="last_2_years">📈 Últimos 2 anos</option>
                         </select>
 
-                        <button type="button" id="reportPeriodPickerButton" class="category-picker-button" aria-haspopup="listbox" aria-expanded="false" aria-controls="reportPeriodOptions">
-                            <span id="reportPeriodPickerLabel">🗓️ Este mês</span>
+                        <button type="button" id="reportPeriodPickerButton" class="category-picker-button split-picker-button" aria-haspopup="listbox" aria-expanded="false" aria-controls="reportPeriodOptions">
+                            <span class="split-picker-button-left">
+                                <span class="split-picker-icon" id="reportPeriodPickerIcon" aria-hidden="true">🗓️</span>
+                                <span class="split-picker-label" id="reportPeriodPickerLabel">Este mês</span>
+                            </span>
                             <span class="category-chevron" aria-hidden="true">⌄</span>
                         </button>
 
-                        <div class="category-drawer frequency-drawer" id="reportPeriodOptions" role="listbox" aria-label="Escolha o período do relatório">
-                            <button type="button" class="category-option" role="option" aria-selected="false" data-value="this_week">
-                                <span class="freq-opt-icon">📅</span>
-                                <div class="freq-opt-text">
-                                    <strong>Esta semana</strong>
-                                    <span>Últimos 7 dias (semana atual)</span>
+                        <div class="category-drawer frequency-drawer split-drawer" id="reportPeriodOptions" role="listbox" aria-label="Escolha o período do relatório">
+                            <button type="button" class="category-option split-option" role="option" aria-selected="false" data-value="this_week">
+                                <div class="split-option-icon-box">📅</div>
+                                <div class="split-option-text">
+                                    <strong class="split-option-title">Esta semana</strong>
+                                    <span class="split-option-desc">Últimos 7 dias (semana atual)</span>
                                 </div>
+                                <span class="split-option-check" aria-hidden="true">✓</span>
                             </button>
-                            <button type="button" class="category-option selected" role="option" aria-selected="true" data-value="this_month">
-                                <span class="freq-opt-icon">🗓️</span>
-                                <div class="freq-opt-text">
-                                    <strong>Este mês</strong>
-                                    <span>Mês de referência completo</span>
+                            <button type="button" class="category-option split-option selected" role="option" aria-selected="true" data-value="this_month">
+                                <div class="split-option-icon-box">🗓️</div>
+                                <div class="split-option-text">
+                                    <strong class="split-option-title">Este mês</strong>
+                                    <span class="split-option-desc">Mês de referência completo</span>
                                 </div>
+                                <span class="split-option-check" aria-hidden="true">✓</span>
                             </button>
-                            <button type="button" class="category-option" role="option" aria-selected="false" data-value="this_year">
-                                <span class="freq-opt-icon">📆</span>
-                                <div class="freq-opt-text">
-                                    <strong>Este ano</strong>
-                                    <span>Janeiro a Dezembro</span>
+                            <button type="button" class="category-option split-option" role="option" aria-selected="false" data-value="this_year">
+                                <div class="split-option-icon-box">📆</div>
+                                <div class="split-option-text">
+                                    <strong class="split-option-title">Este ano</strong>
+                                    <span class="split-option-desc">Janeiro a Dezembro consolidado</span>
                                 </div>
+                                <span class="split-option-check" aria-hidden="true">✓</span>
                             </button>
-                            <button type="button" class="category-option" role="option" aria-selected="false" data-value="last_2_years">
-                                <span class="freq-opt-icon">📈</span>
-                                <div class="freq-opt-text">
-                                    <strong>Últimos 2 anos</strong>
-                                    <span>Histórico de 24 meses</span>
+                            <button type="button" class="category-option split-option" role="option" aria-selected="false" data-value="last_2_years">
+                                <div class="split-option-icon-box">📈</div>
+                                <div class="split-option-text">
+                                    <strong class="split-option-title">Últimos 2 anos</strong>
+                                    <span class="split-option-desc">Histórico completo de 24 meses</span>
                                 </div>
+                                <span class="split-option-check" aria-hidden="true">✓</span>
                             </button>
                         </div>
                     </div>

@@ -185,18 +185,36 @@
                     <div class="form-row transaction-basic-row">
                         <div class="field">
                             <label for="typeButton">Tipo de lançamento</label>
-                            <div class="filter-select transaction-type-select" id="typeControl">
+                            <div class="filter-select transaction-type-select split-picker" id="typeControl">
                                 <select id="type" class="filter-native-select" required aria-label="Tipo de lançamento">
-                                    <option value="despesa">Despesa</option>
-                                    <option value="receita">Receita extra</option>
+                                    <option value="despesa" selected>💸 Despesa</option>
+                                    <option value="receita">💰 Receita extra</option>
                                 </select>
-                                <button type="button" class="filter-select-button" id="typeButton"
+                                <button type="button" class="filter-select-button split-picker-button" id="typeButton"
                                     aria-haspopup="listbox" aria-expanded="false" aria-controls="typeOptions">
-                                    <span id="typeLabel">Despesa</span><span class="filter-select-chevron" aria-hidden="true">⌄</span>
+                                    <span class="split-picker-button-left">
+                                        <span class="split-picker-icon" id="typeIcon" aria-hidden="true">💸</span>
+                                        <span class="split-picker-label" id="typeLabel">Despesa</span>
+                                    </span>
+                                    <span class="filter-select-chevron" aria-hidden="true">⌄</span>
                                 </button>
-                                <div class="filter-select-options" id="typeOptions" role="listbox" aria-label="Tipo de lançamento">
-                                    <button type="button" class="filter-select-option selected" role="option" aria-selected="true" data-value="despesa">Despesa</button>
-                                    <button type="button" class="filter-select-option" role="option" aria-selected="false" data-value="receita">Receita extra</button>
+                                <div class="filter-select-options split-drawer" id="typeOptions" role="listbox" aria-label="Tipo de lançamento">
+                                    <button type="button" class="filter-select-option split-option selected" role="option" aria-selected="true" data-value="despesa">
+                                        <div class="split-option-icon-box">💸</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Despesa</strong>
+                                            <span class="split-option-desc">Saída de dinheiro do seu orçamento mensal</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="filter-select-option split-option" role="option" aria-selected="false" data-value="receita">
+                                        <div class="split-option-icon-box">💰</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Receita extra</strong>
+                                            <span class="split-option-desc">Entrada de dinheiro (rendas, vendas, bônus)</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -237,37 +255,117 @@
                                     </select>
 
                                     <button type="button" id="categoryPickerButton"
-                                        class="category-picker-button"
+                                        class="category-picker-button split-picker-button"
                                         aria-haspopup="listbox" aria-expanded="false"
                                         aria-controls="categoryOptions">
-                                        <span id="categoryPickerLabel">🍽️ Alimentação</span>
+                                        <span class="split-picker-button-left">
+                                            <span class="split-picker-icon" id="categoryPickerIcon" aria-hidden="true">🍽️</span>
+                                            <span class="split-picker-label" id="categoryPickerLabel">Alimentação</span>
+                                        </span>
                                         <span class="category-chevron" aria-hidden="true">⌄</span>
                                     </button>
 
-                                    <div class="category-drawer" id="categoryOptions"
+                                    <div class="category-drawer split-drawer" id="categoryOptions"
                                         role="listbox" aria-label="Escolha uma categoria">
-                                        <button type="button" class="category-option selected"
-                                             role="option" aria-selected="true" data-value="Alimentação">🍽️ Alimentação</button>
-                                        <button type="button" class="category-option"
-                                            role="option" aria-selected="false" data-value="Moradia">🏠 Moradia</button>
-                                        <button type="button" class="category-option"
-                                            role="option" aria-selected="false" data-value="Água e luz">💡 Água e luz</button>
-                                        <button type="button" class="category-option"
-                                            role="option" aria-selected="false" data-value="Transporte">🚗 Transporte</button>
-                                        <button type="button" class="category-option"
-                                            role="option" aria-selected="false" data-value="Saúde">💊 Saúde</button>
-                                        <button type="button" class="category-option"
-                                            role="option" aria-selected="false" data-value="Educação">📚 Educação</button>
-                                        <button type="button" class="category-option"
-                                            role="option" aria-selected="false" data-value="Lazer">🎮 Lazer</button>
-                                        <button type="button" class="category-option"
-                                            role="option" aria-selected="false" data-value="Compras">🛍️ Compras</button>
-                                        <button type="button" class="category-option"
-                                            role="option" aria-selected="false" data-value="Assinaturas">📱 Assinaturas</button>
-                                        <button type="button" class="category-option"
-                                            role="option" aria-selected="false" data-value="Investimentos">📈 Investimentos</button>
-                                        <button type="button" class="category-option"
-                                            role="option" aria-selected="false" data-value="Outros">📦 Outros</button>
+                                        <button type="button" class="category-option split-option selected"
+                                             role="option" aria-selected="true" data-value="Alimentação">
+                                            <div class="split-option-icon-box">🍽️</div>
+                                            <div class="split-option-text">
+                                                <strong class="split-option-title">Alimentação</strong>
+                                                <span class="split-option-desc">Supermercado, feiras, delivery e restaurantes</span>
+                                            </div>
+                                            <span class="split-option-check" aria-hidden="true">✓</span>
+                                        </button>
+                                        <button type="button" class="category-option split-option"
+                                            role="option" aria-selected="false" data-value="Moradia">
+                                            <div class="split-option-icon-box">🏠</div>
+                                            <div class="split-option-text">
+                                                <strong class="split-option-title">Moradia</strong>
+                                                <span class="split-option-desc">Aluguel, condomínio, IPTU e reparos</span>
+                                            </div>
+                                            <span class="split-option-check" aria-hidden="true">✓</span>
+                                        </button>
+                                        <button type="button" class="category-option split-option"
+                                            role="option" aria-selected="false" data-value="Água e luz">
+                                            <div class="split-option-icon-box">💡</div>
+                                            <div class="split-option-text">
+                                                <strong class="split-option-title">Água e luz</strong>
+                                                <span class="split-option-desc">Energia elétrica, água, gás e internet</span>
+                                            </div>
+                                            <span class="split-option-check" aria-hidden="true">✓</span>
+                                        </button>
+                                        <button type="button" class="category-option split-option"
+                                            role="option" aria-selected="false" data-value="Transporte">
+                                            <div class="split-option-icon-box">🚗</div>
+                                            <div class="split-option-text">
+                                                <strong class="split-option-title">Transporte</strong>
+                                                <span class="split-option-desc">Combustível, Uber, transporte público e IPVA</span>
+                                            </div>
+                                            <span class="split-option-check" aria-hidden="true">✓</span>
+                                        </button>
+                                        <button type="button" class="category-option split-option"
+                                            role="option" aria-selected="false" data-value="Saúde">
+                                            <div class="split-option-icon-box">💊</div>
+                                            <div class="split-option-text">
+                                                <strong class="split-option-title">Saúde</strong>
+                                                <span class="split-option-desc">Farmácia, consultas, exames e plano de saúde</span>
+                                            </div>
+                                            <span class="split-option-check" aria-hidden="true">✓</span>
+                                        </button>
+                                        <button type="button" class="category-option split-option"
+                                            role="option" aria-selected="false" data-value="Educação">
+                                            <div class="split-option-icon-box">📚</div>
+                                            <div class="split-option-text">
+                                                <strong class="split-option-title">Educação</strong>
+                                                <span class="split-option-desc">Cursos, faculdade, livros e materiais</span>
+                                            </div>
+                                            <span class="split-option-check" aria-hidden="true">✓</span>
+                                        </button>
+                                        <button type="button" class="category-option split-option"
+                                            role="option" aria-selected="false" data-value="Lazer">
+                                            <div class="split-option-icon-box">🎮</div>
+                                            <div class="split-option-text">
+                                                <strong class="split-option-title">Lazer</strong>
+                                                <span class="split-option-desc">Cinema, viagens, passeios, jogos e bares</span>
+                                            </div>
+                                            <span class="split-option-check" aria-hidden="true">✓</span>
+                                        </button>
+                                        <button type="button" class="category-option split-option"
+                                            role="option" aria-selected="false" data-value="Compras">
+                                            <div class="split-option-icon-box">🛍️</div>
+                                            <div class="split-option-text">
+                                                <strong class="split-option-title">Compras</strong>
+                                                <span class="split-option-desc">Roupas, calçados, eletrônicos e presentes</span>
+                                            </div>
+                                            <span class="split-option-check" aria-hidden="true">✓</span>
+                                        </button>
+                                        <button type="button" class="category-option split-option"
+                                            role="option" aria-selected="false" data-value="Assinaturas">
+                                            <div class="split-option-icon-box">📱</div>
+                                            <div class="split-option-text">
+                                                <strong class="split-option-title">Assinaturas</strong>
+                                                <span class="split-option-desc">Netflix, Spotify, Prime, YouTube e apps</span>
+                                            </div>
+                                            <span class="split-option-check" aria-hidden="true">✓</span>
+                                        </button>
+                                        <button type="button" class="category-option split-option"
+                                            role="option" aria-selected="false" data-value="Investimentos">
+                                            <div class="split-option-icon-box">📈</div>
+                                            <div class="split-option-text">
+                                                <strong class="split-option-title">Investimentos</strong>
+                                                <span class="split-option-desc">Aportes em reserva, renda fixa e ações</span>
+                                            </div>
+                                            <span class="split-option-check" aria-hidden="true">✓</span>
+                                        </button>
+                                        <button type="button" class="category-option split-option"
+                                            role="option" aria-selected="false" data-value="Outros">
+                                            <div class="split-option-icon-box">📦</div>
+                                            <div class="split-option-text">
+                                                <strong class="split-option-title">Outros</strong>
+                                                <span class="split-option-desc">Despesas diversas e imprevistos diários</span>
+                                            </div>
+                                            <span class="split-option-check" aria-hidden="true">✓</span>
+                                        </button>
                                     </div>
                                 </div>
 
@@ -281,106 +379,108 @@
                         </div>
                     </div>
 
-                    <div class="field">
-                        <label for="txDatePickerTrigger">Data do lançamento</label>
-                        <div class="custom-datepicker" id="txDatePickerContainer">
-                            <input id="transactionDate" type="date" required class="datepicker-native-input" tabindex="-1" aria-hidden="true">
-                            <button type="button" class="datepicker-trigger" id="txDatePickerTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="txDatePickerDropdown">
-                                <span class="datepicker-trigger-left">
-                                    <span class="datepicker-icon" aria-hidden="true">📅</span>
-                                    <span class="datepicker-text" id="txDatePickerText">Selecione uma data</span>
-                                </span>
-                                <span class="datepicker-chevron" aria-hidden="true">⌄</span>
-                            </button>
+                    <div class="form-row date-split-row">
+                        <div class="field">
+                            <label for="txDatePickerTrigger">Data do lançamento</label>
+                            <div class="custom-datepicker" id="txDatePickerContainer">
+                                <input id="transactionDate" type="date" required class="datepicker-native-input" tabindex="-1" aria-hidden="true">
+                                <button type="button" class="datepicker-trigger" id="txDatePickerTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="txDatePickerDropdown">
+                                    <span class="datepicker-trigger-left">
+                                        <span class="datepicker-icon" aria-hidden="true">📅</span>
+                                        <span class="datepicker-text" id="txDatePickerText">Selecione uma data</span>
+                                    </span>
+                                    <span class="datepicker-chevron" aria-hidden="true">⌄</span>
+                                </button>
 
-                            <div class="datepicker-backdrop" id="txDatePickerBackdrop" aria-hidden="true"></div>
+                                <div class="datepicker-backdrop" id="txDatePickerBackdrop" aria-hidden="true"></div>
 
-                            <div class="datepicker-dropdown" id="txDatePickerDropdown" role="dialog" aria-modal="true" aria-label="Seletor de data" aria-hidden="true">
-                                <div class="dp-header">
-                                    <button type="button" class="dp-btn-view" title="Alternar para seleção de mês e ano">
-                                        <span class="dp-current-month-year">Outubro de 2026</span>
-                                        <span class="dp-view-chevron" aria-hidden="true">▾</span>
-                                    </button>
-                                    <div class="dp-nav-group">
-                                        <button type="button" class="dp-nav-btn dp-prev-btn" aria-label="Mês anterior">‹</button>
-                                        <button type="button" class="dp-nav-btn dp-next-btn" aria-label="Próximo mês">›</button>
-                                        <button type="button" class="dp-close-btn" aria-label="Fechar calendário">✕</button>
+                                <div class="datepicker-dropdown" id="txDatePickerDropdown" role="dialog" aria-modal="true" aria-label="Seletor de data" aria-hidden="true">
+                                    <div class="dp-header">
+                                        <button type="button" class="dp-btn-view" title="Alternar para seleção de mês e ano">
+                                            <span class="dp-current-month-year">Outubro de 2026</span>
+                                            <span class="dp-view-chevron" aria-hidden="true">▾</span>
+                                        </button>
+                                        <div class="dp-nav-group">
+                                            <button type="button" class="dp-nav-btn dp-prev-btn" aria-label="Mês anterior">‹</button>
+                                            <button type="button" class="dp-nav-btn dp-next-btn" aria-label="Próximo mês">›</button>
+                                            <button type="button" class="dp-close-btn" aria-label="Fechar calendário">✕</button>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div class="dp-shortcuts">
-                                    <button type="button" class="dp-shortcut-btn dp-today-btn">Hoje</button>
-                                    <button type="button" class="dp-shortcut-btn dp-yesterday-btn">Ontem</button>
-                                </div>
-
-                                <div class="dp-days-view">
-                                    <div class="dp-weekdays">
-                                        <span>Dom</span>
-                                        <span>Seg</span>
-                                        <span>Ter</span>
-                                        <span>Qua</span>
-                                        <span>Qui</span>
-                                        <span>Sex</span>
-                                        <span>Sáb</span>
+                                    <div class="dp-shortcuts">
+                                        <button type="button" class="dp-shortcut-btn dp-today-btn">Hoje</button>
+                                        <button type="button" class="dp-shortcut-btn dp-yesterday-btn">Ontem</button>
                                     </div>
-                                    <div class="dp-grid"></div>
-                                </div>
 
-                                <div class="dp-months-view hidden">
-                                    <div class="dp-year-selector">
-                                        <button type="button" class="dp-nav-btn dp-prev-year-btn" aria-label="Ano anterior">‹</button>
-                                        <span class="dp-year-display">2026</span>
-                                        <button type="button" class="dp-nav-btn dp-next-year-btn" aria-label="Próximo ano">›</button>
+                                    <div class="dp-days-view">
+                                        <div class="dp-weekdays">
+                                            <span>Dom</span>
+                                            <span>Seg</span>
+                                            <span>Ter</span>
+                                            <span>Qua</span>
+                                            <span>Qui</span>
+                                            <span>Sex</span>
+                                            <span>Sáb</span>
+                                        </div>
+                                        <div class="dp-grid"></div>
                                     </div>
-                                    <div class="dp-months-grid"></div>
+
+                                    <div class="dp-months-view hidden">
+                                        <div class="dp-year-selector">
+                                            <button type="button" class="dp-nav-btn dp-prev-year-btn" aria-label="Ano anterior">‹</button>
+                                            <span class="dp-year-display">2026</span>
+                                            <button type="button" class="dp-nav-btn dp-next-year-btn" aria-label="Próximo ano">›</button>
+                                        </div>
+                                        <div class="dp-months-grid"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="field split-field" id="splitFieldContainer" style="margin-top: 10px;">
-                        <label for="splitTypeButton">Divisão da despesa (Modo Casal / Casa)</label>
-                        <div class="split-picker" id="splitTypePicker">
-                            <select id="splitType" class="category-native-select" aria-hidden="true" tabindex="-1">
-                                <option value="individual" selected>👤 Individual (100% meu)</option>
-                                <option value="shared_50">👥 Compartilhado (50% meu / 50% parceiro)</option>
-                                <option value="partner">🤝 Pago pelo parceiro(a) / colega</option>
-                            </select>
+                        <div class="field split-field" id="splitFieldContainer">
+                            <label for="splitTypeButton">Divisão da despesa (Modo Casal / Casa)</label>
+                            <div class="split-picker" id="splitTypePicker">
+                                <select id="splitType" class="category-native-select" aria-hidden="true" tabindex="-1">
+                                    <option value="individual" selected>👤 Individual (100% meu)</option>
+                                    <option value="shared_50">👥 Compartilhado (50% meu / 50% parceiro)</option>
+                                    <option value="partner">🤝 Pago pelo parceiro(a) / colega</option>
+                                </select>
 
-                            <button type="button" id="splitTypeButton" class="split-picker-button"
-                                aria-haspopup="listbox" aria-expanded="false" aria-controls="splitTypeOptions">
-                                <span class="split-picker-button-left">
-                                    <span class="split-picker-icon" id="splitTypeIcon" aria-hidden="true">👤</span>
-                                    <span class="split-picker-label" id="splitTypeLabel">Individual (100% meu)</span>
-                                </span>
-                                <span class="split-picker-chevron" aria-hidden="true">⌄</span>
-                            </button>
+                                <button type="button" id="splitTypeButton" class="split-picker-button"
+                                    aria-haspopup="listbox" aria-expanded="false" aria-controls="splitTypeOptions">
+                                    <span class="split-picker-button-left">
+                                        <span class="split-picker-icon" id="splitTypeIcon" aria-hidden="true">👤</span>
+                                        <span class="split-picker-label" id="splitTypeLabel">Individual (100% meu)</span>
+                                    </span>
+                                    <span class="split-picker-chevron" aria-hidden="true">⌄</span>
+                                </button>
 
-                            <div class="split-drawer" id="splitTypeOptions" role="listbox" aria-label="Escolha a divisão da despesa">
-                                <button type="button" class="split-option selected" role="option" aria-selected="true" data-value="individual">
-                                    <div class="split-option-icon-box">👤</div>
-                                    <div class="split-option-text">
-                                        <strong class="split-option-title">Individual (100% meu)</strong>
-                                        <span class="split-option-desc">Despesa sob minha responsabilidade exclusiva</span>
-                                    </div>
-                                    <span class="split-option-check" aria-hidden="true">✓</span>
-                                </button>
-                                <button type="button" class="split-option" role="option" aria-selected="false" data-value="shared_50">
-                                    <div class="split-option-icon-box">👥</div>
-                                    <div class="split-option-text">
-                                        <strong class="split-option-title">Compartilhado (50% meu / 50% parceiro)</strong>
-                                        <span class="split-option-desc">Divide o valor em partes iguais para acertar depois</span>
-                                    </div>
-                                    <span class="split-option-check" aria-hidden="true">✓</span>
-                                </button>
-                                <button type="button" class="split-option" role="option" aria-selected="false" data-value="partner">
-                                    <div class="split-option-icon-box">🤝</div>
-                                    <div class="split-option-text">
-                                        <strong class="split-option-title">Pago pelo parceiro(a) / colega</strong>
-                                        <span class="split-option-desc">Registra a despesa como quitada pela outra pessoa</span>
-                                    </div>
-                                    <span class="split-option-check" aria-hidden="true">✓</span>
-                                </button>
+                                <div class="split-drawer" id="splitTypeOptions" role="listbox" aria-label="Escolha a divisão da despesa">
+                                    <button type="button" class="split-option selected" role="option" aria-selected="true" data-value="individual">
+                                        <div class="split-option-icon-box">👤</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Individual (100% meu)</strong>
+                                            <span class="split-option-desc">Despesa sob minha responsabilidade exclusiva</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="split-option" role="option" aria-selected="false" data-value="shared_50">
+                                        <div class="split-option-icon-box">👥</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Compartilhado (50% meu / 50% parceiro)</strong>
+                                            <span class="split-option-desc">Divide o valor em partes iguais para acertar depois</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="split-option" role="option" aria-selected="false" data-value="partner">
+                                        <div class="split-option-icon-box">🤝</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Pago pelo parceiro(a) / colega</strong>
+                                            <span class="split-option-desc">Registra a despesa como quitada pela outra pessoa</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -414,20 +514,45 @@
                 <div class="filter-row">
                     <input type="search" id="searchTransactions"
                         placeholder="Buscar lançamento por descrição, categoria..." aria-label="Buscar lançamento">
-                    <div class="filter-select" id="typeFilterControl">
+                    <div class="filter-select split-picker" id="typeFilterControl">
                         <select id="typeFilter" class="filter-native-select" aria-label="Filtrar por tipo">
-                            <option value="todos">Todos</option>
-                            <option value="receita">Receitas</option>
-                            <option value="despesa">Despesas</option>
+                            <option value="todos" selected>📊 Todos</option>
+                            <option value="receita">💰 Receitas</option>
+                            <option value="despesa">💸 Despesas</option>
                         </select>
-                        <button type="button" class="filter-select-button" id="typeFilterButton"
+                        <button type="button" class="filter-select-button split-picker-button" id="typeFilterButton"
                             aria-haspopup="listbox" aria-expanded="false" aria-controls="typeFilterOptions">
-                            <span id="typeFilterLabel">Todos</span><span class="filter-select-chevron" aria-hidden="true">⌄</span>
+                            <span class="split-picker-button-left">
+                                <span class="split-picker-icon" id="typeFilterIcon" aria-hidden="true">📊</span>
+                                <span class="split-picker-label" id="typeFilterLabel">Todos</span>
+                            </span>
+                            <span class="filter-select-chevron" aria-hidden="true">⌄</span>
                         </button>
-                        <div class="filter-select-options" id="typeFilterOptions" role="listbox" aria-label="Filtrar lançamentos">
-                            <button type="button" class="filter-select-option selected" role="option" aria-selected="true" data-value="todos">Todos</button>
-                            <button type="button" class="filter-select-option" role="option" aria-selected="false" data-value="receita">Receitas</button>
-                            <button type="button" class="filter-select-option" role="option" aria-selected="false" data-value="despesa">Despesas</button>
+                        <div class="filter-select-options split-drawer" id="typeFilterOptions" role="listbox" aria-label="Filtrar lançamentos">
+                            <button type="button" class="filter-select-option split-option selected" role="option" aria-selected="true" data-value="todos">
+                                <div class="split-option-icon-box">📊</div>
+                                <div class="split-option-text">
+                                    <strong class="split-option-title">Todos os lançamentos</strong>
+                                    <span class="split-option-desc">Exibe receitas e despesas juntas na lista</span>
+                                </div>
+                                <span class="split-option-check" aria-hidden="true">✓</span>
+                            </button>
+                            <button type="button" class="filter-select-option split-option" role="option" aria-selected="false" data-value="receita">
+                                <div class="split-option-icon-box">💰</div>
+                                <div class="split-option-text">
+                                    <strong class="split-option-title">Apenas receitas</strong>
+                                    <span class="split-option-desc">Filtra somente entradas e créditos</span>
+                                </div>
+                                <span class="split-option-check" aria-hidden="true">✓</span>
+                            </button>
+                            <button type="button" class="filter-select-option split-option" role="option" aria-selected="false" data-value="despesa">
+                                <div class="split-option-icon-box">💸</div>
+                                <div class="split-option-text">
+                                    <strong class="split-option-title">Apenas despesas</strong>
+                                    <span class="split-option-desc">Filtra somente saídas e pagamentos</span>
+                                </div>
+                                <span class="split-option-check" aria-hidden="true">✓</span>
+                            </button>
                         </div>
                     </div>
                 </div>
