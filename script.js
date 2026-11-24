@@ -6674,31 +6674,42 @@ function setupSidebarToggle() {
     }
 
     function setSidebarCollapsed(collapsed) {
+        const bottomToggle = document.getElementById("sidebarToggleBtn");
+        const toggleLabel = bottomToggle ? bottomToggle.querySelector(".toggle-label") : null;
+
         if (collapsed) {
             document.documentElement.classList.add("sidebar-collapsed");
             document.body.classList.add("sidebar-collapsed");
             try {
-                localStorage.setItem("brilhaCash_sidebarCollapsed", "true"); localStorage.setItem("meuFinanceiro_sidebarCollapsed", "true");
+                localStorage.setItem("brilhaCash_sidebarCollapsed", "true");
+                localStorage.setItem("meuFinanceiro_sidebarCollapsed", "true");
             } catch (err) {}
             document.querySelectorAll(".sidebar-toggle-btn").forEach(btn => {
                 btn.setAttribute("aria-label", "Expandir menu lateral");
                 btn.setAttribute("title", "Expandir menu lateral (Ctrl+B)");
             });
+            if (toggleLabel) {
+                toggleLabel.textContent = "Expandir menu";
+            }
         } else {
             document.documentElement.classList.remove("sidebar-collapsed");
             document.body.classList.remove("sidebar-collapsed");
             try {
-                localStorage.setItem("brilhaCash_sidebarCollapsed", "false"); localStorage.setItem("meuFinanceiro_sidebarCollapsed", "false");
+                localStorage.setItem("brilhaCash_sidebarCollapsed", "false");
+                localStorage.setItem("meuFinanceiro_sidebarCollapsed", "false");
             } catch (err) {}
             document.querySelectorAll(".sidebar-toggle-btn").forEach(btn => {
-                btn.setAttribute("aria-label", "Minimizar menu lateral");
-                btn.setAttribute("title", "Minimizar menu lateral (Ctrl+B)");
+                btn.setAttribute("aria-label", "Recolher menu lateral");
+                btn.setAttribute("title", "Recolher menu lateral (Ctrl+B)");
             });
+            if (toggleLabel) {
+                toggleLabel.textContent = "Recolher menu";
+            }
         }
 
         setTimeout(() => {
             window.dispatchEvent(new Event("resize"));
-        }, 290);
+        }, 380);
     }
 
     try {
