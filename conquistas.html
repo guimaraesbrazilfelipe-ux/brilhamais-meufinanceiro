@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conquistas & Nível | Meu Financeiro</title>
+    <title>Conquistas & Nível | BrilhaCash</title>
     <link rel="stylesheet" href="style1.css">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -12,7 +12,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script>
         try {
-            if (localStorage.getItem("meuFinanceiro_sidebarCollapsed") === "true") {
+            if (localStorage.getItem("brilhaCash_sidebarCollapsed") === "true" || localStorage.getItem("meuFinanceiro_sidebarCollapsed") === "true") {
                 document.documentElement.classList.add("sidebar-collapsed");
             }
         } catch (e) {}
@@ -29,7 +29,7 @@
             <div class="sidebar-header">
                 <a href="index.html" class="brand">
                     <span class="brand-icon">₿</span>
-                    <span class="brand-text">Meu<span class="brand-accent">Financeiro</span></span>
+                    <span class="brand-text">Brilha<span class="brand-accent">Cash</span></span>
                 </a>
                 <button type="button" class="sidebar-toggle-btn header-toggle-btn" id="headerSidebarToggleBtn" aria-label="Minimizar menu lateral" title="Minimizar menu lateral (Ctrl+B)">
                     <span class="sidebar-toggle-lines" aria-hidden="true">
@@ -93,7 +93,7 @@
             <section class="ach-hero-card" aria-label="Status do Nível Financeiro">
                 <div class="ach-hero-top">
                     <div class="ach-level-badge-wrap">
-                        <div class="ach-level-box" title="Seu nível atual no Meu Financeiro">
+                        <div class="ach-level-box" title="Seu nível atual no BrilhaCash">
                             <span class="ach-level-num" id="achCurrentLevelBadge">1</span>
                         </div>
                         <div class="ach-level-info">
@@ -171,7 +171,7 @@
         <div class="mobile-drawer-header">
             <div class="mobile-drawer-title">
                 <span class="brand-icon">₿</span>
-                <span>Meu<span class="brand-accent">Financeiro</span></span>
+                <span>Brilha<span class="brand-accent">Cash</span></span>
             </div>
             <button type="button" class="mobile-drawer-close" id="mobileMenuCloseBtn" aria-label="Fechar menu">✕</button>
         </div>

@@ -1,6 +1,6 @@
-/**
+﻿/**
  * ==============================================================================
- * MEU FINANCEIRO - MODAL DE AUTENTICAÇÃO E PERFIL DO USUÁRIO
+ * BRILHACASH - MODAL DE AUTENTICAÇÃO E PERFIL DO USUÁRIO
  * ==============================================================================
  * Injeta o componente modal de login/cadastro/configuração e o botão na topbar
  * ==============================================================================
@@ -19,7 +19,7 @@
                 <div class="auth-modal-header">
                     <div class="auth-brand-badge">
                         <span class="auth-brand-icon">⚡</span>
-                        <span>Meu Financeiro Nuvem</span>
+                        <span>BrilhaCash Nuvem</span>
                     </div>
 
                     <!-- Selo de Identificação do Dispositivo -->

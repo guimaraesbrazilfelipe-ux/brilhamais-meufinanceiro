@@ -1,6 +1,6 @@
-{
-  "name": "Meu Financeiro | Gestão Financeira Pessoal",
-  "short_name": "Meu Financeiro",
+﻿{
+  "name": "BrilhaCash | Gestão Financeira Pessoal",
+  "short_name": "BrilhaCash",
   "description": "Controle completo de receitas, despesas, limites mensais, contas fixas e metas com sincronização em nuvem e funcionamento offline.",
   "start_url": "./index.html",
   "scope": "./",

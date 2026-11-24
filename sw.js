@@ -1,6 +1,6 @@
-/**
+﻿/**
  * ==============================================================================
- * MEU FINANCEIRO - SERVICE WORKER (PWA)
+ * BRILHACASH - SERVICE WORKER (PWA)
  * ==============================================================================
  * Estratégia de cache híbrida e segura:
  * - Network-Only para APIs e autenticação do Supabase (sem cache de credenciais)
@@ -9,7 +9,7 @@
  * ==============================================================================
  */
 
-const CACHE_NAME = "meu-financeiro-v8";
+const CACHE_NAME = "brilhacash-v1";
 
 const PRECACHE_ASSETS = [
     "./",

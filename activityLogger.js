@@ -1,6 +1,6 @@
-/**
+﻿/**
  * ==============================================================================
- * MEU FINANCEIRO - MÓDULO DE RASTREABILIDADE & TRILHA DE AUDITORIA (LOGS)
+ * BRILHACASH - MÓDULO DE RASTREABILIDADE & TRILHA DE AUDITORIA (LOGS)
  * ==============================================================================
  * Registra cronologicamente todas as ações do usuário e do sistema:
  * - Sessão de acesso única (hora em que entrou e hora em que saiu do sistema)
@@ -356,7 +356,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `meu-financeiro-trilha-auditoria-${new Date().toISOString().split("T")[0]}.csv`;
+            a.download = `brilhacash-trilha-auditoria-${new Date().toISOString().split("T")[0]}.csv`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

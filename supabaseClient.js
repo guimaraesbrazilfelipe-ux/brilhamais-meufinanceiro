@@ -1,6 +1,6 @@
-/**
+﻿/**
  * ==============================================================================
- * MEU FINANCEIRO - CLIENTE SUPABASE & CAMADA DE AUTENTICAÇÃO / SINCRONIZAÇÃO
+ * BRILHACASH - CLIENTE SUPABASE & CAMADA DE AUTENTICAÇÃO / SINCRONIZAÇÃO
  * ==============================================================================
  * Fornece integração Local-First com o Supabase:
  * - Gerenciamento de credenciais (persistidas em localStorage ou predefinidas)

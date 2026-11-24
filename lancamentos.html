@@ -7,9 +7,9 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Meu Financeiro">
+    <meta name="apple-mobile-web-app-title" content="BrilhaCash">
     <meta name="description" content="Registre receitas e despesas financeiras.">
-    <title>Novo Lançamento | Meu Financeiro</title>
+    <title>Novo Lançamento | BrilhaCash</title>
 
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon.png">
     <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="style1.css">
     <script>
         try {
-            if (localStorage.getItem("meuFinanceiro_sidebarCollapsed") === "true") {
+            if (localStorage.getItem("brilhaCash_sidebarCollapsed") === "true" || localStorage.getItem("meuFinanceiro_sidebarCollapsed") === "true") {
                 document.documentElement.classList.add("sidebar-collapsed");
             }
         } catch (e) {}
@@ -35,7 +35,7 @@
             <div class="sidebar-header">
                 <a href="index.html" class="brand">
                     <span class="brand-icon">₿</span>
-                    <span class="brand-text">Meu<span class="brand-accent">Financeiro</span></span>
+                    <span class="brand-text">Brilha<span class="brand-accent">Cash</span></span>
                 </a>
                 <button type="button" class="sidebar-toggle-btn header-toggle-btn" id="headerSidebarToggleBtn" aria-label="Minimizar menu lateral" title="Minimizar menu lateral (Ctrl+B)">
                     <span class="sidebar-toggle-lines" aria-hidden="true">
@@ -402,7 +402,7 @@
             </article>
 
             <footer class="main-footer">
-                <p>Meu Financeiro © <span id="currentYear"></span></p>
+                <p>BrilhaCash © <span id="currentYear"></span></p>
                 <p>Organize hoje. Conquiste amanhã. ✨</p>
             </footer>
         </main>
@@ -432,7 +432,7 @@
         <div class="mobile-drawer-header">
             <div class="mobile-drawer-title">
                 <span class="brand-icon">₿</span>
-                <span>Meu<span class="brand-accent">Financeiro</span></span>
+                <span>Brilha<span class="brand-accent">Cash</span></span>
             </div>
             <button type="button" class="mobile-drawer-close" id="mobileMenuCloseBtn" aria-label="Fechar menu">✕</button>
         </div>
@@ -467,7 +467,7 @@
                 <button type="button" class="confirm-dialog-close" id="btnCancelBoletoModal" aria-label="Fechar modal" style="background: transparent; border: none; color: #94a3b8; font-size: 20px; cursor: pointer; line-height: 1;">&times;</button>
             </div>
             <p style="font-size: 13px; color: #94a3b8; margin: 0 0 16px;">
-                Cole a linha digitável do boleto (47 ou 48 dígitos). O Meu Financeiro identificará o banco emissor, valor exato e data de vencimento automaticamente.
+                Cole a linha digitável do boleto (47 ou 48 dígitos). O BrilhaCash identificará o banco emissor, valor exato e data de vencimento automaticamente.
             </p>
 
             <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">

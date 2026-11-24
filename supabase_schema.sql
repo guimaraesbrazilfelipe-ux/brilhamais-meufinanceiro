@@ -1,8 +1,8 @@
--- ==============================================================================
--- MEU FINANCEIRO - ESQUEMA DE BANCO DE DADOS (SUPABASE / POSTGRESQL)
+﻿-- ==============================================================================
+-- BRILHACASH - ESQUEMA DE BANCO DE DADOS (SUPABASE / POSTGRESQL)
 -- ==============================================================================
 -- Este script cria a estrutura mínima e completa para persistir todos os dados
--- do Meu Financeiro com suporte a múltiplos usuários e Row Level Security (RLS).
+-- do BrilhaCash com suporte a múltiplos usuários e Row Level Security (RLS).
 -- ==============================================================================
 
 -- 0. Extensões

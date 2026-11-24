@@ -7,9 +7,9 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Meu Financeiro">
+    <meta name="apple-mobile-web-app-title" content="BrilhaCash">
     <meta name="description" content="Configurações financeiras e backup de dados.">
-    <title>Configurações | Meu Financeiro</title>
+    <title>Configurações | BrilhaCash</title>
 
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon.png">
     <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="style1.css">
     <script>
         try {
-            if (localStorage.getItem("meuFinanceiro_sidebarCollapsed") === "true") {
+            if (localStorage.getItem("brilhaCash_sidebarCollapsed") === "true" || localStorage.getItem("meuFinanceiro_sidebarCollapsed") === "true") {
                 document.documentElement.classList.add("sidebar-collapsed");
             }
         } catch (e) {}
@@ -35,7 +35,7 @@
             <div class="sidebar-header">
                 <a href="index.html" class="brand">
                     <span class="brand-icon">₿</span>
-                    <span class="brand-text">Meu<span class="brand-accent">Financeiro</span></span>
+                    <span class="brand-text">Brilha<span class="brand-accent">Cash</span></span>
                 </a>
                 <button type="button" class="sidebar-toggle-btn header-toggle-btn" id="headerSidebarToggleBtn" aria-label="Minimizar menu lateral" title="Minimizar menu lateral (Ctrl+B)">
                     <span class="sidebar-toggle-lines" aria-hidden="true">
@@ -366,7 +366,7 @@
                     <div class="panel-heading">
                         <div>
                             <h2>📱 Instalar Aplicativo (PWA)</h2>
-                            <p>Instale o Meu Financeiro no seu celular ou computador para acesso instantâneo, modo offline e visual em tela cheia.</p>
+                            <p>Instale o BrilhaCash no seu celular ou computador para acesso instantâneo, modo offline e visual em tela cheia.</p>
                         </div>
                         <div class="panel-actions">
                             <span class="status-pill status-pwa-ready" id="pwaInstallStatusPill">Verificando...</span>
@@ -435,7 +435,7 @@
                             <div class="notification-info-icon" aria-hidden="true">📲</div>
                             <div class="notification-info-text">
                                 <strong>Lembretes inteligentes sem invasão</strong>
-                                <p>O Meu Financeiro avisa no dia exato do vencimento das suas contas fixas e quando seu salário for creditado, sem propagandas e sem compartilhar seus dados.</p>
+                                <p>O BrilhaCash avisa no dia exato do vencimento das suas contas fixas e quando seu salário for creditado, sem propagandas e sem compartilhar seus dados.</p>
                             </div>
                         </div>
 
@@ -646,7 +646,7 @@
             </section>
 
             <footer class="main-footer">
-                <p>Meu Financeiro © <span id="currentYear"></span></p>
+                <p>BrilhaCash © <span id="currentYear"></span></p>
                 <p>Organize hoje. Conquiste amanhã. ✨</p>
             </footer>
         </main>
@@ -676,11 +676,11 @@
         <div class="confirm-dialog-card notification-dialog-card">
             <button type="button" id="notificationExplainerClose" class="confirm-dialog-close" aria-label="Fechar janela">×</button>
             <div class="confirm-dialog-icon notification-dialog-icon" aria-hidden="true">🔔</div>
-            <p class="confirm-dialog-eyebrow">LEMBRETES DO MEU FINANCEIRO</p>
+            <p class="confirm-dialog-eyebrow">LEMBRETES DO BRILHACASH</p>
             <h2 id="notificationExplainerTitle">Para que servem as notificações?</h2>
             
             <div id="notificationExplainerDesc" class="notification-explainer-content">
-                <p>Para você nunca mais esquecer uma conta ou perder o controle das suas finanças, o Meu Financeiro usa notificações do sistema para:</p>
+                <p>Para você nunca mais esquecer uma conta ou perder o controle das suas finanças, o BrilhaCash usa notificações do sistema para:</p>
                 <ul class="notification-perks-list">
                     <li><strong>📅 Contas a vencer:</strong> Alerta no dia do vencimento dos seus boletos e compromissos fixos.</li>
                     <li><strong>💵 Salário e 13º:</strong> Aviso no momento em que seu salário for creditado e projetado.</li>
@@ -750,7 +750,7 @@
                     <li>
                         <span class="pwa-step-num">3</span>
                         <div class="pwa-step-desc">
-                            No canto superior direito, toque em <strong>"Adicionar"</strong>. Pronto! O ícone do Meu Financeiro estará na tela do seu aparelho.
+                            No canto superior direito, toque em <strong>"Adicionar"</strong>. Pronto! O ícone do BrilhaCash estará na tela do seu aparelho.
                         </div>
                     </li>
                 </ol>
@@ -769,7 +769,7 @@
         <div class="mobile-drawer-header">
             <div class="mobile-drawer-title">
                 <span class="brand-icon">₿</span>
-                <span>Meu<span class="brand-accent">Financeiro</span></span>
+                <span>Brilha<span class="brand-accent">Cash</span></span>
             </div>
             <button type="button" class="mobile-drawer-close" id="mobileMenuCloseBtn" aria-label="Fechar menu">✕</button>
         </div>

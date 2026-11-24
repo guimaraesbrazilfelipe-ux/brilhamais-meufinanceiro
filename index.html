@@ -7,9 +7,9 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Meu Financeiro">
+    <meta name="apple-mobile-web-app-title" content="BrilhaCash">
     <meta name="description" content="Visão geral e controle de finanças pessoais.">
-    <title>Visão Geral | Meu Financeiro</title>
+    <title>Visão Geral | BrilhaCash</title>
 
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon.png">
     <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="style1.css">
     <script>
         try {
-            if (localStorage.getItem("meuFinanceiro_sidebarCollapsed") === "true") {
+            if (localStorage.getItem("brilhaCash_sidebarCollapsed") === "true" || localStorage.getItem("meuFinanceiro_sidebarCollapsed") === "true") {
                 document.documentElement.classList.add("sidebar-collapsed");
             }
         } catch (e) {}
@@ -36,7 +36,7 @@
             <div class="sidebar-header">
                 <a href="index.html" class="brand">
                     <span class="brand-icon">₿</span>
-                    <span class="brand-text">Meu<span class="brand-accent">Financeiro</span></span>
+                    <span class="brand-text">Brilha<span class="brand-accent">Cash</span></span>
                 </a>
                 <button type="button" class="sidebar-toggle-btn header-toggle-btn" id="headerSidebarToggleBtn" aria-label="Minimizar menu lateral" title="Minimizar menu lateral (Ctrl+B)">
                     <span class="sidebar-toggle-lines" aria-hidden="true">
@@ -264,7 +264,7 @@
             <div id="financeSplitCard" style="margin-top: 24px;"></div>
 
             <footer class="main-footer">
-                <p>Meu Financeiro © <span id="currentYear"></span></p>
+                <p>BrilhaCash © <span id="currentYear"></span></p>
                 <p>Organize hoje. Conquiste amanhã. ✨</p>
             </footer>
         </main>
@@ -294,7 +294,7 @@
         <div class="mobile-drawer-header">
             <div class="mobile-drawer-title">
                 <span class="brand-icon">₿</span>
-                <span>Meu<span class="brand-accent">Financeiro</span></span>
+                <span>Brilha<span class="brand-accent">Cash</span></span>
             </div>
             <button type="button" class="mobile-drawer-close" id="mobileMenuCloseBtn" aria-label="Fechar menu">✕</button>
         </div>
@@ -320,7 +320,7 @@
     </div>
 
     <!-- Mini Tutorial e Explicação Inicial (Separado do Gestor) -->
-    <div id="welcomeTutorial" class="welcome-tutorial-overlay" role="dialog" aria-modal="true" aria-label="Tutorial do Meu Financeiro">
+    <div id="welcomeTutorial" class="welcome-tutorial-overlay" role="dialog" aria-modal="true" aria-label="Tutorial do BrilhaCash">
         <div class="tutorial-card">
             <header class="tutorial-header">
                 <div class="tutorial-badge">
@@ -503,7 +503,7 @@
                     </p>
                     <div class="slide-tip-box">
                         <span>🎉</span>
-                        <span><strong>Tudo pronto!</strong> Você agora tem o domínio completo do Meu Financeiro. Clique no botão abaixo para começar a usar seu site com total clareza e tranquilidade.</span>
+                        <span><strong>Tudo pronto!</strong> Você agora tem o domínio completo do BrilhaCash. Clique no botão abaixo para começar a usar seu site com total clareza e tranquilidade.</span>
                     </div>
                 </div>
             </div>
@@ -528,7 +528,7 @@
                         Próximo passo →
                     </button>
                     <button type="button" class="tutorial-btn-primary tutorial-btn-start hidden" id="tutorialFinishBtn">
-                        Acessar Meu Financeiro ✨
+                        Acessar BrilhaCash ✨
                     </button>
                 </div>
 

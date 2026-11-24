@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 // Captura global antecipada do evento de instalação do PWA
 window.deferredPwaPrompt = null;
@@ -14,7 +14,7 @@ window.addEventListener("appinstalled", () => {
             "system",
             "PWA_INSTALLED",
             "Aplicativo instalado",
-            "O Meu Financeiro foi instalado com sucesso no dispositivo"
+            "O BrilhaCash foi instalado com sucesso no dispositivo"
         );
     }
     window.dispatchEvent(new CustomEvent("mf:pwa-installed"));
@@ -22,7 +22,8 @@ window.addEventListener("appinstalled", () => {
 
 const $ = (selector) => document.querySelector(selector);
 
-const STORAGE_KEY = "meuFinanceiro.v1";
+const STORAGE_KEY = "brilhaCash.v1";
+const LEGACY_STORAGE_KEY = "meuFinanceiro.v1";
 
 const COLORS = [
     "#9475ff", "#45d6a0", "#61a5ff", "#ff7485",
@@ -6129,7 +6130,7 @@ function handleGoalSubmit(event) {
 
 function exportBackup() {
     const backup = {
-        app: "MeuFinanceiro",
+        app: "BrilhaCash",
         version: 1,
         exportedAt: new Date().toISOString(),
         data
@@ -6195,7 +6196,7 @@ function exportCSV() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `meu-financeiro-${todayISO()}.csv`;
+    link.download = `brilhacash-${todayISO()}.csv`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 
@@ -6369,6 +6370,7 @@ async function clearAllData() {
 
     try {
         localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(LEGACY_STORAGE_KEY);
         localStorage.removeItem("mf_quickstart_completed");
         localStorage.removeItem("meuFinanceiro.tutorialDone");
         localStorage.removeItem("meuFinanceiro.privacyMode");
@@ -6676,7 +6678,7 @@ function setupSidebarToggle() {
             document.documentElement.classList.add("sidebar-collapsed");
             document.body.classList.add("sidebar-collapsed");
             try {
-                localStorage.setItem("meuFinanceiro_sidebarCollapsed", "true");
+                localStorage.setItem("brilhaCash_sidebarCollapsed", "true"); localStorage.setItem("meuFinanceiro_sidebarCollapsed", "true");
             } catch (err) {}
             document.querySelectorAll(".sidebar-toggle-btn").forEach(btn => {
                 btn.setAttribute("aria-label", "Expandir menu lateral");
@@ -6686,7 +6688,7 @@ function setupSidebarToggle() {
             document.documentElement.classList.remove("sidebar-collapsed");
             document.body.classList.remove("sidebar-collapsed");
             try {
-                localStorage.setItem("meuFinanceiro_sidebarCollapsed", "false");
+                localStorage.setItem("brilhaCash_sidebarCollapsed", "false"); localStorage.setItem("meuFinanceiro_sidebarCollapsed", "false");
             } catch (err) {}
             document.querySelectorAll(".sidebar-toggle-btn").forEach(btn => {
                 btn.setAttribute("aria-label", "Minimizar menu lateral");
@@ -6700,7 +6702,7 @@ function setupSidebarToggle() {
     }
 
     try {
-        const stored = localStorage.getItem("meuFinanceiro_sidebarCollapsed");
+        const stored = localStorage.getItem("brilhaCash_sidebarCollapsed") || localStorage.getItem("meuFinanceiro_sidebarCollapsed");
         if (stored === "true") {
             setSidebarCollapsed(true);
         } else if (stored === "false") {
@@ -7361,10 +7363,10 @@ function init() {
                     btnInstall.classList.add("btn-disabled");
                 }
                 if (hintText) {
-                    hintText.textContent = "Você já está navegando no aplicativo instalado do Meu Financeiro.";
+                    hintText.textContent = "Você já está navegando no aplicativo instalado do BrilhaCash.";
                 }
                 if (headline) headline.textContent = "Aplicativo em execução";
-                if (desc) desc.textContent = "O Meu Financeiro já está instalado neste dispositivo com suporte a cache offline e funcionamento autônomo.";
+                if (desc) desc.textContent = "O BrilhaCash já está instalado neste dispositivo com suporte a cache offline e funcionamento autônomo.";
                 if (btnIosHelp) btnIosHelp.classList.add("hidden");
                 return;
             }
@@ -7395,7 +7397,7 @@ function init() {
                     btnInstall.disabled = false;
                 }
                 if (hintText) {
-                    hintText.textContent = "Clique para adicionar o Meu Financeiro diretamente na sua tela inicial.";
+                    hintText.textContent = "Clique para adicionar o BrilhaCash diretamente na sua tela inicial.";
                 }
             } else {
                 if (statusPill) {
@@ -7449,7 +7451,7 @@ function init() {
                                     "system",
                                     "PWA_INSTALLED",
                                     "Aplicativo instalado",
-                                    "O Meu Financeiro foi instalado com sucesso no dispositivo"
+                                    "O BrilhaCash foi instalado com sucesso no dispositivo"
                                 );
                             }
                             if (typeof showToast === "function") {
@@ -7849,12 +7851,12 @@ function init() {
         { id: "streak_7", title: "Explorador Dedicado", desc: "Alcance 7 dias consecutivos mantendo o controle financeiro.", category: "streak", categoryName: "Trilha & Streaks", icon: "⚡", xp: 100, tier: "rare" },
         { id: "streak_14", title: "Guerreiro da Disciplina", desc: "Alcance 14 dias seguidos de organização financeira ininterrupta.", category: "streak", categoryName: "Trilha & Streaks", icon: "🌟", xp: 200, tier: "epic" },
         { id: "streak_30", title: "Lenda da Constância", desc: "Complete 30 dias consecutivos de streak!", category: "streak", categoryName: "Trilha & Streaks", icon: "👑", xp: 400, tier: "legendary" },
-        { id: "streak_century", title: "O Centurião", desc: "Registre mais de 100 lançamentos no total no Meu Financeiro.", category: "streak", categoryName: "Trilha & Streaks", icon: "📜", xp: 300, tier: "legendary" },
+        { id: "streak_century", title: "O Centurião", desc: "Registre mais de 100 lançamentos no total no BrilhaCash.", category: "streak", categoryName: "Trilha & Streaks", icon: "📜", xp: 300, tier: "legendary" },
 
         // ⚡ ENGENHEIRO DE REDSTONE (AUTOMAÇÃO & TRUQUES)
         { id: "redstone_automator", title: "Circuito Automático", desc: "Importe um extrato bancário em formato OFX ou CSV.", category: "redstone", categoryName: "Redstone & Truques", icon: "⚙️", xp: 100, tier: "rare" },
         { id: "redstone_scanner", title: "Linha Decodificada", desc: "Cole e decodifique um boleto pela linha digitável inteligente.", category: "redstone", categoryName: "Redstone & Truques", icon: "📠", xp: 75, tier: "common" },
-        { id: "redstone_signal", title: "Sinal de Redstone", desc: "Ative as notificações PWA do Meu Financeiro.", category: "redstone", categoryName: "Redstone & Truques", icon: "🔔", xp: 50, tier: "common" },
+        { id: "redstone_signal", title: "Sinal de Redstone", desc: "Ative as notificações PWA do BrilhaCash.", category: "redstone", categoryName: "Redstone & Truques", icon: "🔔", xp: 50, tier: "common" },
         { id: "redstone_auditor", title: "Livro com Pena", desc: "Exporte um relatório de atividades ou planilha em CSV.", category: "redstone", categoryName: "Redstone & Truques", icon: "🪶", xp: 75, tier: "common" },
         { id: "redstone_biometrics", title: "Cofre Encantado", desc: "Ative o bloqueio seguro por biometria ou PIN no app.", category: "redstone", categoryName: "Redstone & Truques", icon: "🔐", xp: 100, tier: "rare" },
 
@@ -8523,7 +8525,7 @@ function init() {
                 overlay.innerHTML = `
                     <div class="app-lock-card">
                         <div class="app-lock-icon">🔐</div>
-                        <h2>Meu Financeiro Bloqueado</h2>
+                        <h2>BrilhaCash Bloqueado</h2>
                         <p>Digite seu PIN de segurança ou confirme sua identidade para desbloquear.</p>
                         <input type="password" id="appLockPinInput" maxlength="8" placeholder="Digite seu PIN" class="app-lock-pin-input" autofocus>
                         <button type="button" id="btnUnlockApp" class="button button-primary" style="width: 100%; margin-top: 14px;">Desbloquear</button>
@@ -8661,12 +8663,12 @@ function init() {
         }
 
         async function fireTestNotification() {
-            const title = "Meu Financeiro • Lembrete de Teste 🔔";
+            const title = "BrilhaCash • Lembrete de Teste 🔔";
             const options = {
                 body: "Sua notificação de teste está funcionando perfeitamente! Você receberá alertas de contas e vencimentos aqui.",
                 icon: "icons/icon-192.png",
                 badge: "icons/icon-192.png",
-                tag: "meu-financeiro-test",
+                tag: "brilhacash-test",
                 vibrate: [200, 100, 200],
                 data: { url: "./index.html" }
             };
@@ -8713,7 +8715,7 @@ function init() {
 
         function showVisualFallback(message) {
             if (typeof showToast === "function") {
-                showToast(message || "🔔 Alerta de teste do Meu Financeiro!");
+                showToast(message || "🔔 Alerta de teste do BrilhaCash!");
             }
         }
 
