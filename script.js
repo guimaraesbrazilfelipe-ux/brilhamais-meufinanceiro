@@ -9809,21 +9809,25 @@ function openEditBillAmountModal(billId) {
                         <input type="number" id="editBillNewAmount" step="0.01" min="0.01" required placeholder="0,00" class="field-input" style="font-size: 18px; font-weight: 700; height: 48px; padding: 0 14px; width: 100%; border-radius: 10px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: #fff;">
                     </div>
 
-                    <div class="edit-amount-scope-options" style="text-align: left; margin-bottom: 18px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 12px;">
-                        <label class="scope-radio-label" style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin-bottom: 10px;">
-                            <input type="radio" name="editAmountScope" value="month" checked style="margin-top: 3px;">
-                            <div>
-                                <strong style="display: block; font-size: 13px; color: var(--text);">Alterar somente neste mês (<span id="editBillMonthLabel">mês atual</span>)</strong>
-                                <small style="font-size: 12px; color: var(--muted); display: block; margin-top: 2px;">Ideal para contas que variam todo mês (água, luz, gás, cartão).</small>
+                    <div class="edit-amount-scope-options option-card-group">
+                        <label class="scope-radio-label split-radio-option" for="scopeMonth">
+                            <input type="radio" id="scopeMonth" name="editAmountScope" value="month" checked class="split-radio-native">
+                            <div class="split-option-icon-box">🗓️</div>
+                            <div class="split-option-text">
+                                <strong class="split-option-title">Alterar somente neste mês (<span id="editBillMonthLabel">mês atual</span>)</strong>
+                                <span class="split-option-desc">Ideal para contas que variam todo mês (água, luz, gás, cartão)</span>
                             </div>
+                            <span class="split-radio-custom" aria-hidden="true"></span>
                         </label>
 
-                        <label class="scope-radio-label" style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin-bottom: 0;">
-                            <input type="radio" name="editAmountScope" value="all" style="margin-top: 3px;">
-                            <div>
-                                <strong style="display: block; font-size: 13px; color: var(--text);">Alterar valor padrão (todos os meses)</strong>
-                                <small style="font-size: 12px; color: var(--muted); display: block; margin-top: 2px;">Atualiza o valor base da assinatura/conta para sempre.</small>
+                        <label class="scope-radio-label split-radio-option" for="scopeAll">
+                            <input type="radio" id="scopeAll" name="editAmountScope" value="all" class="split-radio-native">
+                            <div class="split-option-icon-box">🔄</div>
+                            <div class="split-option-text">
+                                <strong class="split-option-title">Alterar valor padrão (todos os meses)</strong>
+                                <span class="split-option-desc">Atualiza o valor base da assinatura/conta para sempre</span>
                             </div>
+                            <span class="split-radio-custom" aria-hidden="true"></span>
                         </label>
                     </div>
 

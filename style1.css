@@ -11880,3 +11880,298 @@ body.privacy-mode .breakdown-val {
 .extrato-item-row:last-child {
     border-bottom: none;
 }
+
+
+/* ==============================================================================
+   6. LAYOUT SYSTEM & RITMO VISUAL UNIVERSAL (BRILHACASH)
+   ==============================================================================
+   Garante ritmo vertical consistente, alinhamento harmonioso, bordas e espaçamentos
+   idênticos entre todas as 9 abas no Desktop e no Celular.
+   ============================================================================== */
+
+:root {
+    --space-section: 24px;
+    --space-panel: 22px;
+    --space-gap: 16px;
+    --radius-panel: 16px;
+}
+
+@media (max-width: 768px) {
+    :root {
+        --space-section: 18px;
+        --space-panel: 16px;
+        --space-gap: 12px;
+        --radius-panel: 14px;
+    }
+}
+
+/* Limite elegante de largura e centralização para telas grandes (evita distorção ultra-wide) */
+.main-content {
+    max-width: 1380px;
+    box-sizing: border-box;
+}
+
+/* Ritmo vertical automatizado entre blocos principais de cada aba */
+.main-content > .panel,
+.main-content > section:not(.topbar):not(.sidebar),
+.main-content > article:not(.summary-card):not(.achievement-card),
+.main-content > .month-toolbar,
+.main-content > .summary-grid,
+.main-content > .content-grid,
+.main-content > .dashboard-widgets-grid,
+.main-content > .planning-grid,
+.main-content > .period-tabs,
+.main-content > .ach-hero-card,
+.main-content > .ach-categories-bar,
+.main-content > .achievements-grid,
+.main-content > #contextInsightCard,
+.main-content > #dashboardBudgetBreakdown,
+.main-content > #financeSplitCard,
+.main-content > #historicalReportsContainer {
+    margin-top: var(--space-section) !important;
+    margin-bottom: 0 !important;
+}
+
+/* Primeiro elemento após topbar / demo banner não deve ter espaçamento excessivo */
+.main-content > .topbar + *,
+.main-content > .demo-data-banner + * {
+    margin-top: 16px !important;
+}
+
+/* Painéis padronizados */
+.panel {
+    padding: var(--space-panel);
+    border-radius: var(--radius-panel);
+    box-sizing: border-box;
+}
+
+/* Cabeçalho de painel flexível com suporte a grupo de ações à direita */
+.panel-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.panel-heading > div:first-child {
+    flex: 1 1 240px;
+    min-width: 0;
+}
+
+.panel-heading h2 {
+    margin: 0 0 4px 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.3px;
+}
+
+.panel-heading p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.45;
+}
+
+.panel-actions {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-left: auto;
+}
+
+@media (max-width: 650px) {
+    .panel-actions {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 6px;
+    }
+    .panel-actions > * {
+        flex: 1 1 auto;
+        text-align: center;
+        justify-content: center;
+    }
+}
+
+/* Botões utilitários compactos para cabeçalhos e barras */
+.button-sm {
+    font-size: 12px !important;
+    padding: 7px 14px !important;
+    min-height: 36px !important;
+    border-radius: 9px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    white-space: nowrap !important;
+}
+
+/* Caixa de aviso / dica contextual com identidade BrilhaCash */
+.info-callout {
+    background: rgba(124, 93, 250, 0.08);
+    border: 1px solid rgba(124, 93, 250, 0.24);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 12.5px;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    line-height: 1.5;
+    margin-bottom: 18px;
+}
+
+.info-callout strong {
+    color: #f1f5f9;
+}
+
+.info-callout a {
+    color: #c4b5fd;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* Cartão de opção / configuração unificado */
+.option-card {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 16px;
+    transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
+    box-sizing: border-box;
+}
+
+.option-card:hover {
+    border-color: rgba(124, 93, 250, 0.35);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* Grade auto-adaptável para cartões secundários */
+.auto-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap: var(--space-gap);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Barra de busca e filtros unificada e alinhada */
+.filter-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 16px;
+    box-sizing: border-box;
+}
+
+.filter-row input[type="search"] {
+    width: 100%;
+    min-height: 44px;
+    box-sizing: border-box;
+}
+
+@media (max-width: 650px) {
+    .filter-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Rodapé principal respirado e centralizado */
+.main-footer {
+    margin-top: 40px !important;
+    padding: 24px 16px 36px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Grupo de Opções com Seleção Estilo Parceiro / Drawer */
+.option-card-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 18px;
+    width: 100%;
+}
+
+.split-radio-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    user-select: none;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.split-radio-option:hover {
+    background: #242442;
+    border-color: rgba(124, 93, 250, 0.4);
+    transform: translateX(2px);
+}
+
+.split-radio-native {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.split-radio-option:has(.split-radio-native:checked) {
+    background: #29264b !important;
+    border-color: rgba(124, 93, 250, 0.6) !important;
+    box-shadow: 0 4px 14px rgba(124, 93, 250, 0.25) !important;
+}
+
+.split-radio-custom {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #64748b;
+    margin-left: auto;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.split-radio-custom::after {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #7c5dfa;
+    transform: scale(0);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.split-radio-option:has(.split-radio-native:checked) .split-radio-custom {
+    border-color: #7c5dfa;
+    box-shadow: 0 0 8px rgba(124, 93, 250, 0.5);
+}
+
+.split-radio-option:has(.split-radio-native:checked) .split-radio-custom::after {
+    transform: scale(1);
+}
+
+.split-radio-option:has(.split-radio-native:checked) .split-option-icon-box {
+    background: rgba(124, 93, 250, 0.25);
+    border-color: var(--purple-light);
+    box-shadow: 0 0 10px rgba(124, 93, 250, 0.4);
+}
+

@@ -166,7 +166,7 @@
             </section>
 
             <!-- Resumo Financeiro do Período (Alinhado exatamente igual a Relatórios) -->
-            <section class="summary-grid" aria-label="Resumo financeiro do período" style="margin-top: 20px;">
+            <section class="summary-grid" aria-label="Resumo financeiro do período">
                 <article class="summary-card card-total">
                     <div class="summary-top">
                         <span class="summary-icon purple">◈</span>
@@ -205,7 +205,7 @@
             </section>
 
             <!-- Painel de Projeção Anual / Período (Itens 2 e 3 da Avaliação) -->
-            <div id="historyProjectionPanel" class="panel projection-summary-panel" style="margin-top: 20px; display: none;">
+            <div id="historyProjectionPanel" class="panel projection-summary-panel" style="display: none;">
                 <div class="panel-heading">
                     <div>
                         <h2 id="historyProjectionTitle">Projeção e Conciliação do Ano</h2>
@@ -235,7 +235,7 @@
             </div>
 
             <!-- Abas para alternar período: Mês completo (padrão), Dia, Ano ou Todos -->
-            <div class="period-tabs" role="tablist" aria-label="Filtrar por período" style="margin: 22px 0 24px;">
+            <div class="period-tabs" role="tablist" aria-label="Filtrar por período">
                 <button type="button" class="period-tab-btn active" data-mode="month" role="tab" aria-selected="true">
                     🗓️ Mês completo
                 </button>
@@ -251,9 +251,9 @@
             </div>
 
             <!-- Bloco de Relatórios do Período (Categorias de Despesas e Receitas) -->
-            <div id="historicalReportsContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 16px; margin-top: 20px;">
+            <div id="historicalReportsContainer" class="auto-grid">
                 <!-- Relatório de Despesas por Categoria -->
-                <article class="category-breakdown-card" style="margin-top: 0;">
+                <article class="category-breakdown-card">
                     <div class="category-breakdown-header">
                         <h3>📊 Despesas por categoria</h3>
                     </div>
@@ -261,7 +261,7 @@
                 </article>
 
                 <!-- Relatório de Receitas por Categoria/Fonte -->
-                <article class="category-breakdown-card" style="margin-top: 0;">
+                <article class="category-breakdown-card">
                     <div class="category-breakdown-header">
                         <h3>💰 Receitas que entraram por fonte</h3>
                     </div>
@@ -270,14 +270,14 @@
             </div>
 
             <!-- Histórico de Contas Fixas e Assinaturas no Período -->
-            <article class="panel" id="historyRecurringPanel" style="margin-top: 24px;">
+            <article class="panel" id="historyRecurringPanel">
                 <div class="panel-heading">
                     <div>
                         <h2>⟳ Histórico de Contas Fixas e Assinaturas</h2>
                         <p>Compromissos mensais e assinaturas recorrentes com vencimento no período selecionado.</p>
                     </div>
                     <div class="panel-actions">
-                        <a href="contas-fixas.html" class="button button-secondary" style="font-size: 12px; padding: 6px 14px;">Gerenciar contas fixas</a>
+                        <a href="contas-fixas.html" class="button button-secondary button-sm">Gerenciar contas fixas</a>
                     </div>
                 </div>
 
@@ -285,14 +285,14 @@
             </article>
 
             <!-- Receitas que Entraram no Período -->
-            <article class="panel" id="historyIncomePanel" style="margin-top: 24px;">
+            <article class="panel" id="historyIncomePanel">
                 <div class="panel-heading">
                     <div>
                         <h2>💰 Receitas que Entraram</h2>
                         <p>Entradas de dinheiro, salário e rendimentos correspondentes a este período.</p>
                     </div>
                     <div class="panel-actions">
-                        <a href="lancamentos.html" class="button button-primary" style="font-size: 12px; padding: 6px 14px;">+ Nova receita</a>
+                        <a href="lancamentos.html" class="button button-primary button-sm">+ Nova receita</a>
                     </div>
                 </div>
 
@@ -300,7 +300,7 @@
             </article>
 
             <!-- Movimentações do Período -->
-            <article class="panel history-panel" style="margin: 24px 0 30px;">
+            <article class="panel history-panel">
                 <div class="panel-heading">
                     <div>
                         <h2>Movimentações do período</h2>

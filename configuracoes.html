@@ -165,7 +165,7 @@
                 <span class="status-pill">● Dados e Backup</span>
             </section>
 
-            <section class="panel settings-panel" style="margin: 24px 0 30px;">
+            <section class="panel settings-panel">
                 <div class="panel-heading">
                     <div>
                         <h2>Renda e Salário Mensal Automático</h2>
@@ -280,7 +280,7 @@
                 </form>
 
                 <!-- Card de Cálculo Exato e Contagem até o Próximo Salário -->
-                <div id="salaryCalculationCard" class="salary-calc-card" style="margin-top: 18px;"></div>
+                <div id="salaryCalculationCard" class="salary-calc-card"></div>
 
                 <!-- Guia Explicativo do Salário Automático -->
                 <article class="settings-info-card">
@@ -312,7 +312,7 @@
                 </article>
 
                 <!-- Sincronização em Nuvem & Dispositivo Conectado -->
-                <article class="panel device-sync-panel" id="deviceSyncPanel" style="margin-top: 24px;">
+                <article class="panel device-sync-panel" id="deviceSyncPanel">
                     <div class="panel-heading">
                         <div>
                             <h2>☁️ Nuvem & Dispositivo Conectado</h2>
@@ -362,7 +362,7 @@
                 </article>
 
                 <!-- Painel de Instalação do Aplicativo (PWA) -->
-                <article class="panel pwa-install-panel" id="pwaInstallPanel" style="margin-top: 24px;">
+                <article class="panel pwa-install-panel" id="pwaInstallPanel">
                     <div class="panel-heading">
                         <div>
                             <h2>📱 Instalar Aplicativo (PWA)</h2>
@@ -419,7 +419,7 @@
                 </article>
 
                 <!-- Painel de Notificações do PWA -->
-                <article class="panel notification-panel" id="notificationPanel" style="margin-top: 24px;">
+                <article class="panel notification-panel" id="notificationPanel">
                     <div class="panel-heading">
                         <div>
                             <h2>🔔 Notificações e Lembretes (PWA)</h2>
@@ -498,7 +498,7 @@
                 </article>
 
                 <!-- Segurança & Bloqueio por PIN / Biometria (Ideia 6) -->
-                <article class="panel security-panel" id="securityPanel" style="margin-top: 24px;">
+                <article class="panel security-panel" id="securityPanel">
                     <div class="panel-heading">
                         <div>
                             <h2>🔒 Segurança & Bloqueio de Acesso</h2>
@@ -509,7 +509,7 @@
                         </div>
                     </div>
 
-                    <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 18px; margin-top: 14px;">
+                    <div class="option-card" style="margin-top: 14px;">
                         <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
                             <div style="max-width: 520px;">
                                 <strong style="font-size: 14px; color: #f8fafc; display: block; margin-bottom: 4px;">Ativar bloqueio de tela no app</strong>
@@ -525,7 +525,7 @@
                             <label for="appLockPinInput" style="font-size: 12px; font-weight: 600; color: #cbd5e1; display: block; margin-bottom: 6px;">Definir PIN de 4 dígitos:</label>
                             <div style="display: flex; gap: 10px; max-width: 280px;">
                                 <input type="password" id="appLockPinInput" maxlength="6" placeholder="Ex: 1234" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(124, 93, 250, 0.4); border-radius: 8px; padding: 8px 12px; color: #fff; font-size: 16px; letter-spacing: 4px; text-align: center; width: 120px;">
-                                <button type="button" class="button button-primary" id="btnSaveAppLockPin" style="font-size: 12.5px; padding: 8px 16px;">Salvar PIN</button>
+                                <button type="button" class="button button-primary button-sm" id="btnSaveAppLockPin">Salvar PIN</button>
                             </div>
                             <small style="font-size: 11px; color: #64748b; margin-top: 6px; display: block;">Se o aparelho suportar biometria (WebAuthn / TouchID / FaceID), ela será oferecida automaticamente.</small>
                         </div>
@@ -533,7 +533,7 @@
                 </article>
 
                 <!-- Rastreabilidade das Atividades / Trilha de Auditoria -->
-                <article class="panel activity-audit-panel" id="activityAuditSection" style="margin-top: 24px;">
+                <article class="panel activity-audit-panel" id="activityAuditSection">
                     <div class="panel-heading">
                         <div>
                             <h2>🛡️ Rastreabilidade & Trilha de Auditoria</h2>

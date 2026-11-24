@@ -162,7 +162,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="lancamentos-toolbar-actions" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <div class="lancamentos-toolbar-actions panel-actions">
                     <button type="button" class="button button-primary" id="btnToggleNewTransaction">+ Novo lançamento</button>
                     <button type="button" class="button button-secondary" id="btnOpenImportExtrato" title="Importar extrato bancário (OFX ou CSV)">📂 Importar extrato</button>
                     <button type="button" class="button button-secondary" id="btnOpenBoletoModal" title="Colar e decodificar linha digitável de boleto">⚡ Colar boleto</button>
@@ -170,7 +170,7 @@
             </section>
 
             <!-- Painel de Cadastro de Novo Lançamento -->
-            <section class="panel transaction-panel" style="margin-top: 24px;">
+            <section class="panel transaction-panel">
                 <div class="panel-heading">
                     <div>
                         <h2 id="formTitle">Novo lançamento</h2>
@@ -502,13 +502,15 @@
             </section>
 
             <!-- Lista de Lançamentos Recentes -->
-            <article class="panel" style="margin-top: 24px; margin-bottom: 30px;">
+            <article class="panel">
                 <div class="panel-heading">
                     <div>
                         <h2>Lista de lançamentos</h2>
                         <p>Movimentações e gastos recentes cadastrados</p>
                     </div>
-                    <a href="historico.html" class="text-button">Ver histórico completo →</a>
+                    <div class="panel-actions">
+                        <a href="historico.html" class="text-button">Ver histórico completo →</a>
+                    </div>
                 </div>
 
                 <div class="filter-row">
