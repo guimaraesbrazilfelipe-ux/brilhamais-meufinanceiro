@@ -338,13 +338,51 @@
                         </div>
                     </div>
 
-                    <div class="field" style="margin-top: 10px;">
-                        <label for="splitType">Divisão da despesa (Modo Casal / Casa)</label>
-                        <select id="splitType" class="field-select" style="min-height: 42px; width: 100%; background: #111d30; border: 1px solid var(--border); border-radius: 9px; color: var(--text); padding: 0 12px;">
-                            <option value="individual" selected>👤 Individual (100% meu)</option>
-                            <option value="shared_50">👥 Compartilhado (50% meu / 50% parceiro)</option>
-                            <option value="partner">🤝 Pago pelo parceiro(a) / colega</option>
-                        </select>
+                    <div class="field split-field" id="splitFieldContainer" style="margin-top: 10px;">
+                        <label for="splitTypeButton">Divisão da despesa (Modo Casal / Casa)</label>
+                        <div class="split-picker" id="splitTypePicker">
+                            <select id="splitType" class="category-native-select" aria-hidden="true" tabindex="-1">
+                                <option value="individual" selected>👤 Individual (100% meu)</option>
+                                <option value="shared_50">👥 Compartilhado (50% meu / 50% parceiro)</option>
+                                <option value="partner">🤝 Pago pelo parceiro(a) / colega</option>
+                            </select>
+
+                            <button type="button" id="splitTypeButton" class="split-picker-button"
+                                aria-haspopup="listbox" aria-expanded="false" aria-controls="splitTypeOptions">
+                                <span class="split-picker-button-left">
+                                    <span class="split-picker-icon" id="splitTypeIcon" aria-hidden="true">👤</span>
+                                    <span class="split-picker-label" id="splitTypeLabel">Individual (100% meu)</span>
+                                </span>
+                                <span class="split-picker-chevron" aria-hidden="true">⌄</span>
+                            </button>
+
+                            <div class="split-drawer" id="splitTypeOptions" role="listbox" aria-label="Escolha a divisão da despesa">
+                                <button type="button" class="split-option selected" role="option" aria-selected="true" data-value="individual">
+                                    <div class="split-option-icon-box">👤</div>
+                                    <div class="split-option-text">
+                                        <strong class="split-option-title">Individual (100% meu)</strong>
+                                        <span class="split-option-desc">Despesa sob minha responsabilidade exclusiva</span>
+                                    </div>
+                                    <span class="split-option-check" aria-hidden="true">✓</span>
+                                </button>
+                                <button type="button" class="split-option" role="option" aria-selected="false" data-value="shared_50">
+                                    <div class="split-option-icon-box">👥</div>
+                                    <div class="split-option-text">
+                                        <strong class="split-option-title">Compartilhado (50% meu / 50% parceiro)</strong>
+                                        <span class="split-option-desc">Divide o valor em partes iguais para acertar depois</span>
+                                    </div>
+                                    <span class="split-option-check" aria-hidden="true">✓</span>
+                                </button>
+                                <button type="button" class="split-option" role="option" aria-selected="false" data-value="partner">
+                                    <div class="split-option-icon-box">🤝</div>
+                                    <div class="split-option-text">
+                                        <strong class="split-option-title">Pago pelo parceiro(a) / colega</strong>
+                                        <span class="split-option-desc">Registra a despesa como quitada pela outra pessoa</span>
+                                    </div>
+                                    <span class="split-option-check" aria-hidden="true">✓</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="field">

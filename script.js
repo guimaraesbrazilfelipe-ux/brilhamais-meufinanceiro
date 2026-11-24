@@ -2847,6 +2847,93 @@ function setupCategoryPicker() {
     setupCategoryAutoSuggestion();
 }
 
+function syncSplitPicker(value) {
+    const select = $("#splitType");
+    const label = $("#splitTypeLabel");
+    const icon = $("#splitTypeIcon");
+    if (!select) return;
+
+    const val = value || select.value || "individual";
+    select.value = val;
+
+    const splitInfo = {
+        individual: { icon: "👤", text: "Individual (100% meu)" },
+        shared_50: { icon: "👥", text: "Compartilhado (50% meu / 50% parceiro)" },
+        partner: { icon: "🤝", text: "Pago pelo parceiro(a) / colega" }
+    };
+
+    const current = splitInfo[val] || splitInfo.individual;
+    if (label) label.textContent = current.text;
+    if (icon) icon.textContent = current.icon;
+
+    document.querySelectorAll(".split-option").forEach((btn) => {
+        const isMatch = btn.dataset.value === val;
+        btn.classList.toggle("selected", isMatch);
+        btn.setAttribute("aria-selected", String(isMatch));
+    });
+}
+
+function setupSplitTypePicker() {
+    const picker = $("#splitTypePicker");
+    const button = $("#splitTypeButton");
+    const options = $("#splitTypeOptions");
+    const select = $("#splitType");
+
+    if (!picker || !button || !options || !select) return;
+
+    syncSplitPicker(select.value);
+
+    button.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isOpen = picker.classList.contains("open");
+        if (isOpen) {
+            picker.classList.remove("open");
+            button.setAttribute("aria-expanded", "false");
+        } else {
+            if (typeof closeCategoryDrawer === "function") closeCategoryDrawer();
+            picker.classList.add("open");
+            button.setAttribute("aria-expanded", "true");
+        }
+    });
+
+    options.addEventListener("click", (e) => {
+        const opt = e.target.closest(".split-option");
+        if (!opt) return;
+
+        const val = opt.dataset.value;
+        syncSplitPicker(val);
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+
+        picker.classList.remove("open");
+        button.setAttribute("aria-expanded", "false");
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!picker.contains(e.target)) {
+            picker.classList.remove("open");
+            button.setAttribute("aria-expanded", "false");
+        }
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && picker.classList.contains("open")) {
+            picker.classList.remove("open");
+            button.setAttribute("aria-expanded", "false");
+        }
+    });
+
+    const typeSelect = $("#type");
+    const splitContainer = $("#splitFieldContainer");
+    if (typeSelect && splitContainer) {
+        const updateSplitVisibility = () => {
+            const isExpense = typeSelect.value === "despesa";
+            splitContainer.style.display = isExpense ? "" : "none";
+        };
+        typeSelect.addEventListener("change", updateSplitVisibility);
+        updateSplitVisibility();
+    }
+}
+
 function setupCategoryAutoSuggestion() {
     const descInput = $("#description");
     const catPicker = $("#categoryPicker");
@@ -2966,6 +3053,7 @@ function initSingleDatePicker(container) {
     let localYear = new Date().getFullYear();
     let localMonth = new Date().getMonth();
     let viewMode = "days";
+    let lastRenderedDaysKey = "";
 
     function parseInputValue() {
         let val = input.value;
@@ -3019,12 +3107,26 @@ function initSingleDatePicker(container) {
 
         const selectedVal = input.value || todayISO();
         const todayStr = todayISO();
+        const renderKey = `${localYear}-${localMonth}`;
+
+        // Otimização de performance: se o mês/ano já foi renderizado, apenas atualiza estados
+        if (lastRenderedDaysKey === renderKey && daysGrid.children.length > 0) {
+            const dayButtons = daysGrid.querySelectorAll(".dp-day");
+            dayButtons.forEach(btn => {
+                const iso = btn.dataset.iso;
+                btn.classList.toggle("selected", iso === selectedVal);
+                btn.classList.toggle("today", iso === todayStr);
+            });
+            return;
+        }
+
+        lastRenderedDaysKey = renderKey;
 
         const firstDayIndex = new Date(localYear, localMonth, 1).getDay();
         const daysInMonth = new Date(localYear, localMonth + 1, 0).getDate();
         const daysInPrevMonth = new Date(localYear, localMonth, 0).getDate();
 
-        daysGrid.innerHTML = "";
+        const fragment = document.createDocumentFragment();
 
         // Dias do mês anterior
         for (let i = firstDayIndex - 1; i >= 0; i--) {
@@ -3037,8 +3139,8 @@ function initSingleDatePicker(container) {
             btn.type = "button";
             btn.className = "dp-day other-month";
             btn.textContent = String(dayNum);
-            btn.addEventListener("click", () => selectDate(iso));
-            daysGrid.appendChild(btn);
+            btn.dataset.iso = iso;
+            fragment.appendChild(btn);
         }
 
         // Dias do mês atual
@@ -3049,12 +3151,12 @@ function initSingleDatePicker(container) {
             btn.type = "button";
             btn.className = "dp-day";
             btn.textContent = String(dayNum);
+            btn.dataset.iso = iso;
 
             if (iso === todayStr) btn.classList.add("today");
             if (iso === selectedVal) btn.classList.add("selected");
 
-            btn.addEventListener("click", () => selectDate(iso));
-            daysGrid.appendChild(btn);
+            fragment.appendChild(btn);
         }
 
         // Dias do próximo mês
@@ -3070,28 +3172,54 @@ function initSingleDatePicker(container) {
             btn.type = "button";
             btn.className = "dp-day other-month";
             btn.textContent = String(dayNum);
-            btn.addEventListener("click", () => selectDate(iso));
-            daysGrid.appendChild(btn);
+            btn.dataset.iso = iso;
+            fragment.appendChild(btn);
         }
+
+        daysGrid.innerHTML = "";
+        daysGrid.appendChild(fragment);
+    }
+
+    // Delegação de evento no grid de dias para evitar alocação excessiva de listeners
+    if (daysGrid && !daysGrid._dpDelegated) {
+        daysGrid._dpDelegated = true;
+        daysGrid.addEventListener("click", (e) => {
+            const btn = e.target.closest(".dp-day");
+            if (btn && btn.dataset.iso) {
+                selectDate(btn.dataset.iso);
+            }
+        });
     }
 
     function renderMonths() {
         if (!monthsGrid) return;
         if (yearDisplay) yearDisplay.textContent = String(localYear);
-        monthsGrid.innerHTML = "";
 
+        const fragment = document.createDocumentFragment();
         DP_MONTH_NAMES_SHORT.forEach((name, idx) => {
             const btn = document.createElement("button");
             btn.type = "button";
             btn.className = "dp-month-btn";
+            btn.dataset.monthIndex = String(idx);
             if (idx === localMonth) btn.classList.add("selected");
             btn.textContent = name;
-            btn.addEventListener("click", () => {
-                localMonth = idx;
+            fragment.appendChild(btn);
+        });
+
+        monthsGrid.innerHTML = "";
+        monthsGrid.appendChild(fragment);
+    }
+
+    if (monthsGrid && !monthsGrid._dpDelegated) {
+        monthsGrid._dpDelegated = true;
+        monthsGrid.addEventListener("click", (e) => {
+            const btn = e.target.closest(".dp-month-btn");
+            if (btn && btn.dataset.monthIndex !== undefined) {
+                localMonth = parseInt(btn.dataset.monthIndex, 10);
+                lastRenderedDaysKey = "";
                 switchView("days");
                 renderDays();
-            });
-            monthsGrid.appendChild(btn);
+            }
         });
     }
 
@@ -3121,8 +3249,10 @@ function initSingleDatePicker(container) {
         switchView("days");
         parseInputValue();
         renderDays();
-        container.classList.add("open");
-        trigger.setAttribute("aria-expanded", "true");
+        requestAnimationFrame(() => {
+            container.classList.add("open");
+            trigger.setAttribute("aria-expanded", "true");
+        });
     }
 
     function close() {
@@ -5597,6 +5727,7 @@ function resetTransactionForm() {
     if ($("#category")) $("#category").value = "Alimentação";
     if ($("#customCategory")) $("#customCategory").value = "";
     if ($("#splitType")) $("#splitType").value = "individual";
+    syncSplitPicker("individual");
 
     const typeLabel = $("#typeLabel");
     if (typeLabel) typeLabel.textContent = "Despesa";
@@ -5679,6 +5810,7 @@ function editTransaction(id) {
     syncDatePicker();
     if ($("#notes")) $("#notes").value = transaction.notes || "";
     if ($("#splitType")) $("#splitType").value = transaction.splitType || "individual";
+    syncSplitPicker(transaction.splitType || "individual");
 
     const formTitle = $("#formTitle");
     if (formTitle) formTitle.textContent = "Editar lançamento";
@@ -8874,6 +9006,7 @@ function init() {
     setupSidebarToggle();
     setupPrivacyMode();
     setupCategoryPicker();
+    setupSplitTypePicker();
     setupDatePicker();
     setupTimePickers();
     setupAgenda();
