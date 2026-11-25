@@ -1943,21 +1943,49 @@ textarea:focus {
     line-height: 1.3;
 }
 
-.split-option-check {
-    font-size: 14px;
-    font-weight: 900;
-    color: #34d399;
-    opacity: 0;
-    transform: scale(0.7);
-    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+.split-option-check,
+.custom-radio-circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #64748b;
     margin-left: auto;
     flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0 !important;
+    line-height: 0;
+    opacity: 1;
+    transform: scale(1);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+    position: relative;
+}
+
+.split-option-check::after,
+.custom-radio-circle::after {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #38bdf8;
+    transform: scale(0);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .split-option.selected .split-option-check,
 .category-option.selected .split-option-check,
-.filter-select-option.selected .split-option-check {
-    opacity: 1;
+.filter-select-option.selected .split-option-check,
+.custom-radio-circle.checked {
+    border-color: #38bdf8 !important;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.45) !important;
+}
+
+.split-option.selected .split-option-check::after,
+.category-option.selected .split-option-check::after,
+.filter-select-option.selected .split-option-check::after,
+.custom-radio-circle.checked::after {
     transform: scale(1);
 }
 
@@ -2310,22 +2338,21 @@ textarea:focus {
     }
 
     .datepicker-backdrop {
-        display: none !important;
+        display: block !important;
         position: fixed !important;
         inset: 0 !important;
         background: rgba(8, 12, 22, 0.72) !important;
-        backdrop-filter: blur(6px) !important;
-        -webkit-backdrop-filter: blur(6px) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
         z-index: 100001 !important;
-        opacity: 0;
-        visibility: hidden;
+        opacity: 0 !important;
+        visibility: hidden !important;
         pointer-events: none !important;
-        transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s !important;
-        will-change: opacity;
+        transition: opacity 0.26s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.26s !important;
+        will-change: opacity, visibility;
     }
 
     .custom-datepicker.open .datepicker-backdrop {
-        display: block !important;
         opacity: 1 !important;
         visibility: visible !important;
         pointer-events: auto !important;
@@ -2350,8 +2377,8 @@ textarea:focus {
         opacity: 0 !important;
         visibility: hidden !important;
         pointer-events: none !important;
-        transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s !important;
-        will-change: transform, opacity;
+        transition: opacity 0.26s cubic-bezier(0.16, 1, 0.3, 1), transform 0.26s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.26s !important;
+        will-change: transform, opacity, visibility;
         touch-action: manipulation;
         -webkit-backface-visibility: hidden;
         backface-visibility: hidden;
@@ -11463,7 +11490,6 @@ body.privacy-mode .breakdown-val {
     font-weight: 800;
     color: #38bdf8;
 }
-}
 
 @keyframes advancementSlideIn {
     from {
@@ -12185,4 +12211,170 @@ body.privacy-mode .breakdown-val {
     border-color: var(--purple-light);
     box-shadow: 0 0 10px rgba(124, 93, 250, 0.4);
 }
+
+/* ============================================================
+   SISTEMA DE LAYOUT PADRONIZADO E RITMO VISUAL
+   ============================================================ */
+:root {
+    --space-section: 24px;
+    --space-panel: 22px;
+    --space-gap: 16px;
+    --radius-panel: 16px;
+}
+
+@media (max-width: 650px) {
+    :root {
+        --space-section: 16px;
+        --space-panel: 16px;
+        --space-gap: 12px;
+    }
+}
+
+/* Ritmo vertical automático entre blocos irmãos */
+.main-content > * + * {
+    margin-top: var(--space-section);
+}
+
+.panel {
+    padding: var(--space-panel);
+    border-radius: var(--radius-panel);
+    box-sizing: border-box;
+}
+
+/* Cabeçalho de painel padrão: título/descrição à esquerda, ações à direita */
+.panel-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.panel-heading > div:first-child {
+    flex: 1 1 260px;
+    min-width: 0;
+}
+
+.panel-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+@media (max-width: 650px) {
+    .panel-actions {
+        width: 100%;
+    }
+    .panel-actions > * {
+        flex: 1 1 auto;
+    }
+}
+
+/* Botão pequeno padronizado */
+.button-sm {
+    font-size: 12px !important;
+    padding: 7px 14px !important;
+    min-height: 34px !important;
+    border-radius: 9px !important;
+    font-weight: 600 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+}
+
+/* Caixa de aviso / dica padronizada */
+.info-callout {
+    background: rgba(124, 93, 250, 0.08);
+    border: 1px solid rgba(124, 93, 250, 0.25);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    box-sizing: border-box;
+}
+
+.info-callout-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.info-callout-text {
+    font-size: 12.5px;
+    color: #cbd5e1;
+    line-height: 1.45;
+}
+
+/* Alinhamento de altura de cartões métricos */
+.metric-cards-equal-height {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: var(--space-gap);
+    align-items: stretch;
+}
+
+.metric-cards-equal-height > * {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+/* Alinhamento de baseline de cards de planejamento, KPIs e conquistas */
+.planning-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.planning-card .progress-track {
+    margin-top: auto;
+}
+
+.recurring-kpi-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.recurring-kpi-footer {
+    margin-top: auto;
+}
+
+.ach-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.ach-card-footer {
+    margin-top: auto;
+}
+
+.ach-categories-bar {
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+}
+
+/* Garante toque acessível de 44px mínimo no celular */
+@media (max-width: 768px) {
+    button, 
+    .button, 
+    .split-picker-button, 
+    .category-picker-button, 
+    .filter-select-button,
+    .nav-link {
+        min-height: 44px;
+    }
+}
+
 
