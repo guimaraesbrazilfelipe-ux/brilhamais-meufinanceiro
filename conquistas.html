@@ -38,7 +38,7 @@
                         <span class="line line-3"></span>
                     </span>
                 </button>
-                <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="mobileMenuDrawer">
+                <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu(event)" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="mobileMenuDrawer">
                     <span class="hamburger-icon" aria-hidden="true">
                         <span></span>
                         <span></span>
@@ -168,7 +168,7 @@
     </div>
 
     <!-- Gaveta do Menu Mobile -->
-    <div class="mobile-menu-backdrop" id="mobileMenuBackdrop" aria-hidden="true"></div>
+    <div class="mobile-menu-backdrop" id="mobileMenuBackdrop" onclick="closeMobileMenu(event)" aria-hidden="true"></div>
 
     <div class="mobile-menu-drawer" id="mobileMenuDrawer" role="dialog" aria-modal="true" aria-label="Menu de navegação">
         <div class="mobile-drawer-header">
@@ -176,7 +176,7 @@
                 <span class="brand-icon">₿</span>
                 <span>Brilha<span class="brand-accent">Cash</span></span>
             </div>
-            <button type="button" class="mobile-drawer-close" id="mobileMenuCloseBtn" aria-label="Fechar menu">✕</button>
+            <button type="button" class="mobile-drawer-close" id="mobileMenuCloseBtn" onclick="closeMobileMenu(event)" aria-label="Fechar menu">✕</button>
         </div>
 
         <p class="menu-label">MENU PRINCIPAL</p>

@@ -84,11 +84,13 @@ a {
 }
 
 /* Elementos exclusivos de mobile ocultados no desktop */
-.mobile-menu-btn,
-.mobile-menu-backdrop,
-.mobile-menu-drawer,
-.mobile-drawer-header {
-    display: none !important;
+@media (min-width: 769px) {
+    .mobile-menu-btn,
+    .mobile-menu-backdrop,
+    .mobile-menu-drawer,
+    .mobile-drawer-header {
+        display: none !important;
+    }
 }
 
 /* O botão de 3 linhas do topo não é mais usado no desktop - a setinha inferior controla o menu */
@@ -2785,7 +2787,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     }
 }
 
-@media (max-width: 650px) {
+@media (max-width: 768px) {
     .app {
         display: block !important;
         width: 100%;
@@ -2850,6 +2852,11 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         cursor: pointer;
         transition: background .2s, border-color .2s, transform .15s;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: transparent !important;
+        user-select: none !important;
+        z-index: 1002 !important;
+        position: relative !important;
     }
 
     .mobile-menu-btn:active {
@@ -2862,6 +2869,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         justify-content: space-between;
         width: 16px;
         height: 12px;
+        pointer-events: none;
     }
 
     .hamburger-icon span {
@@ -2871,6 +2879,11 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         background: var(--text);
         border-radius: 2px;
         transition: transform 0.2s, opacity 0.2s;
+        pointer-events: none;
+    }
+
+    .mobile-menu-text {
+        pointer-events: none;
     }
 
     body.mobile-nav-open .hamburger-icon span:nth-child(1) {
@@ -2887,7 +2900,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
     /* Fundo escuro do menu mobile (filho direto do body) */
     .mobile-menu-backdrop {
-        display: none !important;
+        display: block !important;
         position: fixed !important;
         inset: 0 !important;
         width: 100vw !important;
@@ -2905,7 +2918,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     }
 
     body.mobile-nav-open .mobile-menu-backdrop {
-        display: block !important;
         opacity: 1 !important;
         visibility: visible !important;
         pointer-events: auto !important;
@@ -2913,7 +2925,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
     /* Gaveta deslizante do menu mobile (filho direto do body) */
     .mobile-menu-drawer {
-        display: none !important;
+        display: flex !important;
         flex-direction: column !important;
         position: fixed !important;
         top: 0 !important;
@@ -2928,7 +2940,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         padding: 20px 18px 24px !important;
         box-shadow: -14px 0 40px rgba(0, 0, 0, 0.65) !important;
         transform: translate3d(105%, 0, 0) !important;
-        transition: transform 0.52s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.52s ease !important;
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s ease !important;
         will-change: transform;
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch !important;
@@ -2937,7 +2949,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     }
 
     body.mobile-nav-open .mobile-menu-drawer {
-        display: flex !important;
         transform: translate3d(0, 0, 0) !important;
         visibility: visible !important;
         pointer-events: auto !important;
