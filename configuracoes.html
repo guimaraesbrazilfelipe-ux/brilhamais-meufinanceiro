@@ -256,16 +256,21 @@
                         </div>
 
                         <!-- Configuração do 13º Salário (Item 2 e Simulação 2027) -->
-                        <div class="field" style="grid-column: 1 / -1; background: rgba(124, 93, 250, 0.06); border: 1px solid rgba(124, 93, 250, 0.2); border-radius: 10px; padding: 14px 16px;">
-                            <label style="display: flex; align-items: center; gap: 10px; font-weight: 700; cursor: pointer; color: #e2e8f0;">
-                                <input type="checkbox" id="salaryHas13th" style="width: 18px; height: 18px; accent-color: var(--purple);">
-                                <span>🎁 Incluir 13º Salário no planejamento anual</span>
+                        <div class="field setting-toggle-card" style="grid-column: 1 / -1; background: rgba(124, 93, 250, 0.08); border: 1px solid rgba(124, 93, 250, 0.25); border-radius: 12px; padding: 16px 18px;">
+                            <label for="salaryHas13th" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; cursor: pointer; margin: 0; width: 100%;">
+                                <div style="flex: 1;">
+                                    <strong style="display: block; font-size: 14px; font-weight: 700; color: #f8fafc; margin-bottom: 4px;">🎁 Incluir 13º Salário no planejamento anual</strong>
+                                    <span style="font-size: 12.5px; color: #94a3b8; display: block; line-height: 1.4;">Adiciona automaticamente a renda do 13º salário em Dezembro e no cálculo de projeção anual.</span>
+                                </div>
+                                <span class="switch">
+                                    <input type="checkbox" id="salaryHas13th">
+                                    <span class="slider round"></span>
+                                </span>
                             </label>
-                            <small class="field-hint" style="margin-top: 4px; display: block;">Adiciona automaticamente a renda do 13º salário em Dezembro e no cálculo de projeção anual.</small>
-                            <div id="salary13thGroup" style="display: none; margin-top: 12px; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                            <div id="salary13thGroup" style="display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(124, 93, 250, 0.18); gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
                                 <div>
                                     <label for="salary13thAmount" style="font-size: 12px; color: #cbd5e1; font-weight: 600;">Valor do 13º Salário Líquido (R$)</label>
-                                    <input type="number" id="salary13thAmount" step="0.01" min="0" placeholder="Ex.: 1729,98" style="margin-top: 4px; width: 100%;">
+                                    <input type="number" id="salary13thAmount" step="0.01" min="0" placeholder="Ex.: 1729,98" style="margin-top: 6px; width: 100%;">
                                     <small class="field-hint">Deixe em branco para usar o mesmo valor do salário líquido mensal.</small>
                                 </div>
                             </div>
@@ -663,16 +668,16 @@
                     </div>
 
                     <div class="option-card" style="margin-top: 14px;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+                        <label for="toggleAppLockSwitch" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; cursor: pointer; margin: 0; width: 100%;">
                             <div style="max-width: 520px;">
                                 <strong style="font-size: 14px; color: #f8fafc; display: block; margin-bottom: 4px;">Ativar bloqueio de tela no app</strong>
                                 <span style="font-size: 12.5px; color: #94a3b8;">Exigir PIN numérico ou impressão digital para visualizar seus dados toda vez que o app for aberto.</span>
                             </div>
-                            <label class="switch" style="position: relative; display: inline-block; width: 48px; height: 26px;">
+                            <span class="switch">
                                 <input type="checkbox" id="toggleAppLockSwitch">
-                                <span class="slider round" style="position: absolute; cursor: pointer; inset: 0; background-color: #334155; transition: .3s; border-radius: 34px;"></span>
-                            </label>
-                        </div>
+                                <span class="slider round"></span>
+                            </span>
+                        </label>
 
                         <div id="pinConfigBox" style="display: none; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.06);">
                             <label for="appLockPinInput" style="font-size: 12px; font-weight: 600; color: #cbd5e1; display: block; margin-bottom: 6px;">Definir PIN de 4 dígitos:</label>
