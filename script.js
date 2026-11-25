@@ -4604,11 +4604,6 @@ function setupGcalQuickModal() {
             btn.setAttribute("aria-selected", String(isSelected));
         });
     }
-            const isSelected = btn.dataset.value === targetVal;
-            btn.classList.toggle("selected", isSelected);
-            btn.setAttribute("aria-selected", String(isSelected));
-        });
-    }
 
     // Toggle da gaveta de categoria
     if (catBtn && catPicker) {
