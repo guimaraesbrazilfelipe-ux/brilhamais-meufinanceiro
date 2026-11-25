@@ -259,13 +259,25 @@ function detectDeviceRegionalSettings() {
             flag = "🇺🇸";
             detectedCurrency = "USD";
         }
+    } else if (lang.startsWith("fr") || tz.includes("paris")) {
+        detectedCountry = "France";
+        countryCode = "FR";
+        flag = "🇫🇷";
+        detectedLang = "fr-FR";
+        detectedCurrency = "EUR";
+    } else if (lang.startsWith("de") || tz.includes("berlin") || tz.includes("vienna") || tz.includes("zurich")) {
+        detectedCountry = "Deutschland";
+        countryCode = "DE";
+        flag = "🇩🇪";
+        detectedLang = "de-DE";
+        detectedCurrency = "EUR";
     } else if (tz.includes("lisbon") || (lang.startsWith("pt") && !lang.includes("br"))) {
         detectedCountry = "Portugal";
         countryCode = "PT";
         flag = "🇵🇹";
         detectedLang = "pt-BR";
         detectedCurrency = "EUR";
-    } else if (tz.includes("europe") || tz.includes("berlin") || tz.includes("paris") || tz.includes("rome")) {
+    } else if (tz.includes("europe") || tz.includes("rome")) {
         detectedCountry = "Europa";
         countryCode = "EU";
         flag = "🇪🇺";
@@ -297,8 +309,10 @@ function getActiveLocaleAndCurrency() {
     let locale = "pt-BR";
     if (lang === "en-US") locale = "en-US";
     else if (lang === "es-ES") locale = "es-ES";
+    else if (lang === "fr-FR") locale = "fr-FR";
+    else if (lang === "de-DE") locale = "de-DE";
     else if (currency === "USD") locale = "en-US";
-    else if (currency === "EUR") locale = (lang === "es-ES" ? "es-ES" : (lang === "pt-BR" ? "pt-PT" : "de-DE"));
+    else if (currency === "EUR") locale = (lang === "es-ES" ? "es-ES" : (lang === "pt-BR" ? "pt-PT" : (lang === "fr-FR" ? "fr-FR" : (lang === "de-DE" ? "de-DE" : "de-DE"))));
     else if (currency === "GBP") locale = "en-GB";
 
     return { lang, currency, locale, autoInfo: auto };
@@ -3248,6 +3262,58 @@ const I18N_TRANSLATIONS = {
         "dp_yesterday": "Ayer",
         "privacy_hide": "Ocultar importes",
         "privacy_show": "Mostrar importes"
+    },
+    "fr-FR": {
+        "nav_overview": "Vue d'ensemble",
+        "nav_transactions": "Nouvelle opération",
+        "nav_bills": "Charges fixes",
+        "nav_agenda": "Calendrier",
+        "nav_reports": "Rapports",
+        "nav_history": "Historique",
+        "nav_planning": "Budget",
+        "nav_achievements": "Succès",
+        "nav_settings": "Paramètres",
+        "nav_tutorial": "Mode d'emploi",
+        "nav_collapse": "Réduire menu",
+        "nav_expand": "Agrandir menu",
+        "month_balance": "Solde du mois",
+        "month_income": "Revenus du mois",
+        "month_expenses": "Dépenses du mois",
+        "savings_rate": "Taux d'épargne",
+        "balance_desc": "Revenus moins dépenses",
+        "income_desc": "Salaire et rentrées",
+        "expense_desc": "Total des sorties",
+        "savings_desc": "Part des revenus épargnée",
+        "dp_today": "Aujourd'hui",
+        "dp_yesterday": "Hier",
+        "privacy_hide": "Masquer les montants",
+        "privacy_show": "Afficher les montants"
+    },
+    "de-DE": {
+        "nav_overview": "Übersicht",
+        "nav_transactions": "Neuer Eintrag",
+        "nav_bills": "Fixkosten",
+        "nav_agenda": "Kalender",
+        "nav_reports": "Berichte",
+        "nav_history": "Verlauf",
+        "nav_planning": "Planung",
+        "nav_achievements": "Erfolge",
+        "nav_settings": "Einstellungen",
+        "nav_tutorial": "Anleitung",
+        "nav_collapse": "Menü einklappen",
+        "nav_expand": "Menü ausklappen",
+        "month_balance": "Monatssaldo",
+        "month_income": "Einnahmen",
+        "month_expenses": "Ausgaben",
+        "savings_rate": "Sparquote",
+        "balance_desc": "Einnahmen minus Ausgaben",
+        "income_desc": "Gehalt und sonstige Einnahmen",
+        "expense_desc": "Gesamtausgaben",
+        "savings_desc": "Gesparter Einkommensanteil",
+        "dp_today": "Heute",
+        "dp_yesterday": "Gestern",
+        "privacy_hide": "Beträge verbergen",
+        "privacy_show": "Beträge anzeigen"
     }
 };
 
@@ -3266,6 +3332,16 @@ const DP_I18N = {
         months: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
         monthsShort: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dic"],
         weekdays: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+    },
+    "fr-FR": {
+        months: ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"],
+        monthsShort: ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"],
+        weekdays: ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"]
+    },
+    "de-DE": {
+        months: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
+        monthsShort: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
+        weekdays: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"]
     }
 };
 

@@ -9,7 +9,7 @@
  * ==============================================================================
  */
 
-const CACHE_NAME = "brilhacash-v15";
+const CACHE_NAME = "brilhacash-v16";
 
 const PRECACHE_ASSETS = [
     "./",
