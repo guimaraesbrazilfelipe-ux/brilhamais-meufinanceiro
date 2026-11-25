@@ -10900,6 +10900,7 @@ function setupQuickStartWizard() {
     function closeWizard(completed = false) {
         modal.classList.remove("is-open");
         modal.setAttribute("aria-hidden", "true");
+        localStorage.setItem("mf_quickstart_seen", "true");
         if (completed) {
             localStorage.setItem("mf_quickstart_completed", "true");
         }
@@ -11067,11 +11068,15 @@ function setupQuickStartWizard() {
 
     const urlParams = new URLSearchParams(window.location.search);
     const forceOpen = urlParams.get("wizard") === "true";
-    const alreadyCompleted = localStorage.getItem("mf_quickstart_completed") === "true";
+    const alreadySeen = localStorage.getItem("mf_quickstart_seen") === "true" || localStorage.getItem("mf_quickstart_completed") === "true";
     const tutorialOverlay = $("#welcomeTutorial");
     const tutorialActive = tutorialOverlay && !tutorialOverlay.classList.contains("hidden") && tutorialOverlay.style.display !== "none";
 
-    if (forceOpen || (!alreadyCompleted && !tutorialActive && (!data.salaryConfig || !data.salaryConfig.amount))) {
+    // Abre SOMENTE no 1º acesso ao aplicativo (a menos que acionado explicitamente via URL ?wizard=true ou botão)
+    if (forceOpen || (!alreadySeen && !tutorialActive && (!data.salaryConfig || !data.salaryConfig.amount))) {
+        if (!forceOpen) {
+            localStorage.setItem("mf_quickstart_seen", "true");
+        }
         setTimeout(openWizard, 250);
     }
 }

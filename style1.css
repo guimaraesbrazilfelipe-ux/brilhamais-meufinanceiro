@@ -8199,8 +8199,9 @@ body.privacy-mode .breakdown-val {
 .settings-submit-field {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    padding-top: 6px;
+    width: 100%;
+    padding-top: 8px;
+    margin: 0;
 }
 
 .settings-submit-field label,
@@ -8213,34 +8214,47 @@ body.privacy-mode .breakdown-val {
 }
 
 .settings-submit-field .button {
-    height: 46px !important;
-    min-height: 46px !important;
+    width: 100% !important;
+    height: 48px !important;
+    min-height: 48px !important;
     padding: 0 24px !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
-    border-radius: 10px !important;
+    font-size: 14.5px !important;
+    font-weight: 700 !important;
+    border-radius: 12px !important;
+    box-sizing: border-box !important;
     white-space: nowrap !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 8px !important;
+    gap: 10px !important;
     background: linear-gradient(135deg, var(--purple, #7c3aed), #6366f1) !important;
     box-shadow: 0 4px 16px rgba(124, 58, 237, 0.35) !important;
-    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease !important;
+}
+
+.settings-submit-field .button .btn-icon {
+    font-size: 18px !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
 }
 
 .settings-submit-field .button:hover {
     transform: translateY(-1px) !important;
-    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.45) !important;
+    box-shadow: 0 6px 22px rgba(124, 58, 237, 0.48) !important;
+    filter: brightness(1.05) !important;
+}
+
+.settings-submit-field .button:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 10px rgba(124, 58, 237, 0.35) !important;
 }
 
 @media (max-width: 768px) {
     .settings-form-grid {
         grid-template-columns: 1fr;
         gap: 18px;
-    }
-    .settings-submit-field .button {
-        width: 100%;
     }
 }
 
