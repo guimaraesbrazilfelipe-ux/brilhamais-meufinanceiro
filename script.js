@@ -355,6 +355,45 @@ function createId() {
         Math.random().toString(36).slice(2);
 }
 
+function getTombstones() {
+    try {
+        const raw = localStorage.getItem("brilhaCash_tombstones");
+        if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return { txs: [], bills: [] };
+}
+
+function addTombstone(type, id) {
+    if (!id) return;
+    try {
+        const tb = getTombstones();
+        if (type === "tx" && !tb.txs.includes(id)) {
+            tb.txs.push(id);
+        } else if (type === "bill" && !tb.bills.includes(id)) {
+            tb.bills.push(id);
+        }
+        localStorage.setItem("brilhaCash_tombstones", JSON.stringify(tb));
+    } catch (e) {}
+}
+
+function removeTombstone(type, id) {
+    try {
+        const tb = getTombstones();
+        if (type === "tx") {
+            tb.txs = tb.txs.filter(i => i !== id);
+        } else if (type === "bill") {
+            tb.bills = tb.bills.filter(i => i !== id);
+        }
+        localStorage.setItem("brilhaCash_tombstones", JSON.stringify(tb));
+    } catch (e) {}
+}
+
+window.MFTombstones = {
+    get: getTombstones,
+    add: addTombstone,
+    remove: removeTombstone
+};
+
 function defaultData() {
     return {
         transactions: [],
@@ -382,7 +421,15 @@ function defaultData() {
 
 function loadData() {
     try {
-        const saved = localStorage.getItem(STORAGE_KEY);
+        let saved = localStorage.getItem(STORAGE_KEY);
+
+        if (!saved) {
+            const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+            if (legacy) {
+                saved = legacy;
+                try { localStorage.setItem(STORAGE_KEY, legacy); } catch (e) {}
+            }
+        }
 
         if (!saved) {
             return defaultData();
@@ -394,8 +441,10 @@ function loadData() {
             throw new Error("Dados inválidos");
         }
 
+        const tombstones = getTombstones();
+
         return {
-            transactions: (data.transactions || []).filter((t) => !t.recurringBillId),
+            transactions: (data.transactions || []).filter((t) => !t.recurringBillId && !tombstones.txs.includes(t.id)),
             salaries: data.salaries || {},
             salaryConfig: {
                 amount: Number(data.salaryConfig?.amount || 0),
@@ -414,11 +463,13 @@ function loadData() {
                 currency: data.preferences?.currency || "auto"
             },
             isDemoData: Boolean(data.isDemoData),
-            recurringBills: (Array.isArray(data.recurringBills) ? data.recurringBills : []).map((b) => ({
-                ...b,
-                isVariable: Boolean(b.isVariable),
-                monthlyAmounts: (b.monthlyAmounts && typeof b.monthlyAmounts === "object") ? b.monthlyAmounts : {}
-            }))
+            recurringBills: (Array.isArray(data.recurringBills) ? data.recurringBills : [])
+                .filter((b) => !tombstones.bills.includes(b.id))
+                .map((b) => ({
+                    ...b,
+                    isVariable: Boolean(b.isVariable),
+                    monthlyAmounts: (b.monthlyAmounts && typeof b.monthlyAmounts === "object") ? b.monthlyAmounts : {}
+                }))
         };
     } catch (error) {
         console.error("Não foi possível carregar os dados:", error);
@@ -2393,7 +2444,11 @@ async function deleteRecurringBill(billId) {
     if (!confirmed) return;
 
     data.recurringBills = (data.recurringBills || []).filter((b) => b.id !== billId);
+    addTombstone("bill", billId);
     saveData();
+    if (window.MFAuth && typeof window.MFAuth.deleteRecurringBill === "function") {
+        window.MFAuth.deleteRecurringBill(billId);
+    }
     if (window.MFActivityLogger) {
         window.MFActivityLogger.log(
             "recurring",
@@ -6235,6 +6290,7 @@ async function deleteTransaction(id) {
     data.transactions = previous.filter(
         (item) => item.id !== id
     );
+    addTombstone("tx", id);
 
     if (transaction.recurringBillId) {
         const bill = (data.recurringBills || []).find((b) => b.id === transaction.recurringBillId);
@@ -6255,7 +6311,12 @@ async function deleteTransaction(id) {
 
     if (!saveData()) {
         data.transactions = previous;
+        removeTombstone("tx", id);
         return;
+    }
+
+    if (window.MFAuth && typeof window.MFAuth.deleteTransaction === "function") {
+        window.MFAuth.deleteTransaction(id);
     }
 
     if (window.MFActivityLogger) {
@@ -6841,6 +6902,7 @@ async function clearAllData() {
     try {
         localStorage.removeItem(STORAGE_KEY);
         localStorage.removeItem(LEGACY_STORAGE_KEY);
+        localStorage.removeItem("brilhaCash_tombstones");
         localStorage.removeItem("mf_quickstart_completed");
         localStorage.removeItem("meuFinanceiro.tutorialDone");
         localStorage.removeItem("meuFinanceiro.privacyMode");

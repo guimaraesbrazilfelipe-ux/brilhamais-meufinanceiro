@@ -512,6 +512,16 @@ async function pullCloudDataToLocal() {
             .from("monthly_plans")
             .select("*");
 
+        const tombstones = (window.MFTombstones && typeof window.MFTombstones.get === "function")
+            ? window.MFTombstones.get()
+            : (() => {
+                try {
+                    const raw = localStorage.getItem("brilhaCash_tombstones");
+                    if (raw) return JSON.parse(raw);
+                } catch (e) {}
+                return { txs: [], bills: [] };
+            })();
+
         if (window.data) {
             if (settings) {
                 window.data.salaryConfig = {
@@ -527,15 +537,17 @@ async function pullCloudDataToLocal() {
             }
 
             if (Array.isArray(txs)) {
-                window.data.transactions = txs.map(t => ({
-                    id: t.id,
-                    type: t.type,
-                    description: t.description,
-                    amount: Number(t.amount),
-                    category: t.category,
-                    date: t.date,
-                    notes: t.notes || ""
-                }));
+                window.data.transactions = txs
+                    .filter(t => !tombstones.txs.includes(t.id))
+                    .map(t => ({
+                        id: t.id,
+                        type: t.type,
+                        description: t.description,
+                        amount: Number(t.amount),
+                        category: t.category,
+                        date: t.date,
+                        notes: t.notes || ""
+                    }));
             }
 
             if (Array.isArray(bills)) {
@@ -555,23 +567,25 @@ async function pullCloudDataToLocal() {
                     });
                 }
 
-                window.data.recurringBills = bills.map(b => {
-                    const rec = billRecordsMap[b.id] || { monthlyAmounts: {}, paidMonths: [], paidDates: [] };
-                    return {
-                        id: b.id,
-                        name: b.name,
-                        amount: Number(b.amount),
-                        startDate: b.start_date,
-                        dueDay: Number(b.due_day),
-                        subscriptionTime: b.subscription_time ? b.subscription_time.slice(0, 5) : "09:00",
-                        frequency: b.frequency || "monthly",
-                        category: b.category,
-                        isVariable: Boolean(b.is_variable),
-                        monthlyAmounts: rec.monthlyAmounts,
-                        paidMonths: rec.paidMonths,
-                        paidDates: rec.paidDates
-                    };
-                });
+                window.data.recurringBills = bills
+                    .filter(b => !tombstones.bills.includes(b.id))
+                    .map(b => {
+                        const rec = billRecordsMap[b.id] || { monthlyAmounts: {}, paidMonths: [], paidDates: [] };
+                        return {
+                            id: b.id,
+                            name: b.name,
+                            amount: Number(b.amount),
+                            startDate: b.start_date,
+                            dueDay: Number(b.due_day),
+                            subscriptionTime: b.subscription_time ? b.subscription_time.slice(0, 5) : "09:00",
+                            frequency: b.frequency || "monthly",
+                            category: b.category,
+                            isVariable: Boolean(b.is_variable),
+                            monthlyAmounts: rec.monthlyAmounts,
+                            paidMonths: rec.paidMonths,
+                            paidDates: rec.paidDates
+                        };
+                    });
             }
 
             if (Array.isArray(plans)) {
@@ -615,7 +629,33 @@ async function pushAllLocalDataToCloud(userId, localData) {
             updated_at: new Date().toISOString()
         });
 
-        // 2. transactions
+        // 2. Limpeza de registros excluídos na nuvem via tombstones
+        const tombstones = (window.MFTombstones && typeof window.MFTombstones.get === "function")
+            ? window.MFTombstones.get()
+            : (() => {
+                try {
+                    const raw = localStorage.getItem("brilhaCash_tombstones");
+                    if (raw) return JSON.parse(raw);
+                } catch (e) {}
+                return { txs: [], bills: [] };
+            })();
+
+        if (Array.isArray(tombstones.txs) && tombstones.txs.length > 0) {
+            await supabaseClient.from("transactions").delete().in("id", tombstones.txs);
+            tombstones.txs.forEach(id => {
+                if (window.MFTombstones) window.MFTombstones.remove("tx", id);
+            });
+        }
+
+        if (Array.isArray(tombstones.bills) && tombstones.bills.length > 0) {
+            await supabaseClient.from("recurring_bill_records").delete().in("recurring_bill_id", tombstones.bills);
+            await supabaseClient.from("recurring_bills").delete().in("id", tombstones.bills);
+            tombstones.bills.forEach(id => {
+                if (window.MFTombstones) window.MFTombstones.remove("bill", id);
+            });
+        }
+
+        // 3. transactions
         if (Array.isArray(localData.transactions) && localData.transactions.length > 0) {
             const txRows = localData.transactions.map(t => ({
                 id: (t.id && t.id.length >= 32) ? t.id : undefined, // usa UUID se válido
@@ -628,9 +668,12 @@ async function pushAllLocalDataToCloud(userId, localData) {
                 notes: t.notes || null
             }));
             await supabaseClient.from("transactions").upsert(txRows);
+        } else if (Array.isArray(localData.transactions) && localData.transactions.length === 0) {
+            // Se o usuário apagou todos os lançamentos locais, limpa na nuvem
+            await supabaseClient.from("transactions").delete().eq("user_id", userId);
         }
 
-        // 3. recurring_bills
+        // 4. recurring_bills
         if (Array.isArray(localData.recurringBills) && localData.recurringBills.length > 0) {
             const billRows = localData.recurringBills.map(b => ({
                 id: (b.id && b.id.length >= 32) ? b.id : undefined,
@@ -645,9 +688,37 @@ async function pushAllLocalDataToCloud(userId, localData) {
                 is_variable: Boolean(b.isVariable)
             }));
             await supabaseClient.from("recurring_bills").upsert(billRows);
+        } else if (Array.isArray(localData.recurringBills) && localData.recurringBills.length === 0) {
+            await supabaseClient.from("recurring_bills").delete().eq("user_id", userId);
         }
     } catch (e) {
         console.error("Erro ao enviar dados locais para nuvem:", e);
+    }
+}
+
+// Exclusão pontual direta na nuvem para garantir consistência imediata
+async function deleteCloudTransaction(txId) {
+    if (!supabaseClient || !currentUser || !txId) return;
+    try {
+        await supabaseClient.from("transactions").delete().eq("id", txId);
+        if (window.MFTombstones && typeof window.MFTombstones.remove === "function") {
+            window.MFTombstones.remove("tx", txId);
+        }
+    } catch (err) {
+        console.warn("Aviso ao excluir transação no Supabase:", err);
+    }
+}
+
+async function deleteCloudRecurringBill(billId) {
+    if (!supabaseClient || !currentUser || !billId) return;
+    try {
+        await supabaseClient.from("recurring_bill_records").delete().eq("recurring_bill_id", billId);
+        await supabaseClient.from("recurring_bills").delete().eq("id", billId);
+        if (window.MFTombstones && typeof window.MFTombstones.remove === "function") {
+            window.MFTombstones.remove("bill", billId);
+        }
+    } catch (err) {
+        console.warn("Aviso ao excluir conta fixa no Supabase:", err);
     }
 }
 
@@ -703,5 +774,7 @@ window.MFAuth = {
     getSession: getCurrentSession,
     getUser: () => currentUser,
     scheduleSync: scheduleCloudSync,
-    pullData: pullCloudDataToLocal
+    pullData: pullCloudDataToLocal,
+    deleteTransaction: deleteCloudTransaction,
+    deleteRecurringBill: deleteCloudRecurringBill
 };
