@@ -205,26 +205,132 @@ function currentMonth() {
     return todayISO().slice(0, 7);
 }
 
+/**
+ * Detecção inteligente do país, idioma e moeda com base no dispositivo e sistema
+ */
+function detectDeviceRegionalSettings() {
+    const lang = (navigator.language || (navigator.languages && navigator.languages[0]) || "pt-BR").toLowerCase();
+    const tz = (Intl.DateTimeFormat().resolvedOptions().timeZone || "").toLowerCase();
+
+    let detectedCountry = "Brasil";
+    let countryCode = "BR";
+    let flag = "🇧🇷";
+    let detectedLang = "pt-BR";
+    let detectedCurrency = "BRL";
+
+    if (lang.startsWith("es") || tz.includes("madrid") || tz.includes("buenos_aires") || tz.includes("bogota") || tz.includes("mexico") || tz.includes("santiago")) {
+        detectedLang = "es-ES";
+        if (tz.includes("madrid") || tz.includes("europe")) {
+            detectedCountry = "España";
+            countryCode = "ES";
+            flag = "🇪🇸";
+            detectedCurrency = "EUR";
+        } else if (tz.includes("buenos_aires")) {
+            detectedCountry = "Argentina";
+            countryCode = "AR";
+            flag = "🇦🇷";
+            detectedCurrency = "USD";
+        } else if (tz.includes("mexico")) {
+            detectedCountry = "México";
+            countryCode = "MX";
+            flag = "🇲🇽";
+            detectedCurrency = "USD";
+        } else {
+            detectedCountry = "Hispanoamérica";
+            countryCode = "LATAM";
+            flag = "🌎";
+            detectedCurrency = "USD";
+        }
+    } else if (lang.startsWith("en") || tz.includes("new_york") || tz.includes("los_angeles") || tz.includes("chicago") || tz.includes("london") || tz.includes("toronto")) {
+        detectedLang = "en-US";
+        if (tz.includes("london") || lang.includes("gb")) {
+            detectedCountry = "United Kingdom";
+            countryCode = "GB";
+            flag = "🇬🇧";
+            detectedCurrency = "GBP";
+        } else if (tz.includes("toronto") || tz.includes("vancouver") || lang.includes("ca")) {
+            detectedCountry = "Canada";
+            countryCode = "CA";
+            flag = "🇨🇦";
+            detectedCurrency = "USD";
+        } else {
+            detectedCountry = "United States";
+            countryCode = "US";
+            flag = "🇺🇸";
+            detectedCurrency = "USD";
+        }
+    } else if (tz.includes("lisbon") || (lang.startsWith("pt") && !lang.includes("br"))) {
+        detectedCountry = "Portugal";
+        countryCode = "PT";
+        flag = "🇵🇹";
+        detectedLang = "pt-BR";
+        detectedCurrency = "EUR";
+    } else if (tz.includes("europe") || tz.includes("berlin") || tz.includes("paris") || tz.includes("rome")) {
+        detectedCountry = "Europa";
+        countryCode = "EU";
+        flag = "🇪🇺";
+        detectedLang = "en-US";
+        detectedCurrency = "EUR";
+    }
+
+    return {
+        detectedLang,
+        detectedCurrency,
+        detectedCountry,
+        countryCode,
+        flag,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
+    };
+}
+
+function getActiveLocaleAndCurrency() {
+    const d = (typeof data !== "undefined" && data) ? data : (typeof loadData === "function" ? loadData() : null);
+    const pref = (d && d.preferences) ? d.preferences : {};
+    const auto = detectDeviceRegionalSettings();
+
+    let lang = pref.language || "auto";
+    if (lang === "auto") lang = auto.detectedLang;
+
+    let currency = pref.currency || "auto";
+    if (currency === "auto") currency = auto.detectedCurrency;
+
+    let locale = "pt-BR";
+    if (lang === "en-US") locale = "en-US";
+    else if (lang === "es-ES") locale = "es-ES";
+    else if (currency === "USD") locale = "en-US";
+    else if (currency === "EUR") locale = (lang === "es-ES" ? "es-ES" : (lang === "pt-BR" ? "pt-PT" : "de-DE"));
+    else if (currency === "GBP") locale = "en-GB";
+
+    return { lang, currency, locale, autoInfo: auto };
+}
+
 function money(value) {
-    return Number(value || 0).toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL"
-    });
+    const { locale, currency } = getActiveLocaleAndCurrency();
+    try {
+        return Number(value || 0).toLocaleString(locale, {
+            style: "currency",
+            currency: currency
+        });
+    } catch (e) {
+        return `R$ ${Number(value || 0).toFixed(2)}`;
+    }
 }
 
 function formatPercent(value, decimals = 1) {
+    const { locale } = getActiveLocaleAndCurrency();
     const num = Number(value) || 0;
-    return `${num.toLocaleString("pt-BR", {
+    return `${num.toLocaleString(locale, {
         minimumFractionDigits: decimals,
         maximumFractionDigits: decimals
     })}%`;
 }
 
 function monthLabel(month) {
+    const { locale } = getActiveLocaleAndCurrency();
     const [year, number] = month.split("-").map(Number);
     const date = new Date(year, number - 1, 1, 12);
 
-    return date.toLocaleDateString("pt-BR", {
+    return date.toLocaleDateString(locale, {
         month: "short",
         year: "2-digit"
     }).replace(".", "");
@@ -266,6 +372,10 @@ function defaultData() {
         budgets: {},
         goals: {},
         recurringBills: [],
+        preferences: {
+            language: "auto",
+            currency: "auto"
+        },
         isDemoData: false
     };
 }
@@ -299,6 +409,10 @@ function loadData() {
             },
             budgets: data.budgets || {},
             goals: data.goals || {},
+            preferences: {
+                language: data.preferences?.language || "auto",
+                currency: data.preferences?.currency || "auto"
+            },
             isDemoData: Boolean(data.isDemoData),
             recurringBills: (Array.isArray(data.recurringBills) ? data.recurringBills : []).map((b) => ({
                 ...b,
@@ -2998,18 +3112,205 @@ function setupCategoryAutoSuggestion() {
 }
 
 /* =========================================
-   SELETOR DE DATAS MODERNO UNIVERSAL (DIA, MÊS E ANO)
+   SISTEMA INTERNACIONAL DE IDIOMAS & DATAS (i18n)
 ========================================= */
 
-const DP_MONTH_NAMES = [
+const I18N_TRANSLATIONS = {
+    "pt-BR": {
+        "nav_overview": "Visão geral",
+        "nav_transactions": "Novo lançamento",
+        "nav_bills": "Contas fixas",
+        "nav_agenda": "Agenda",
+        "nav_reports": "Relatórios",
+        "nav_history": "Histórico",
+        "nav_planning": "Planejamento",
+        "nav_achievements": "Conquistas",
+        "nav_settings": "Configurações",
+        "nav_tutorial": "Como usar",
+        "nav_collapse": "Recolher menu",
+        "nav_expand": "Expandir menu",
+        "month_balance": "Saldo do mês",
+        "month_income": "Receitas do mês",
+        "month_expenses": "Despesas do mês",
+        "savings_rate": "Taxa de economia",
+        "balance_desc": "Receitas menos despesas",
+        "income_desc": "Salário e outras entradas",
+        "expense_desc": "Total das saídas registradas",
+        "savings_desc": "Parte da receita que sobrou",
+        "dp_today": "Hoje",
+        "dp_yesterday": "Ontem",
+        "privacy_hide": "Ocultar valores na tela",
+        "privacy_show": "Mostrar valores na tela"
+    },
+    "en-US": {
+        "nav_overview": "Overview",
+        "nav_transactions": "New Entry",
+        "nav_bills": "Recurring Bills",
+        "nav_agenda": "Calendar",
+        "nav_reports": "Reports",
+        "nav_history": "History",
+        "nav_planning": "Planning",
+        "nav_achievements": "Achievements",
+        "nav_settings": "Settings",
+        "nav_tutorial": "How to Use",
+        "nav_collapse": "Collapse menu",
+        "nav_expand": "Expand menu",
+        "month_balance": "Month Balance",
+        "month_income": "Month Income",
+        "month_expenses": "Month Expenses",
+        "savings_rate": "Savings Rate",
+        "balance_desc": "Income minus expenses",
+        "income_desc": "Salary and extra income",
+        "expense_desc": "Total tracked outflows",
+        "savings_desc": "Portion of income saved",
+        "dp_today": "Today",
+        "dp_yesterday": "Yesterday",
+        "privacy_hide": "Hide values on screen",
+        "privacy_show": "Show values on screen"
+    },
+    "es-ES": {
+        "nav_overview": "Visión general",
+        "nav_transactions": "Nuevo registro",
+        "nav_bills": "Cuentas fijas",
+        "nav_agenda": "Agenda",
+        "nav_reports": "Informes",
+        "nav_history": "Historial",
+        "nav_planning": "Planificación",
+        "nav_achievements": "Logros",
+        "nav_settings": "Configuración",
+        "nav_tutorial": "Cómo usar",
+        "nav_collapse": "Plegar menú",
+        "nav_expand": "Expandir menú",
+        "month_balance": "Saldo del mes",
+        "month_income": "Ingresos del mes",
+        "month_expenses": "Gastos del mes",
+        "savings_rate": "Tasa de ahorro",
+        "balance_desc": "Ingresos menos gastos",
+        "income_desc": "Salario y otros ingresos",
+        "expense_desc": "Total de salidas registradas",
+        "savings_desc": "Parte de ingresos ahorrada",
+        "dp_today": "Hoy",
+        "dp_yesterday": "Ayer",
+        "privacy_hide": "Ocultar importes",
+        "privacy_show": "Mostrar importes"
+    }
+};
+
+const DP_I18N = {
+    "pt-BR": {
+        months: ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"],
+        monthsShort: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
+        weekdays: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
+    },
+    "en-US": {
+        months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+        monthsShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        weekdays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    },
+    "es-ES": {
+        months: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
+        monthsShort: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dic"],
+        weekdays: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+    }
+};
+
+let DP_MONTH_NAMES = [
     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
 ];
 
-const DP_MONTH_NAMES_SHORT = [
+let DP_MONTH_NAMES_SHORT = [
     "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
     "Jul", "Ago", "Set", "Out", "Nov", "Dez"
 ];
+
+function applyLanguageTranslations() {
+    const { lang } = getActiveLocaleAndCurrency();
+    const t = I18N_TRANSLATIONS[lang] || I18N_TRANSLATIONS["pt-BR"];
+    const dp = DP_I18N[lang] || DP_I18N["pt-BR"];
+
+    document.documentElement.lang = lang;
+
+    if (Array.isArray(DP_MONTH_NAMES)) {
+        DP_MONTH_NAMES.splice(0, 12, ...dp.months);
+    }
+    if (Array.isArray(DP_MONTH_NAMES_SHORT)) {
+        DP_MONTH_NAMES_SHORT.splice(0, 12, ...dp.monthsShort);
+    }
+
+    const navMap = [
+        { href: "index.html", key: "nav_overview" },
+        { href: "lancamentos.html", key: "nav_transactions" },
+        { href: "contas-fixas.html", key: "nav_bills" },
+        { href: "agenda.html", key: "nav_agenda" },
+        { href: "relatorios.html", key: "nav_reports" },
+        { href: "historico.html", key: "nav_history" },
+        { href: "planejamento.html", key: "nav_planning" },
+        { href: "conquistas.html", key: "nav_achievements" },
+        { href: "configuracoes.html", key: "nav_settings" },
+        { href: "index.html?tutorial=true", key: "nav_tutorial" }
+    ];
+
+    navMap.forEach(({ href, key }) => {
+        document.querySelectorAll(`a.nav-link[href="${href}"]`).forEach(a => {
+            const label = a.querySelector(".nav-label");
+            if (label && t[key]) label.textContent = t[key];
+            if (t[key]) a.setAttribute("data-tooltip", t[key]);
+        });
+    });
+
+    const toggleLabel = document.querySelector(".toggle-label");
+    if (toggleLabel) {
+        const isCollapsed = document.documentElement.classList.contains("sidebar-collapsed");
+        toggleLabel.textContent = isCollapsed ? t.nav_expand : t.nav_collapse;
+    }
+
+    document.querySelectorAll(".dp-today-btn").forEach(btn => {
+        btn.textContent = t.dp_today;
+    });
+    document.querySelectorAll(".dp-yesterday-btn").forEach(btn => {
+        btn.textContent = t.dp_yesterday;
+    });
+
+    document.querySelectorAll(".dp-weekdays").forEach(wrap => {
+        const spans = wrap.querySelectorAll("span");
+        if (spans.length === 7) {
+            dp.weekdays.forEach((wd, i) => {
+                spans[i].textContent = wd;
+            });
+        }
+    });
+
+    const cardTotalTitle = document.querySelector(".card-total .summary-title");
+    if (cardTotalTitle) cardTotalTitle.textContent = t.month_balance;
+    const cardTotalDesc = document.querySelector(".card-total .summary-description");
+    if (cardTotalDesc) cardTotalDesc.textContent = t.balance_desc;
+
+    const cardIncomeTitle = document.querySelector(".card-income .summary-title");
+    if (cardIncomeTitle) cardIncomeTitle.textContent = t.month_income;
+    const cardIncomeDesc = document.querySelector(".card-income .summary-description");
+    if (cardIncomeDesc) cardIncomeDesc.textContent = t.income_desc;
+
+    const cardExpenseTitle = document.querySelector(".card-expense .summary-title");
+    if (cardExpenseTitle) cardExpenseTitle.textContent = t.month_expenses;
+    const cardExpenseDesc = document.querySelector(".card-expense .summary-description");
+    if (cardExpenseDesc) cardExpenseDesc.textContent = t.expense_desc;
+
+    const cardPurpleTitle = document.querySelector(".card-purple .summary-title");
+    if (cardPurpleTitle) cardPurpleTitle.textContent = t.savings_rate;
+    const cardPurpleDesc = document.querySelector(".card-purple .summary-description");
+    if (cardPurpleDesc) cardPurpleDesc.textContent = t.savings_desc;
+
+    document.querySelectorAll(".privacy-btn").forEach(btn => {
+        const isPressed = btn.getAttribute("aria-pressed") === "true";
+        btn.setAttribute("title", isPressed ? t.privacy_show : t.privacy_hide);
+        btn.setAttribute("aria-label", isPressed ? t.privacy_show : t.privacy_hide);
+    });
+}
+
+/* =========================================
+   SELETOR DE DATAS MODERNO UNIVERSAL (DIA, MÊS E ANO)
+========================================= */
 
 function syncDatePicker() {
     document.querySelectorAll(".custom-datepicker").forEach((c) => {
@@ -7046,6 +7347,7 @@ function setupModernValidation() {
 }
 
 function init() {
+    applyLanguageTranslations();
     setupNavigation();
     setupMobileMenu();
     setupSidebarToggle();
@@ -7299,6 +7601,148 @@ function init() {
     const clearAllDataBtn = $("#clearAllDataBtn");
     if (clearAllDataBtn) {
         clearAllDataBtn.addEventListener("click", clearAllData);
+    }
+
+    function setupRegionalSettings() {
+        const langPicker = $("#appLanguagePicker");
+        const langBtn = $("#appLanguageButton");
+        const langLabel = $("#appLanguageLabel");
+        const langIcon = $("#appLanguageIcon");
+        const langOptions = $("#appLanguageOptions");
+        const langSelect = $("#appLanguage");
+
+        const currPicker = $("#appCurrencyPicker");
+        const currBtn = $("#appCurrencyButton");
+        const currLabel = $("#appCurrencyLabel");
+        const currIcon = $("#appCurrencyIcon");
+        const currOptions = $("#appCurrencyOptions");
+        const currSelect = $("#appCurrency");
+
+        const badge = $("#deviceRegionalBadge");
+        const flagIcon = $("#deviceFlagIcon");
+        const detectTitle = $("#deviceDetectTitle");
+        const detectSubtitle = $("#deviceDetectSubtitle");
+        const samplePreview = $("#currencySamplePreview");
+
+        const autoInfo = detectDeviceRegionalSettings();
+
+        if (badge && flagIcon && detectTitle && detectSubtitle) {
+            flagIcon.textContent = autoInfo.flag;
+            detectTitle.textContent = `Aparelho detectado: ${autoInfo.detectedCountry} (${autoInfo.detectedLang})`;
+            detectSubtitle.textContent = `Fuso horário: ${autoInfo.timeZone} • Moeda recomendada: ${autoInfo.detectedCurrency}`;
+        }
+
+        const currentPref = data.preferences || { language: "auto", currency: "auto" };
+        const savedLang = currentPref.language || "auto";
+        const savedCurrency = currentPref.currency || "auto";
+
+        function updatePreview() {
+            if (samplePreview) {
+                samplePreview.textContent = money(1250.50);
+            }
+        }
+
+        function syncLangUI(val) {
+            if (!langSelect) return;
+            langSelect.value = val;
+            if (langOptions) {
+                langOptions.querySelectorAll(".split-option").forEach(opt => {
+                    const isSel = opt.dataset.value === val;
+                    opt.classList.toggle("selected", isSel);
+                    opt.setAttribute("aria-selected", String(isSel));
+                    if (isSel) {
+                        const icon = opt.querySelector(".split-option-icon-box")?.textContent.trim() || "🌐";
+                        const title = opt.querySelector(".split-option-title")?.textContent.trim() || val;
+                        if (langIcon) langIcon.textContent = icon;
+                        if (langLabel) langLabel.textContent = title;
+                    }
+                });
+            }
+        }
+
+        function syncCurrencyUI(val) {
+            if (!currSelect) return;
+            currSelect.value = val;
+            if (currOptions) {
+                currOptions.querySelectorAll(".split-option").forEach(opt => {
+                    const isSel = opt.dataset.value === val;
+                    opt.classList.toggle("selected", isSel);
+                    opt.setAttribute("aria-selected", String(isSel));
+                    if (isSel) {
+                        const icon = opt.querySelector(".split-option-icon-box")?.textContent.trim() || "🌐";
+                        const title = opt.querySelector(".split-option-title")?.textContent.trim() || val;
+                        if (currIcon) currIcon.textContent = icon;
+                        if (currLabel) currLabel.textContent = title;
+                    }
+                });
+            }
+        }
+
+        if (langSelect) syncLangUI(savedLang);
+        if (currSelect) syncCurrencyUI(savedCurrency);
+        updatePreview();
+
+        if (langBtn && langPicker && langOptions) {
+            langBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if (currPicker) currPicker.classList.remove("open");
+                const isOpen = langPicker.classList.toggle("open");
+                langBtn.setAttribute("aria-expanded", String(isOpen));
+            });
+
+            langOptions.addEventListener("click", (e) => {
+                const opt = e.target.closest(".split-option");
+                if (!opt) return;
+                const val = opt.dataset.value;
+                syncLangUI(val);
+                langPicker.classList.remove("open");
+                langBtn.setAttribute("aria-expanded", "false");
+
+                if (!data.preferences) data.preferences = {};
+                data.preferences.language = val;
+                saveData();
+                applyLanguageTranslations();
+                updatePreview();
+                if (typeof renderAll === "function") renderAll();
+                showToast("Idioma atualizado com sucesso!");
+            });
+        }
+
+        if (currBtn && currPicker && currOptions) {
+            currBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if (langPicker) langPicker.classList.remove("open");
+                const isOpen = currPicker.classList.toggle("open");
+                currBtn.setAttribute("aria-expanded", String(isOpen));
+            });
+
+            currOptions.addEventListener("click", (e) => {
+                const opt = e.target.closest(".split-option");
+                if (!opt) return;
+                const val = opt.dataset.value;
+                syncCurrencyUI(val);
+                currPicker.classList.remove("open");
+                currBtn.setAttribute("aria-expanded", "false");
+
+                if (!data.preferences) data.preferences = {};
+                data.preferences.currency = val;
+                saveData();
+                updatePreview();
+                if (typeof renderAll === "function") renderAll();
+                showToast("Moeda principal atualizada com sucesso!");
+            });
+        }
+
+        document.addEventListener("click", (e) => {
+            if (langPicker && !langPicker.contains(e.target)) {
+                langPicker.classList.remove("open");
+                if (langBtn) langBtn.setAttribute("aria-expanded", "false");
+            }
+            if (currPicker && !currPicker.contains(e.target)) {
+                currPicker.classList.remove("open");
+                if (currBtn) currBtn.setAttribute("aria-expanded", "false");
+            }
+        });
     }
 
     function setupDeviceAndCloudSettings() {
@@ -9094,6 +9538,7 @@ function init() {
     setupServiceWorker();
     setupPwaInstall();
     setupNotificationTest();
+    setupRegionalSettings();
     setupDeviceAndCloudSettings();
     setupActivityAuditPanel();
     setupNavigation();

@@ -311,6 +311,159 @@
                     </div>
                 </article>
 
+                <!-- Idioma, Moeda & Detecção Regional -->
+                <article class="panel settings-panel" id="regionalSettingsPanel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>🌐 Idioma, Moeda & Detecção Regional</h2>
+                            <p>Personalize o idioma e a moeda do aplicativo. O BrilhaCash analisa o seu dispositivo e país para alternar e ajustar os formatos automaticamente.</p>
+                        </div>
+                    </div>
+
+                    <!-- Badge de Detecção em Tempo Real -->
+                    <div class="info-callout" id="deviceRegionalBadge" style="margin-bottom: 18px;">
+                        <span class="info-callout-icon" id="deviceFlagIcon" style="font-size: 26px;">🇧🇷</span>
+                        <div class="info-callout-text">
+                            <strong id="deviceDetectTitle" style="font-size: 14px; color: #f8fafc;">Dispositivo detectado: Brasil (pt-BR)</strong>
+                            <p id="deviceDetectSubtitle" style="margin: 3px 0 0; font-size: 12px; color: #94a3b8;">Fuso horário: America/Sao_Paulo • Moeda recomendada: BRL (R$)</p>
+                        </div>
+                    </div>
+
+                    <div class="settings-form-grid">
+                        <!-- Seletor de Idioma Customizado -->
+                        <div class="field">
+                            <label for="appLanguageButton">Idioma do aplicativo</label>
+                            <div class="filter-select split-picker" id="appLanguagePicker">
+                                <select id="appLanguage" class="filter-native-select" aria-label="Idioma do aplicativo">
+                                    <option value="auto" selected>🌐 Automático (Detectar aparelho e país)</option>
+                                    <option value="pt-BR">🇧🇷 Português (Brasil)</option>
+                                    <option value="en-US">🇺🇸 English (US)</option>
+                                    <option value="es-ES">🇪🇸 Español</option>
+                                </select>
+                                <button type="button" class="filter-select-button split-picker-button" id="appLanguageButton"
+                                    aria-haspopup="listbox" aria-expanded="false" aria-controls="appLanguageOptions">
+                                    <span class="split-picker-button-left">
+                                        <span class="split-picker-icon" id="appLanguageIcon" aria-hidden="true">🌐</span>
+                                        <span class="split-picker-label" id="appLanguageLabel">Automático (Detectar aparelho)</span>
+                                    </span>
+                                    <span class="filter-select-chevron" aria-hidden="true">⌄</span>
+                                </button>
+                                <div class="filter-select-options split-drawer" id="appLanguageOptions" role="listbox" aria-label="Escolher idioma">
+                                    <button type="button" class="filter-select-option split-option selected" role="option" aria-selected="true" data-value="auto">
+                                        <div class="split-option-icon-box">🌐</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Automático (Detectar aparelho)</strong>
+                                            <span class="split-option-desc">Adapta o idioma conforme o país e sistema do dispositivo</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="filter-select-option split-option" role="option" aria-selected="false" data-value="pt-BR">
+                                        <div class="split-option-icon-box">🇧🇷</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Português (Brasil)</strong>
+                                            <span class="split-option-desc">Português brasileiro nativo</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="filter-select-option split-option" role="option" aria-selected="false" data-value="en-US">
+                                        <div class="split-option-icon-box">🇺🇸</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">English (US)</strong>
+                                            <span class="split-option-desc">American English for international use</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="filter-select-option split-option" role="option" aria-selected="false" data-value="es-ES">
+                                        <div class="split-option-icon-box">🇪🇸</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Español</strong>
+                                            <span class="split-option-desc">Español internacional y de Latinoamérica</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <small class="field-hint">Altera os textos de menus, botões, cabeçalhos e calendários.</small>
+                        </div>
+
+                        <!-- Seletor de Moeda Customizado -->
+                        <div class="field">
+                            <label for="appCurrencyButton">Moeda principal</label>
+                            <div class="filter-select split-picker" id="appCurrencyPicker">
+                                <select id="appCurrency" class="filter-native-select" aria-label="Moeda principal">
+                                    <option value="auto" selected>🌐 Automática (Conforme o país)</option>
+                                    <option value="BRL">🇧🇷 Real Brasileiro (R$)</option>
+                                    <option value="USD">🇺🇸 Dólar Americano ($)</option>
+                                    <option value="EUR">🇪🇺 Euro (€)</option>
+                                    <option value="GBP">🇬🇧 Libra Esterlina (£)</option>
+                                </select>
+                                <button type="button" class="filter-select-button split-picker-button" id="appCurrencyButton"
+                                    aria-haspopup="listbox" aria-expanded="false" aria-controls="appCurrencyOptions">
+                                    <span class="split-picker-button-left">
+                                        <span class="split-picker-icon" id="appCurrencyIcon" aria-hidden="true">🌐</span>
+                                        <span class="split-picker-label" id="appCurrencyLabel">Automática (Conforme o país)</span>
+                                    </span>
+                                    <span class="filter-select-chevron" aria-hidden="true">⌄</span>
+                                </button>
+                                <div class="filter-select-options split-drawer" id="appCurrencyOptions" role="listbox" aria-label="Escolher moeda">
+                                    <button type="button" class="filter-select-option split-option selected" role="option" aria-selected="true" data-value="auto">
+                                        <div class="split-option-icon-box">🌐</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Automática (Conforme o país)</strong>
+                                            <span class="split-option-desc">Usa a moeda padrão do país detectado</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="filter-select-option split-option" role="option" aria-selected="false" data-value="BRL">
+                                        <div class="split-option-icon-box">🇧🇷</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Real Brasileiro (BRL)</strong>
+                                            <span class="split-option-desc">Símbolo: R$ • Padrão no Brasil</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="filter-select-option split-option" role="option" aria-selected="false" data-value="USD">
+                                        <div class="split-option-icon-box">🇺🇸</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Dólar Americano (USD)</strong>
+                                            <span class="split-option-desc">Símbolo: $ • Padrão global</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="filter-select-option split-option" role="option" aria-selected="false" data-value="EUR">
+                                        <div class="split-option-icon-box">🇪🇺</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Euro (EUR)</strong>
+                                            <span class="split-option-desc">Símbolo: € • Padrão União Europeia</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="filter-select-option split-option" role="option" aria-selected="false" data-value="GBP">
+                                        <div class="split-option-icon-box">🇬🇧</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Libra Esterlina (GBP)</strong>
+                                            <span class="split-option-desc">Símbolo: £ • Reino Unido</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <small class="field-hint">Formata todos os valores, gráficos, cartões e relatórios instantaneamente.</small>
+                        </div>
+                    </div>
+
+                    <!-- Preview de Exibição Monetária -->
+                    <div class="option-card" style="margin-top: 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+                        <div>
+                            <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: #94a3b8; font-weight: 700;">Pré-visualização do Formato</span>
+                            <p style="margin: 2px 0 0; font-size: 12.5px; color: #cbd5e1;">Exemplo de como um valor será exibido no app:</p>
+                        </div>
+                        <div style="font-size: 18px; font-weight: 800; color: #38bdf8; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 10px; padding: 6px 14px;" id="currencySamplePreview">
+                            R$ 1.250,50
+                        </div>
+                    </div>
+                </article>
+
                 <!-- Sincronização em Nuvem & Dispositivo Conectado -->
                 <article class="panel device-sync-panel" id="deviceSyncPanel">
                     <div class="panel-heading">
