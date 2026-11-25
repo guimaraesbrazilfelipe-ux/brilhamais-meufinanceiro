@@ -256,13 +256,16 @@
                         </div>
 
                         <!-- Configuração do 13º Salário (Item 2 e Simulação 2027) -->
-                        <div class="field setting-toggle-card" style="grid-column: 1 / -1; background: rgba(124, 93, 250, 0.08); border: 1px solid rgba(124, 93, 250, 0.25); border-radius: 12px; padding: 16px 18px;">
-                            <label for="salaryHas13th" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; cursor: pointer; margin: 0; width: 100%;">
-                                <div style="flex: 1;">
-                                    <strong style="display: block; font-size: 14px; font-weight: 700; color: #f8fafc; margin-bottom: 4px;">🎁 Incluir 13º Salário no planejamento anual</strong>
-                                    <span style="font-size: 12.5px; color: #94a3b8; display: block; line-height: 1.4;">Adiciona automaticamente a renda do 13º salário em Dezembro e no cálculo de projeção anual.</span>
+                        <div class="field setting-toggle-card" style="grid-column: 1 / -1; margin-top: -4px; margin-bottom: 2px;">
+                            <label for="salaryHas13th" class="setting-toggle-row">
+                                <div class="setting-toggle-left">
+                                    <span class="setting-toggle-icon" aria-hidden="true">🎁</span>
+                                    <div class="setting-toggle-text">
+                                        <strong class="setting-toggle-title">Incluir 13º Salário no planejamento anual</strong>
+                                        <span class="setting-toggle-desc">Adiciona automaticamente a renda do 13º salário em Dezembro e no cálculo de projeção anual.</span>
+                                    </div>
                                 </div>
-                                <span class="switch">
+                                <span class="switch" aria-label="Ativar 13º salário">
                                     <input type="checkbox" id="salaryHas13th">
                                     <span class="slider round"></span>
                                 </span>
