@@ -3769,12 +3769,27 @@ body.dialog-open { overflow: hidden; }
     height: 100%;
 }
 
-.dashboard-widgets-grid .thermometer-card,
-.dashboard-widgets-grid .future-radar-card {
+.dashboard-widgets-grid {
+    align-items: stretch;
+}
+
+.dashboard-widgets-grid > div {
     height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-widgets-grid .thermometer-card,
+.dashboard-widgets-grid .future-radar-card,
+.dashboard-widgets-grid .thermometer-card-inner,
+.dashboard-widgets-grid .radar-card-inner {
+    height: 100%;
+    flex: 1;
     margin-bottom: 0 !important;
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    box-sizing: border-box;
 }
 
 @media (max-width: 992px) {
@@ -12669,9 +12684,124 @@ body.privacy-mode .breakdown-val {
     margin-top: auto;
 }
 
-.ach-categories-bar {
+.ach-categories-bar,
+.ach-levels-bar {
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    cursor: grab;
+    scroll-behavior: smooth;
+}
+
+.ach-categories-bar:active,
+.ach-levels-bar:active {
+    cursor: grabbing;
+}
+
+.ach-categories-bar::-webkit-scrollbar,
+.ach-levels-bar::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+/* Grade dupla de gráficos modernos na Visão Geral */
+.charts-duo-grid {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 18px;
+    align-items: stretch;
+}
+
+@media (max-width: 1024px) {
+    .charts-duo-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.chart-analysis-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 12px 16px;
+}
+
+.chart-analysis-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.chart-analysis-controls .split-picker {
+    min-width: 205px;
+}
+
+.category-legend-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.category-legend-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12.5px;
+}
+
+.category-legend-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+.category-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.category-legend-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #f8fafc;
+    font-weight: 700;
+}
+
+.category-legend-pct {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.category-legend-bar-track {
+    width: 100%;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+}
+
+.category-legend-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.35s ease;
 }
 
 /* Garante toque acessível de 44px mínimo no celular */

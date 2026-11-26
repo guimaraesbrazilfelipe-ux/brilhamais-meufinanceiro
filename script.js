@@ -1218,6 +1218,71 @@ function renderDashboardBudgetBreakdown(summary, m) {
     `;
 }
 
+let indexChartMode = "6_months";
+
+function getIndexChartReferenceDate() {
+    const el = $("#indexChartDate");
+    return (el && el.value) ? el.value : (selectedDate() || todayISO());
+}
+
+function setupIndexChartControls() {
+    const dateInput = $("#indexChartDate");
+    const dpContainer = $("#indexChartDatePickerContainer");
+    const periodPicker = $("#indexChartPeriodPicker");
+    const periodBtn = $("#indexChartPeriodButton");
+    const periodIcon = $("#indexChartPeriodIcon");
+    const periodLabel = $("#indexChartPeriodLabel");
+    const periodOptions = $("#indexChartPeriodOptions");
+
+    if (dateInput && !dateInput.value) {
+        dateInput.value = selectedDate() || todayISO();
+        if (dpContainer && dpContainer._syncDatePicker) dpContainer._syncDatePicker();
+    }
+
+    if (dateInput) {
+        dateInput.addEventListener("change", () => {
+            renderMonthlyChart();
+            renderCategoryChart();
+        });
+    }
+
+    if (periodBtn && periodPicker && periodOptions) {
+        periodBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const isOpen = periodPicker.classList.toggle("open");
+            periodBtn.setAttribute("aria-expanded", String(isOpen));
+        });
+
+        periodOptions.addEventListener("click", (e) => {
+            const opt = e.target.closest(".split-option");
+            if (!opt) return;
+            periodOptions.querySelectorAll(".split-option").forEach(o => {
+                o.classList.remove("selected");
+                o.setAttribute("aria-selected", "false");
+            });
+            opt.classList.add("selected");
+            opt.setAttribute("aria-selected", "true");
+
+            indexChartMode = opt.dataset.mode || "6_months";
+            if (periodIcon) periodIcon.textContent = opt.dataset.icon || "📊";
+            if (periodLabel) periodLabel.textContent = opt.dataset.label || "Últimos 6 meses";
+
+            periodPicker.classList.remove("open");
+            periodBtn.setAttribute("aria-expanded", "false");
+
+            renderMonthlyChart();
+            renderCategoryChart();
+        });
+
+        document.addEventListener("click", (e) => {
+            if (!periodPicker.contains(e.target)) {
+                periodPicker.classList.remove("open");
+                periodBtn.setAttribute("aria-expanded", "false");
+            }
+        });
+    }
+}
+
 function renderMonthlyChart() {
     const canvas = $("#monthlyChart");
     if (!canvas) return;
@@ -1226,13 +1291,26 @@ function renderMonthlyChart() {
     const incomeValues = [];
     const expenseValues = [];
 
-    // Se estiver na página de relatórios e um período específico estiver ativo
     const isReportsPage = !!$("#reportPeriodPicker");
     const filter = isReportsPage ? getReportDateFilter() : null;
+    const refDate = isReportsPage ? (selectedDate() || todayISO()) : getIndexChartReferenceDate();
+    const refMonth = refDate.slice(0, 7);
+    const activeMode = isReportsPage ? (filter ? filter.mode : "6_months") : indexChartMode;
 
-    if (isReportsPage && filter && filter.mode === "this_week") {
+    const subEl = $("#monthlyChartSubtitle");
+    if (subEl && !isReportsPage) {
+        const modeTitles = {
+            "6_months": `Últimos 6 meses até ${monthLabel(refMonth)} com tendência de saldo`,
+            "this_month_daily": `Evolução diária em ${monthLabel(refMonth)}`,
+            "this_year": `Comparativo anual de ${refMonth.slice(0, 4)} (12 meses)`,
+            "last_2_years": `Histórico de 24 meses até ${monthLabel(refMonth)}`
+        };
+        subEl.textContent = modeTitles[activeMode] || modeTitles["6_months"];
+    }
+
+    if (activeMode === "this_week") {
         const days = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-        const d = new Date(`${selectedDate() || todayISO()}T12:00:00`);
+        const d = new Date(`${refDate}T12:00:00`);
         const dayOfWeek = (d.getDay() + 6) % 7;
         const monday = new Date(d);
         monday.setDate(d.getDate() - dayOfWeek);
@@ -1256,8 +1334,29 @@ function renderMonthlyChart() {
             incomeValues.push(dayInc);
             expenseValues.push(dayExp);
         }
-    } else if (isReportsPage && filter && filter.mode === "this_year") {
-        const y = selectedMonth().slice(0, 4);
+    } else if (activeMode === "this_month_daily") {
+        const [y, m] = refMonth.split("-").map(Number);
+        const daysInMonth = new Date(y, m, 0).getDate();
+        const salDay = Number(data.salaryConfig?.day || 5);
+        const salAmt = getSalaryForMonth(refMonth);
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const iso = `${refMonth}-${String(day).padStart(2, "0")}`;
+            labels.push(String(day).padStart(2, "0"));
+            const dayTxs = (data.transactions || []).filter(t => !t.recurringBillId && t.date === iso);
+            let dayInc = dayTxs.filter(t => t.type === "receita").reduce((s, t) => s + t.amount, 0);
+            if (day === salDay && salAmt > 0 && !dayTxs.some(t => t.type === "receita" && t.category === "Salário")) {
+                dayInc += salAmt;
+            }
+            let dayExp = dayTxs.filter(t => t.type === "despesa").reduce((s, t) => s + t.amount, 0);
+            (data.recurringBills || []).forEach(b => {
+                if (isBillOccurrencePaid(b, iso)) dayExp += getBillAmount(b, refMonth);
+            });
+            incomeValues.push(dayInc);
+            expenseValues.push(dayExp);
+        }
+    } else if (activeMode === "this_year") {
+        const y = refMonth.slice(0, 4);
         const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
         for (let m = 1; m <= 12; m++) {
             const k = `${y}-${String(m).padStart(2, "0")}`;
@@ -1266,143 +1365,152 @@ function renderMonthlyChart() {
             incomeValues.push(sum.income);
             expenseValues.push(sum.expenses);
         }
-    } else if (isReportsPage && filter && filter.mode === "last_2_years") {
-        const [year, month] = selectedMonth().split("-").map(Number);
+    } else if (activeMode === "last_2_years") {
+        const [year, month] = refMonth.split("-").map(Number);
         for (let i = 23; i >= 0; i--) {
             const date = new Date(year, month - 1 - i, 1, 12);
-            const key = [
-                date.getFullYear(),
-                String(date.getMonth() + 1).padStart(2, "0")
-            ].join("-");
+            const key = [date.getFullYear(), String(date.getMonth() + 1).padStart(2, "0")].join("-");
             const sum = getMonthlySummary(key);
             labels.push(monthLabel(key));
             incomeValues.push(sum.income);
             expenseValues.push(sum.expenses);
         }
     } else {
-        const [year, month] = selectedMonth().split("-").map(Number);
-
+        const [year, month] = refMonth.split("-").map(Number);
         for (let i = 5; i >= 0; i--) {
             const date = new Date(year, month - 1 - i, 1, 12);
-
-            const key = [
-                date.getFullYear(),
-                String(date.getMonth() + 1).padStart(2, "0")
-            ].join("-");
-
+            const key = [date.getFullYear(), String(date.getMonth() + 1).padStart(2, "0")].join("-");
             const summary = getMonthlySummary(key);
-
             labels.push(monthLabel(key));
             incomeValues.push(summary.income);
             expenseValues.push(summary.expenses);
         }
     }
 
+    const balanceTrendValues = incomeValues.map((inc, idx) => Number((inc - (expenseValues[idx] || 0)).toFixed(2)));
+
     if (monthlyChart) {
         monthlyChart.destroy();
     }
 
+    const ctx = canvas.getContext("2d");
+    const incomeGrad = ctx.createLinearGradient(0, 0, 0, 260);
+    incomeGrad.addColorStop(0, "rgba(52, 211, 153, 0.95)");
+    incomeGrad.addColorStop(1, "rgba(5, 150, 105, 0.45)");
+
+    const expenseGrad = ctx.createLinearGradient(0, 0, 0, 260);
+    expenseGrad.addColorStop(0, "rgba(167, 139, 250, 0.95)");
+    expenseGrad.addColorStop(1, "rgba(109, 40, 217, 0.45)");
+
+    const trendGrad = ctx.createLinearGradient(0, 0, 0, 260);
+    trendGrad.addColorStop(0, "rgba(56, 189, 248, 0.22)");
+    trendGrad.addColorStop(1, "rgba(56, 189, 248, 0.0)");
+
     monthlyChart = new Chart(canvas, {
         type: "bar",
-
         data: {
             labels,
-
             datasets: [
                 {
-                    label: "Receitas",
-                    data: incomeValues,
-                    backgroundColor: "#45d6a0",
-                    borderRadius: 5,
-                    maxBarThickness: 24
+                    type: "line",
+                    label: "Saldo Líquido",
+                    data: balanceTrendValues,
+                    borderColor: "#38bdf8",
+                    backgroundColor: trendGrad,
+                    borderWidth: 2.5,
+                    tension: 0.42,
+                    fill: true,
+                    pointRadius: activeMode === "this_month_daily" ? 2 : 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: "#0ea5e9",
+                    pointBorderColor: "#e0f2fe",
+                    pointBorderWidth: 1.5,
+                    order: 0
                 },
                 {
+                    type: "bar",
+                    label: "Receitas",
+                    data: incomeValues,
+                    backgroundColor: incomeGrad,
+                    borderColor: "#34d399",
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    maxBarThickness: 26,
+                    order: 1
+                },
+                {
+                    type: "bar",
                     label: "Despesas",
                     data: expenseValues,
-                    backgroundColor: "#9475ff",
-                    borderRadius: 5,
-                    maxBarThickness: 24
+                    backgroundColor: expenseGrad,
+                    borderColor: "#a78bfa",
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    maxBarThickness: 26,
+                    order: 2
                 }
             ]
         },
-
         options: {
             responsive: true,
             maintainAspectRatio: false,
-
             interaction: {
                 intersect: false,
                 mode: "index"
             },
-
             plugins: {
                 legend: {
                     position: "bottom",
-
                     labels: {
-                        color: "#a4b1c5",
+                        color: "#cbd5e1",
                         usePointStyle: true,
-                        boxWidth: 8,
-                        padding: 18,
-                        font: {
-                            size: 10
-                        }
+                        boxWidth: 9,
+                        padding: 16,
+                        font: { size: 11, weight: "600" }
                     }
                 },
-
                 tooltip: {
+                    backgroundColor: "rgba(15, 23, 42, 0.96)",
+                    titleColor: "#f8fafc",
+                    bodyColor: "#cbd5e1",
+                    borderColor: "rgba(124, 93, 250, 0.45)",
+                    borderWidth: 1,
+                    padding: 12,
+                    cornerRadius: 12,
                     callbacks: {
-                        label: (context) =>
-                            `${context.dataset.label}: ${money(context.raw)}`
+                        label: (context) => ` ${context.dataset.label}: ${money(context.raw)}`,
+                        afterBody: (items) => {
+                            const incItem = items.find(i => i.dataset.label === "Receitas");
+                            const expItem = items.find(i => i.dataset.label === "Despesas");
+                            if (incItem && expItem && incItem.raw > 0) {
+                                const rate = ((incItem.raw - expItem.raw) / incItem.raw) * 100;
+                                return `\nTaxa de Economia: ${formatPercent(rate)}`;
+                            }
+                            return "";
+                        }
                     }
                 }
             },
-
             scales: {
                 x: {
-                    grid: {
-                        display: false
-                    },
-
-                    ticks: {
-                        color: "#92a1b8",
-                        font: {
-                            size: 10
-                        }
-                    },
-
-                    border: {
-                        display: false
-                    }
+                    grid: { display: false },
+                    ticks: { color: "#94a3b8", font: { size: 10.5 } },
+                    border: { display: false }
                 },
-
                 y: {
                     beginAtZero: true,
-
                     ticks: {
-                        color: "#92a1b8",
-
-                        font: {
-                            size: 9
-                        },
-
+                        color: "#94a3b8",
+                        font: { size: 10 },
                         callback: (value) => {
-                            if (value >= 1000) {
-                                return `R$ ${(value / 1000)
-                                    .toLocaleString("pt-BR")} mil`;
+                            if (Math.abs(value) >= 1000) {
+                                return `R$ ${(value / 1000).toLocaleString("pt-BR")} mil`;
                             }
-
                             return `R$ ${value}`;
                         }
                     },
-
-                    grid: {
-                        color: "#2a3850"
-                    },
-
-                    border: {
-                        display: false
-                    }
+                    grid: { color: "rgba(148, 163, 184, 0.1)" },
+                    border: { display: false }
                 }
             }
         }
@@ -1590,13 +1698,27 @@ function renderCategoryChart() {
 
     const isReportsPage = !!$("#reportPeriodPicker");
     const filter = isReportsPage ? getReportDateFilter() : null;
-    const mStr = selectedMonth();
+    const refDate = isReportsPage ? (selectedDate() || todayISO()) : getIndexChartReferenceDate();
+    const mStr = refDate.slice(0, 7);
+    const activeMode = isReportsPage ? (filter ? filter.mode : "6_months") : indexChartMode;
     const totals = {};
+
+    const catSub = $("#categoryChartSubtitle");
+    if (catSub && !isReportsPage) {
+        catSub.textContent = activeMode === "this_year"
+            ? `Distribuição das despesas em ${mStr.slice(0, 4)}`
+            : `Distribuição das despesas em ${monthLabel(mStr)}`;
+    }
 
     // 1. Lançamentos manuais de despesa (se não estiver filtrado apenas para contas fixas)
     if (currentReportFilter !== "contas-fixas") {
         const manualExpenses = (data.transactions || [])
-            .filter((t) => t.type === "despesa" && !t.recurringBillId && (filter ? filter.matchesDate(t.date) : t.date.startsWith(mStr)));
+            .filter((t) => {
+                if (t.type !== "despesa" || t.recurringBillId) return false;
+                if (filter) return filter.matchesDate(t.date);
+                if (activeMode === "this_year") return String(t.date || "").startsWith(mStr.slice(0, 4));
+                return String(t.date || "").startsWith(mStr);
+            });
         manualExpenses.forEach((t) => {
             totals[t.category] = (totals[t.category] || 0) + Number(t.amount || 0);
         });
@@ -1605,9 +1727,9 @@ function renderCategoryChart() {
     // 2. Contas fixas (se não estiver filtrado apenas para lançamentos)
     if (currentReportFilter !== "lancamentos") {
         (data.recurringBills || []).forEach((b) => {
-            if (filter && (filter.mode === "this_year" || filter.mode === "last_2_years")) {
+            if ((filter && (filter.mode === "this_year" || filter.mode === "last_2_years")) || (!filter && activeMode === "this_year")) {
                 const y = parseInt(mStr.slice(0, 4), 10);
-                const years = filter.mode === "this_year" ? [y] : [y - 1, y];
+                const years = (filter && filter.mode === "last_2_years") ? [y - 1, y] : [y];
                 years.forEach(yr => {
                     for (let m = 1; m <= 12; m++) {
                         const k = `${yr}-${String(m).padStart(2, "0")}`;
@@ -1645,44 +1767,69 @@ function renderCategoryChart() {
 
     const labels = entries.map(([category]) => category);
     const values = entries.map(([, value]) => value);
+    const total = values.reduce((sum, value) => sum + value, 0);
+
+    const MODERN_COLORS = [
+        "#8b5cf6", "#10b981", "#38bdf8", "#f59e0b",
+        "#f43f5e", "#ec4899", "#06b6d4", "#eab308"
+    ];
 
     if (categoryChart) {
         categoryChart.destroy();
     }
 
+    const centerTotalPlugin = {
+        id: "centerTotalPlugin",
+        afterDraw(chart) {
+            const { ctx, chartArea } = chart;
+            if (!chartArea) return;
+            const cx = (chartArea.left + chartArea.right) / 2;
+            const cy = (chartArea.top + chartArea.bottom) / 2;
+            ctx.save();
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = "#94a3b8";
+            ctx.font = "700 10px Inter, system-ui, sans-serif";
+            ctx.fillText("TOTAL GASTO", cx, cy - 12);
+            ctx.fillStyle = "#f8fafc";
+            ctx.font = "800 15px Inter, system-ui, sans-serif";
+            ctx.fillText(money(total), cx, cy + 8);
+            ctx.restore();
+        }
+    };
+
     categoryChart = new Chart(canvas, {
         type: "doughnut",
-
+        plugins: [centerTotalPlugin],
         data: {
             labels,
-
             datasets: [{
                 data: values,
-
-                backgroundColor: labels.map(
-                    (_, index) => COLORS[index % COLORS.length]
-                ),
-
-                borderColor: "#182438",
-                borderWidth: 4,
-                hoverOffset: 5
+                backgroundColor: labels.map((_, index) => MODERN_COLORS[index % MODERN_COLORS.length]),
+                borderColor: "#0f172a",
+                borderWidth: 3,
+                hoverOffset: 10
             }]
         },
-
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: "70%",
-
+            cutout: "72%",
             plugins: {
-                legend: {
-                    display: false
-                },
-
+                legend: { display: false },
                 tooltip: {
+                    backgroundColor: "rgba(15, 23, 42, 0.96)",
+                    titleColor: "#f8fafc",
+                    bodyColor: "#cbd5e1",
+                    borderColor: "rgba(124, 93, 250, 0.45)",
+                    borderWidth: 1,
+                    padding: 12,
+                    cornerRadius: 12,
                     callbacks: {
-                        label: (context) =>
-                            `${context.label}: ${money(context.raw)}`
+                        label: (context) => {
+                            const pct = total ? ((context.raw / total) * 100) : 0;
+                            return ` ${context.label}: ${money(context.raw)} (${formatPercent(pct)})`;
+                        }
                     }
                 }
             }
@@ -1702,22 +1849,27 @@ function renderCategoryChart() {
         return;
     }
 
-    const total = values.reduce((sum, value) => sum + value, 0);
-
-    legend.innerHTML = entries.map(([category, value], index) => `
-        <div class="legend-row">
-            <span class="legend-dot"
-                style="background:${COLORS[index % COLORS.length]}"></span>
-
-            <span class="legend-name">${escapeHTML(category)}</span>
-
-            <span class="legend-value">${money(value)}</span>
-
-            <span class="legend-name">
-                ${formatPercent(total ? (value / total * 100) : 0)}
-            </span>
-        </div>
-    `).join("");
+    legend.innerHTML = entries.map(([category, value], index) => {
+        const color = MODERN_COLORS[index % MODERN_COLORS.length];
+        const pct = total ? (value / total) * 100 : 0;
+        return `
+            <div class="category-legend-item">
+                <div class="category-legend-row">
+                    <span class="category-legend-left">
+                        <span class="category-legend-dot" style="background:${color}; box-shadow: 0 0 8px ${color}66;"></span>
+                        <span>${escapeHTML(category)}</span>
+                    </span>
+                    <span class="category-legend-right">
+                        <span class="sensitive-value">${money(value)}</span>
+                        <span class="category-legend-pct">${formatPercent(pct)}</span>
+                    </span>
+                </div>
+                <div class="category-legend-bar-track">
+                    <div class="category-legend-bar-fill" style="width:${Math.min(100, pct).toFixed(1)}%; background:${color};"></div>
+                </div>
+            </div>
+        `;
+    }).join("");
 }
 
 function formatDate(dateString) {
@@ -10467,6 +10619,7 @@ function init() {
     setupRecurringBills();
     setupTransactionsPage();
     setupReports();
+    setupIndexChartControls();
     setupRepeatPlanning();
     if (typeof setupCustomGoals === "function") setupCustomGoals();
     setupDemoBanner();
@@ -10667,7 +10820,34 @@ function setupAchievementsPage() {
             document.querySelectorAll(".ach-level-btn").forEach(b => b.classList.remove("active"));
             btn.classList.add("active");
             currentLevelFilter = btn.dataset.achLevel || "all";
-            render();
+            // Rolagem horizontal invisível suave (mouse wheel + drag) nas barras de categoria e nível
+    document.querySelectorAll(".ach-categories-bar, .ach-levels-bar").forEach(bar => {
+        bar.addEventListener("wheel", (e) => {
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                e.preventDefault();
+                bar.scrollLeft += e.deltaY;
+            }
+        }, { passive: false });
+
+        let isDown = false;
+        let startX = 0;
+        let scrollStart = 0;
+        bar.addEventListener("mousedown", (e) => {
+            isDown = true;
+            startX = e.pageX - bar.offsetLeft;
+            scrollStart = bar.scrollLeft;
+        });
+        bar.addEventListener("mouseleave", () => { isDown = false; });
+        bar.addEventListener("mouseup", () => { isDown = false; });
+        bar.addEventListener("mousemove", (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - bar.offsetLeft;
+            bar.scrollLeft = scrollStart - (x - startX) * 1.4;
+        });
+    });
+
+    render();
         });
     });
 
@@ -10677,14 +10857,95 @@ function setupAchievementsPage() {
             document.querySelectorAll(".ach-filter-btn").forEach(b => b.classList.remove("active"));
             btn.classList.add("active");
             currentFilter = btn.dataset.achFilter || "all";
-            render();
+            // Rolagem horizontal invisível suave (mouse wheel + drag) nas barras de categoria e nível
+    document.querySelectorAll(".ach-categories-bar, .ach-levels-bar").forEach(bar => {
+        bar.addEventListener("wheel", (e) => {
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                e.preventDefault();
+                bar.scrollLeft += e.deltaY;
+            }
+        }, { passive: false });
+
+        let isDown = false;
+        let startX = 0;
+        let scrollStart = 0;
+        bar.addEventListener("mousedown", (e) => {
+            isDown = true;
+            startX = e.pageX - bar.offsetLeft;
+            scrollStart = bar.scrollLeft;
+        });
+        bar.addEventListener("mouseleave", () => { isDown = false; });
+        bar.addEventListener("mouseup", () => { isDown = false; });
+        bar.addEventListener("mousemove", (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - bar.offsetLeft;
+            bar.scrollLeft = scrollStart - (x - startX) * 1.4;
+        });
+    });
+
+    render();
+        });
+    });
+
+    // Rolagem horizontal invisível suave (mouse wheel + drag) nas barras de categoria e nível
+    document.querySelectorAll(".ach-categories-bar, .ach-levels-bar").forEach(bar => {
+        bar.addEventListener("wheel", (e) => {
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                e.preventDefault();
+                bar.scrollLeft += e.deltaY;
+            }
+        }, { passive: false });
+
+        let isDown = false;
+        let startX = 0;
+        let scrollStart = 0;
+        bar.addEventListener("mousedown", (e) => {
+            isDown = true;
+            startX = e.pageX - bar.offsetLeft;
+            scrollStart = bar.scrollLeft;
+        });
+        bar.addEventListener("mouseleave", () => { isDown = false; });
+        bar.addEventListener("mouseup", () => { isDown = false; });
+        bar.addEventListener("mousemove", (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - bar.offsetLeft;
+            bar.scrollLeft = scrollStart - (x - startX) * 1.4;
         });
     });
 
     render();
 
     window.addEventListener("mf:achievement-unlocked", () => {
-        render();
+        // Rolagem horizontal invisível suave (mouse wheel + drag) nas barras de categoria e nível
+    document.querySelectorAll(".ach-categories-bar, .ach-levels-bar").forEach(bar => {
+        bar.addEventListener("wheel", (e) => {
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                e.preventDefault();
+                bar.scrollLeft += e.deltaY;
+            }
+        }, { passive: false });
+
+        let isDown = false;
+        let startX = 0;
+        let scrollStart = 0;
+        bar.addEventListener("mousedown", (e) => {
+            isDown = true;
+            startX = e.pageX - bar.offsetLeft;
+            scrollStart = bar.scrollLeft;
+        });
+        bar.addEventListener("mouseleave", () => { isDown = false; });
+        bar.addEventListener("mouseup", () => { isDown = false; });
+        bar.addEventListener("mousemove", (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - bar.offsetLeft;
+            bar.scrollLeft = scrollStart - (x - startX) * 1.4;
+        });
+    });
+
+    render();
     });
 }
 

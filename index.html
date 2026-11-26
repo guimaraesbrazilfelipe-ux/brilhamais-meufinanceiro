@@ -219,12 +219,108 @@
             <!-- Bloco Disponível Após Despesas Cadastradas & Distribuição por Categoria (Item 6) -->
             <div id="dashboardBudgetBreakdown"></div>
 
-            <section class="content-grid">
+            <!-- Barra de Seleção de Data e Período dos Gráficos -->
+            <section class="chart-analysis-toolbar" aria-label="Filtros de análise dos gráficos">
+                <div>
+                    <strong style="font-size: 13.5px; color: #f8fafc; display: block;">📈 Análise Gráfica & Tendências</strong>
+                    <span style="font-size: 12px; color: #94a3b8;">Escolha a data de referência e o horizonte dos gráficos abaixo.</span>
+                </div>
+                <div class="chart-analysis-controls">
+                    <div class="custom-datepicker" id="indexChartDatePickerContainer">
+                        <input id="indexChartDate" type="date" class="datepicker-native-input" tabindex="-1" aria-hidden="true">
+                        <button type="button" class="datepicker-trigger" id="indexChartDatePickerTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="indexChartDatePickerDropdown">
+                            <span class="datepicker-trigger-left">
+                                <span class="datepicker-icon" aria-hidden="true">📅</span>
+                                <span class="datepicker-text" id="indexChartDatePickerText">Data dos gráficos</span>
+                            </span>
+                            <span class="datepicker-chevron" aria-hidden="true">⌄</span>
+                        </button>
+                        <div class="datepicker-backdrop" aria-hidden="true"></div>
+                        <div class="datepicker-dropdown" id="indexChartDatePickerDropdown" role="dialog" aria-modal="true" aria-label="Data de análise dos gráficos" aria-hidden="true">
+                            <div class="dp-header">
+                                <button type="button" class="dp-btn-view" title="Alternar para seleção de mês e ano">
+                                    <span class="dp-current-month-year">Novembro de 2026</span>
+                                    <span class="dp-view-chevron" aria-hidden="true">▾</span>
+                                </button>
+                                <div class="dp-nav-group">
+                                    <button type="button" class="dp-nav-btn dp-prev-btn" aria-label="Mês anterior">‹</button>
+                                    <button type="button" class="dp-nav-btn dp-next-btn" aria-label="Próximo mês">›</button>
+                                    <button type="button" class="dp-close-btn" aria-label="Fechar calendário">✕</button>
+                                </div>
+                            </div>
+                            <div class="dp-shortcuts">
+                                <button type="button" class="dp-shortcut-btn dp-today-btn">Hoje</button>
+                                <button type="button" class="dp-shortcut-btn dp-yesterday-btn">Ontem</button>
+                            </div>
+                            <div class="dp-days-view">
+                                <div class="dp-weekdays">
+                                    <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+                                </div>
+                                <div class="dp-grid"></div>
+                            </div>
+                            <div class="dp-months-view hidden">
+                                <div class="dp-year-selector">
+                                    <button type="button" class="dp-nav-btn dp-prev-year-btn" aria-label="Ano anterior">‹</button>
+                                    <span class="dp-year-display">2026</span>
+                                    <button type="button" class="dp-nav-btn dp-next-year-btn" aria-label="Próximo ano">›</button>
+                                </div>
+                                <div class="dp-months-grid"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="split-picker" id="indexChartPeriodPicker">
+                        <button type="button" id="indexChartPeriodButton" class="split-picker-button" aria-haspopup="listbox" aria-expanded="false" aria-controls="indexChartPeriodOptions">
+                            <span class="split-picker-button-left">
+                                <span class="split-picker-icon" id="indexChartPeriodIcon" aria-hidden="true">📊</span>
+                                <span class="split-picker-label" id="indexChartPeriodLabel">Últimos 6 meses</span>
+                            </span>
+                            <span class="category-chevron" aria-hidden="true">⌄</span>
+                        </button>
+                        <div class="split-drawer" id="indexChartPeriodOptions" role="listbox" aria-label="Período dos gráficos">
+                            <button type="button" class="split-option selected" role="option" aria-selected="true" data-mode="6_months" data-icon="📊" data-label="Últimos 6 meses">
+                                <div class="split-option-icon-box">📊</div>
+                                <div class="split-option-text">
+                                    <strong class="split-option-title">Últimos 6 meses</strong>
+                                    <span class="split-option-desc">Comparativo semestral até a data escolhida</span>
+                                </div>
+                                <span class="split-option-check" aria-hidden="true">✓</span>
+                            </button>
+                            <button type="button" class="split-option" role="option" aria-selected="false" data-mode="this_month_daily" data-icon="📅" data-label="Mês selecionado (diário)">
+                                <div class="split-option-icon-box">📅</div>
+                                <div class="split-option-text">
+                                    <strong class="split-option-title">Mês selecionado (diário)</strong>
+                                    <span class="split-option-desc">Evolução dia a dia dentro do mês escolhido</span>
+                                </div>
+                                <span class="split-option-check" aria-hidden="true">✓</span>
+                            </button>
+                            <button type="button" class="split-option" role="option" aria-selected="false" data-mode="this_year" data-icon="📆" data-label="Ano inteiro (12 meses)">
+                                <div class="split-option-icon-box">📆</div>
+                                <div class="split-option-text">
+                                    <strong class="split-option-title">Ano inteiro (12 meses)</strong>
+                                    <span class="split-option-desc">Janeiro a Dezembro do ano da data</span>
+                                </div>
+                                <span class="split-option-check" aria-hidden="true">✓</span>
+                            </button>
+                            <button type="button" class="split-option" role="option" aria-selected="false" data-mode="last_2_years" data-icon="📈" data-label="Últimos 2 anos">
+                                <div class="split-option-icon-box">📈</div>
+                                <div class="split-option-text">
+                                    <strong class="split-option-title">Últimos 2 anos</strong>
+                                    <span class="split-option-desc">Histórico de 24 meses</span>
+                                </div>
+                                <span class="split-option-check" aria-hidden="true">✓</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="charts-duo-grid">
                 <article class="panel chart-panel">
                     <div class="panel-heading">
                         <div>
                             <h2>Receitas x despesas</h2>
-                            <p>Comparação dos últimos 6 meses</p>
+                            <p id="monthlyChartSubtitle">Comparação dos últimos 6 meses com tendência de saldo</p>
                         </div>
                         <a href="relatorios.html" class="text-button">Ver relatórios →</a>
                     </div>
@@ -233,16 +329,30 @@
                     </div>
                 </article>
 
-                <article class="panel history-panel">
+                <article class="panel chart-panel">
                     <div class="panel-heading">
                         <div>
-                            <h2>Últimas movimentações</h2>
-                            <p>Recentes do seu histórico</p>
+                            <h2>Onde você gasta?</h2>
+                            <p id="categoryChartSubtitle">Distribuição das despesas do período</p>
                         </div>
-                        <a href="historico.html" class="text-button">Ver histórico →</a>
+                        <a href="relatorios.html" class="text-button">Detalhes →</a>
                     </div>
-                    <div id="transactionList" class="transaction-list"></div>
+                    <div class="chart-container doughnut-container">
+                        <canvas id="categoryChart" aria-label="Gráfico circular de despesas por categoria"></canvas>
+                    </div>
+                    <div id="categoryLegend" class="category-legend"></div>
                 </article>
+            </section>
+
+            <section class="panel history-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Últimas movimentações</h2>
+                        <p>Recentes do seu histórico</p>
+                    </div>
+                    <a href="historico.html" class="text-button">Ver histórico →</a>
+                </div>
+                <div id="transactionList" class="transaction-list"></div>
             </section>
 
             <!-- Contas Fixas e Assinaturas na Visão Geral -->
