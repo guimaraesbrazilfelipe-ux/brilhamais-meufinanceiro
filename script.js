@@ -8972,7 +8972,8 @@ function init() {
                 billsPaid: true,
                 newTransactions: true,
                 salary: true,
-                budgetLimit: true
+                budgetLimit: true,
+                motivational: true
             };
         },
 
@@ -9375,6 +9376,66 @@ function init() {
             try {
                 localStorage.setItem(budgetDedupeKey, "true");
             } catch (e) {}
+        },
+
+        checkMotivationalNotification(forceNow = false) {
+            const prefs = this.getPreferences();
+            if (prefs.motivational === false) return false;
+
+            const NEXT_KEY = "mf_next_motivational_notif_ts";
+            const LAST_IDX_KEY = "mf_last_motivational_quote_idx";
+            const now = Date.now();
+
+            let nextTs = 0;
+            try {
+                nextTs = Number(localStorage.getItem(NEXT_KEY) || 0);
+            } catch (e) {}
+
+            // Primeiro acesso: agenda entre 2h e 4h (a menos que forceNow seja true)
+            if (!nextTs && !forceNow) {
+                const delayMs = (2 + Math.random() * 2) * 3600000;
+                try { localStorage.setItem(NEXT_KEY, String(now + delayMs)); } catch (e) {}
+                return false;
+            }
+
+            if (!forceNow && now < nextTs) {
+                return false;
+            }
+
+            const quotes = [
+                { icon: "💡", title: "Mentalidade Próspera", body: "Não economize o que sobra depois de gastar; gaste o que sobra depois de economizar." },
+                { icon: "🌱", title: "Pequenos Hábitos, Grandes Resultados", body: "Cada real guardado hoje é uma semente de tranquilidade para o seu amanhã." },
+                { icon: "💎", title: "Foco no Patrimônio", body: "Riqueza não é sobre quanto você ganha, mas sobre quanto você consegue manter e multiplicar." },
+                { icon: "🛡️", title: "Liberdade Financeira", body: "Uma reserva de emergência transforma imprevistos em simples inconvenientes." },
+                { icon: "📈", title: "Poder da Constância", body: "A disciplina diária nos pequenos gastos constrói a liberdade financeira dos grandes sonhos." },
+                { icon: "🎯", title: "Direção Clara", body: "Quem controla cada centavo decide para onde vai o próprio futuro." },
+                { icon: "⏳", title: "Tempo a Seu Favor", body: "Os juros compostos recompensam a paciência de quem começa hoje, mesmo com pouco." },
+                { icon: "✨", title: "Consumo Consciente", body: "Antes de comprar por impulso, pergunte: isso me aproxima ou me afasta da minha meta?" },
+                { icon: "🏆", title: "Vitória Silenciosa", body: "Dizer 'não' a um gasto supérfluo hoje é dizer 'sim' à sua paz financeira." },
+                { icon: "🚀", title: "Próximo Nível", body: "Acompanhar suas finanças regularmente já coloca você à frente da maioria." },
+                { icon: "🪙", title: "Valor do Esforço", body: "Dinheiro é tempo de vida transformado em recurso. Cuide bem de onde você o investe." },
+                { icon: "🔥", title: "Mantenha o Ritmo", body: "Metas financeiras não exigem perfeição, exigem consistência todos os meses." }
+            ];
+
+            let lastIdx = -1;
+            try { lastIdx = Number(localStorage.getItem(LAST_IDX_KEY) || -1); } catch (e) {}
+            let idx = Math.floor(Math.random() * quotes.length);
+            if (idx === lastIdx && quotes.length > 1) idx = (idx + 1) % quotes.length;
+            const q = quotes[idx];
+
+            // Agenda a próxima entre 2h e 4h
+            const nextDelayMs = (2 + Math.random() * 2) * 3600000;
+            try {
+                localStorage.setItem(LAST_IDX_KEY, String(idx));
+                localStorage.setItem(NEXT_KEY, String(now + nextDelayMs));
+            } catch (e) {}
+
+            this.send(q.title, q.body, {
+                tag: `motivational-${now}`,
+                url: "./planejamento.html",
+                iconEmoji: q.icon
+            });
+            return true;
         }
     };
 
@@ -10564,6 +10625,7 @@ function init() {
             const prefNewTransactions = document.getElementById("prefNotifNewTransactions");
             const prefSalary = document.getElementById("prefNotifSalary");
             const prefBudgetLimit = document.getElementById("prefNotifBudgetLimit");
+            const prefMotivational = document.getElementById("prefNotifMotivational");
 
             if (!prefBillsDue && !prefBillsPaid) return;
 
@@ -10574,6 +10636,7 @@ function init() {
             if (prefNewTransactions) prefNewTransactions.checked = Boolean(prefs.newTransactions);
             if (prefSalary) prefSalary.checked = Boolean(prefs.salary);
             if (prefBudgetLimit) prefBudgetLimit.checked = Boolean(prefs.budgetLimit);
+            if (prefMotivational) prefMotivational.checked = prefs.motivational !== false;
 
             function updatePrefs() {
                 const updated = {
@@ -10581,7 +10644,8 @@ function init() {
                     billsPaid: prefBillsPaid ? prefBillsPaid.checked : true,
                     newTransactions: prefNewTransactions ? prefNewTransactions.checked : true,
                     salary: prefSalary ? prefSalary.checked : true,
-                    budgetLimit: prefBudgetLimit ? prefBudgetLimit.checked : true
+                    budgetLimit: prefBudgetLimit ? prefBudgetLimit.checked : true,
+                    motivational: prefMotivational ? prefMotivational.checked : true
                 };
                 MFNotifications.savePreferences(updated);
                 if (typeof showToast === "function") {
@@ -10589,7 +10653,7 @@ function init() {
                 }
             }
 
-            [prefBillsDue, prefBillsPaid, prefNewTransactions, prefSalary, prefBudgetLimit].forEach(input => {
+            [prefBillsDue, prefBillsPaid, prefNewTransactions, prefSalary, prefBudgetLimit, prefMotivational].forEach(input => {
                 if (input) input.addEventListener("change", updatePrefs);
             });
         }
@@ -10641,6 +10705,10 @@ function init() {
             if (typeof window.MFNotifications.checkBillsDue === "function") window.MFNotifications.checkBillsDue();
             if (typeof window.MFNotifications.checkSalaryDay === "function") window.MFNotifications.checkSalaryDay();
             if (typeof window.MFNotifications.checkAllCustomGoals === "function") window.MFNotifications.checkAllCustomGoals();
+            if (typeof window.MFNotifications.checkMotivationalNotification === "function") {
+                window.MFNotifications.checkMotivationalNotification(false);
+                setInterval(() => window.MFNotifications.checkMotivationalNotification(false), 15 * 60 * 1000);
+            }
         }
     }, 1500);
 
