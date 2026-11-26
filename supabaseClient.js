@@ -689,6 +689,7 @@ async function pushAllLocalDataToCloud(userId, localData) {
             }));
             await supabaseClient.from("recurring_bills").upsert(billRows);
         } else if (Array.isArray(localData.recurringBills) && localData.recurringBills.length === 0) {
+            await supabaseClient.from("recurring_bill_records").delete().eq("user_id", userId);
             await supabaseClient.from("recurring_bills").delete().eq("user_id", userId);
         }
     } catch (e) {
@@ -719,6 +720,23 @@ async function deleteCloudRecurringBill(billId) {
         }
     } catch (err) {
         console.warn("Aviso ao excluir conta fixa no Supabase:", err);
+    }
+}
+
+async function clearAllCloudData() {
+    if (!supabaseClient || !currentUser) return;
+    const userId = currentUser.id;
+    try {
+        await supabaseClient.from("recurring_bill_records").delete().eq("user_id", userId);
+        await supabaseClient.from("recurring_bills").delete().eq("user_id", userId);
+        await supabaseClient.from("transactions").delete().eq("user_id", userId);
+        await supabaseClient.from("monthly_plans").delete().eq("user_id", userId);
+        await supabaseClient.from("user_settings").delete().eq("user_id", userId);
+        try {
+            localStorage.removeItem("brilhaCash_tombstones");
+        } catch (e) {}
+    } catch (err) {
+        console.warn("Aviso ao limpar todos os dados no Supabase:", err);
     }
 }
 
@@ -776,5 +794,6 @@ window.MFAuth = {
     scheduleSync: scheduleCloudSync,
     pullData: pullCloudDataToLocal,
     deleteTransaction: deleteCloudTransaction,
-    deleteRecurringBill: deleteCloudRecurringBill
+    deleteRecurringBill: deleteCloudRecurringBill,
+    clearAllCloudData: clearAllCloudData
 };

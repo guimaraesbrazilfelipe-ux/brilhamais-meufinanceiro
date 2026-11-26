@@ -225,17 +225,33 @@
                 <form id="customGoalForm" class="custom-goal-form" novalidate>
                     <input type="hidden" id="customGoalEditId" value="">
                     <input type="hidden" id="customGoalIcon" value="✈️">
+                    <input type="hidden" id="customGoalPurpose" value="Lazer">
 
                     <div class="goal-icon-chips-row">
-                        <span class="goal-chips-label">Escolha um ícone:</span>
+                        <span class="goal-chips-label">Categoria / Ícone:</span>
                         <div class="goal-icon-chips" id="goalIconChips">
-                            <button type="button" class="goal-icon-chip active" data-icon="✈️" data-suggest="Viagem">✈️ Viagem</button>
-                            <button type="button" class="goal-icon-chip" data-icon="🚗" data-suggest="Carro">🚗 Carro</button>
-                            <button type="button" class="goal-icon-chip" data-icon="🏠" data-suggest="Casa">🏠 Casa</button>
-                            <button type="button" class="goal-icon-chip" data-icon="🛟" data-suggest="Reserva de Emergência">🛟 Reserva</button>
-                            <button type="button" class="goal-icon-chip" data-icon="💻" data-suggest="Notebook / Tech">💻 Tech</button>
-                            <button type="button" class="goal-icon-chip" data-icon="🎓" data-suggest="Estudos">🎓 Estudos</button>
-                            <button type="button" class="goal-icon-chip" data-icon="🎯" data-suggest="">🎯 Outro</button>
+                            <button type="button" class="goal-icon-chip active" data-icon="✈️" data-suggest="Viagem" data-purpose="Lazer">✈️ Viagem</button>
+                            <button type="button" class="goal-icon-chip" data-icon="🎉" data-suggest="Lazer" data-purpose="Lazer">🎉 Lazer</button>
+                            <button type="button" class="goal-icon-chip" data-icon="💳" data-suggest="Quitar / Pagar" data-purpose="Pagar">💳 Pagar algo</button>
+                            <button type="button" class="goal-icon-chip" data-icon="🛟" data-suggest="Reserva de Emergência" data-purpose="Guardar">🛟 Guardar / Reserva</button>
+                            <button type="button" class="goal-icon-chip" data-icon="🚗" data-suggest="Carro" data-purpose="Compra">🚗 Carro</button>
+                            <button type="button" class="goal-icon-chip" data-icon="🏠" data-suggest="Casa" data-purpose="Compra">🏠 Casa</button>
+                            <button type="button" class="goal-icon-chip" data-icon="💻" data-suggest="Notebook / Tech" data-purpose="Compra">💻 Tech</button>
+                            <button type="button" class="goal-icon-chip" data-icon="🎓" data-suggest="Estudos" data-purpose="Investimento">🎓 Estudos</button>
+                            <button type="button" class="goal-icon-chip" data-icon="🎯" data-suggest="" data-purpose="Meta">🎯 Outro</button>
+                        </div>
+                    </div>
+
+                    <div class="goal-icon-chips-row">
+                        <span class="goal-chips-label">Prazo para atingir a meta:</span>
+                        <div class="goal-icon-chips" id="goalDeadlineChips">
+                            <button type="button" class="goal-icon-chip goal-deadline-chip" data-days="7">🗓️ 1 Semana</button>
+                            <button type="button" class="goal-icon-chip goal-deadline-chip" data-days="15">📅 15 Dias</button>
+                            <button type="button" class="goal-icon-chip goal-deadline-chip" data-months="1">🌙 1 Mês</button>
+                            <button type="button" class="goal-icon-chip goal-deadline-chip active" data-months="3">📆 3 Meses</button>
+                            <button type="button" class="goal-icon-chip goal-deadline-chip" data-months="6">🗓️ 6 Meses</button>
+                            <button type="button" class="goal-icon-chip goal-deadline-chip" data-years="1">🎆 1 Ano</button>
+                            <button type="button" class="goal-icon-chip goal-deadline-chip" data-custom="true">✏️ Data personalizada</button>
                         </div>
                     </div>
 

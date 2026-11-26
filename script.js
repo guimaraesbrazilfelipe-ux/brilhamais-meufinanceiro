@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 // Captura global antecipada do evento de instalação do PWA
 window.deferredPwaPrompt = null;
@@ -986,8 +986,7 @@ function renderContextualInsight(summary, m, periodOptions = null) {
             </div>
         `;
         actionsHtml = `
-            <a href="index.html?wizard=true" class="button button-primary insight-btn">🚀 Iniciar configuração rápida</a>
-            <a href="configuracoes.html" class="button button-secondary insight-btn">💵 Cadastrar renda</a>
+            <a href="configuracoes.html" class="button button-primary insight-btn">💵 Cadastrar renda</a>
             <a href="lancamentos.html" class="button button-secondary insight-btn">+ Novo lançamento</a>
         `;
     } else if (income === 0 && expenses > 0) {
@@ -2051,7 +2050,7 @@ function renderCustomGoals() {
                     <div class="custom-goal-title-wrap">
                         <div class="custom-goal-icon-box">${escapeHTML(g.icon || "🎯")}</div>
                         <div>
-                            <h3>${escapeHTML(g.title)}</h3>
+                            <h3>${escapeHTML(g.title)} ${g.purpose ? `<span class="goal-purpose-tag">${escapeHTML(g.purpose)}</span>` : ""}</h3>
                             <span class="custom-goal-deadline-text">📅 Meta: ${dateLabel} ${daysText ? `• ${daysText}` : ""}</span>
                         </div>
                     </div>
@@ -2091,6 +2090,7 @@ function setupCustomGoals() {
 
     const editIdInput = $("#customGoalEditId");
     const iconInput = $("#customGoalIcon");
+    const purposeInput = $("#customGoalPurpose");
     const titleInput = $("#customGoalTitle");
     const targetInput = $("#customGoalTarget");
     const initialInput = $("#customGoalInitial");
@@ -2098,15 +2098,25 @@ function setupCustomGoals() {
     const submitBtn = $("#btnSaveCustomGoal");
     const cancelBtn = $("#btnCancelEditCustomGoal");
     const chipsContainer = $("#goalIconChips");
+    const deadlineChipsContainer = $("#goalDeadlineChips");
+
+    function setGoalDateOffset({ days = 0, months = 0, years = 0 }) {
+        if (!dateInput) return;
+        const d = new Date();
+        if (days) d.setDate(d.getDate() + days);
+        if (months) d.setMonth(d.getMonth() + months);
+        if (years) d.setFullYear(d.getFullYear() + years);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        dateInput.value = `${y}-${m}-${day}`;
+        const dpContainer = $("#customGoalDatePickerContainer");
+        if (dpContainer && dpContainer._syncDatePicker) dpContainer._syncDatePicker();
+    }
 
     // Define data padrão (3 meses à frente) se vazia
     if (dateInput && !dateInput.value) {
-        const d = new Date();
-        d.setMonth(d.getMonth() + 3);
-        const defIso = d.toISOString().slice(0, 10);
-        dateInput.value = defIso;
-        const dpContainer = $("#customGoalDatePickerContainer");
-        if (dpContainer && dpContainer._syncDatePicker) dpContainer._syncDatePicker();
+        setGoalDateOffset({ months: 3 });
     }
 
     if (chipsContainer) {
@@ -2116,9 +2126,37 @@ function setupCustomGoals() {
             chipsContainer.querySelectorAll(".goal-icon-chip").forEach(c => c.classList.remove("active"));
             chip.classList.add("active");
             if (iconInput) iconInput.value = chip.dataset.icon || "🎯";
+            if (purposeInput) purposeInput.value = chip.dataset.purpose || "Meta";
             if (titleInput && !titleInput.value.trim() && chip.dataset.suggest) {
                 titleInput.value = chip.dataset.suggest;
             }
+        });
+    }
+
+    if (deadlineChipsContainer) {
+        deadlineChipsContainer.addEventListener("click", (e) => {
+            const chip = e.target.closest(".goal-deadline-chip");
+            if (!chip) return;
+            deadlineChipsContainer.querySelectorAll(".goal-deadline-chip").forEach(c => c.classList.remove("active"));
+            chip.classList.add("active");
+
+            if (chip.dataset.custom === "true") {
+                const trigger = $("#customGoalDatePickerTrigger");
+                if (trigger) trigger.click();
+                return;
+            }
+            const days = Number(chip.dataset.days || 0);
+            const months = Number(chip.dataset.months || 0);
+            const years = Number(chip.dataset.years || 0);
+            setGoalDateOffset({ days, months, years });
+        });
+    }
+
+    if (dateInput && deadlineChipsContainer) {
+        dateInput.addEventListener("change", () => {
+            deadlineChipsContainer.querySelectorAll(".goal-deadline-chip").forEach(c => {
+                c.classList.toggle("active", c.dataset.custom === "true");
+            });
         });
     }
 
@@ -2142,6 +2180,7 @@ function setupCustomGoals() {
         const currentAmount = Math.max(0, Number(initialInput?.value || 0));
         const targetDate = dateInput?.value || "";
         const icon = iconInput?.value || "🎯";
+        const purpose = purposeInput?.value || "Meta";
         const editId = editIdInput?.value || "";
 
         if (!title) {
@@ -2167,6 +2206,7 @@ function setupCustomGoals() {
                     ...data.customGoals[idx],
                     title,
                     icon,
+                    purpose,
                     targetAmount,
                     currentAmount,
                     targetDate
@@ -2178,6 +2218,7 @@ function setupCustomGoals() {
                 id: "goal_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
                 title,
                 icon,
+                purpose,
                 targetAmount,
                 currentAmount,
                 targetDate,
@@ -7298,12 +7339,30 @@ async function clearAllData() {
     if (!confirmed) return;
 
     try {
+        // 1. Registra tombstones de todos os lançamentos e contas fixas antes de limpar
+        const prevTxs = Array.isArray(data?.transactions) ? data.transactions : [];
+        const prevBills = Array.isArray(data?.recurringBills) ? data.recurringBills : [];
+        prevTxs.forEach(t => { if (t?.id) addTombstone("tx", t.id); });
+        prevBills.forEach(b => { if (b?.id) addTombstone("bill", b.id); });
+
+        // 2. Remove chaves de dados e estados locais
         localStorage.removeItem(STORAGE_KEY);
         localStorage.removeItem(LEGACY_STORAGE_KEY);
-        localStorage.removeItem("brilhaCash_tombstones");
-        localStorage.removeItem("mf_quickstart_completed");
         localStorage.removeItem("meuFinanceiro.tutorialDone");
         localStorage.removeItem("meuFinanceiro.privacyMode");
+        localStorage.removeItem("meuFinanceiro.privacy");
+        localStorage.removeItem("meuFinanceiro_achievements_v1");
+        localStorage.removeItem("meuFinanceiro_daily_streak_v1");
+        localStorage.removeItem("meuFinanceiro_notifications_sent_log");
+        localStorage.removeItem("meuFinanceiro_used_ofx");
+        localStorage.removeItem("meuFinanceiro_used_barcode");
+
+        Object.keys(localStorage).forEach(k => {
+            if (k.startsWith("salary_credited_") || k.startsWith("budget_limit_") || k.startsWith("mf_quickstart_")) {
+                localStorage.removeItem(k);
+            }
+        });
+
         sessionStorage.removeItem("meuFinanceiro.date");
         sessionStorage.removeItem("meuFinanceiro.month");
         sessionStorage.removeItem("meuFinanceiro.historyPeriod");
@@ -7316,14 +7375,23 @@ async function clearAllData() {
                 "system",
                 "DATA_CLEARED",
                 "Dados reiniciados",
-                "Todos os lançamentos e configurações locais foram apagados"
+                "Todos os lançamentos, contas fixas, metas e configurações foram apagados"
             );
         }
 
+        // 3. Zera objeto em memória e grava estado limpo
         data = defaultData();
-        saveData();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 
-        showToast("Todos os dados foram apagados com sucesso!");
+        // 4. Se conectado ao Supabase, limpa imediatamente na nuvem (contas fixas, lançamentos, planos, configurações)
+        if (window.MFAuth && typeof window.MFAuth.clearAllCloudData === "function") {
+            await window.MFAuth.clearAllCloudData();
+        } else {
+            localStorage.removeItem("brilhaCash_tombstones");
+        }
+
+        if (typeof renderAll === "function") renderAll();
+        showToast("Todos os dados (incluindo contas fixas e metas) foram apagados com sucesso!");
 
         setTimeout(() => {
             window.location.reload();
@@ -10309,7 +10377,6 @@ function init() {
     if (typeof setupCustomGoals === "function") setupCustomGoals();
     setupDemoBanner();
     setupWelcomeTutorial();
-    setupQuickStartWizard();
     setupAchievementsPage();
     setupAutomationModals();
     setupSecurityPanelUI();
@@ -11665,224 +11732,6 @@ function setupWelcomeTutorial() {
 
     if (shouldShow) {
         goToStep(0);
-    }
-}
-
-/* =========================================
-   ONBOARDING GUIADO (CONFIGURAÇÃO RÁPIDA)
-========================================= */
-
-function setupQuickStartWizard() {
-    const modal = $("#quickStartModal");
-    if (!modal) return;
-
-    const btnClose = $("#btnWizardClose");
-    const btnSkip = $("#btnWizardSkip");
-    const btnPrev = $("#btnWizardPrev");
-    const btnNext = $("#btnWizardNext");
-    const btnFinish = $("#btnWizardFinish");
-    const badge = $("#wizardStepBadge");
-    const progressFill = $("#wizardProgressFill");
-
-    let currentStep = 1;
-    const totalSteps = 4;
-
-    function openWizard() {
-        modal.classList.add("is-open");
-        modal.setAttribute("aria-hidden", "false");
-
-        const netSal = $("#wizardNetSalary");
-        if (netSal) {
-            netSal.value = (data.salaryConfig && data.salaryConfig.amount) ? data.salaryConfig.amount : "";
-        }
-        const salDay = $("#wizardSalaryDay");
-        if (salDay && data.salaryConfig && data.salaryConfig.payDay) {
-            salDay.value = data.salaryConfig.payDay;
-        }
-        goToStep(1);
-    }
-
-    function closeWizard(completed = false) {
-        modal.classList.remove("is-open");
-        modal.setAttribute("aria-hidden", "true");
-        localStorage.setItem("mf_quickstart_seen", "true");
-        if (completed) {
-            localStorage.setItem("mf_quickstart_completed", "true");
-        }
-    }
-
-    function calculateWizardSummary() {
-        const netSalary = Number($("#wizardNetSalary")?.value || 0);
-        let expensesSum = 0;
-        document.querySelectorAll(".wizard-chip.selected").forEach((chip) => {
-            const input = chip.querySelector(".wizard-chip-val");
-            const val = Number(input?.value || 0);
-            expensesSum += val;
-        });
-
-        const sumIncomeEl = $("#wizardSumIncome");
-        const sumExpEl = $("#wizardSumExpenses");
-        const sumCompEl = $("#wizardSumCompromised");
-        const sumBalEl = $("#wizardSumBalance");
-
-        if (sumIncomeEl) sumIncomeEl.textContent = money(netSalary);
-        if (sumExpEl) sumExpEl.textContent = money(expensesSum);
-
-        const pct = netSalary > 0 ? (expensesSum / netSalary) * 100 : 0;
-        if (sumCompEl) {
-            sumCompEl.textContent = `${pct.toFixed(1).replace(".", ",")}%`;
-            sumCompEl.style.color = pct > 90 ? "#ef4444" : (pct > 70 ? "#f59e0b" : "#34d399");
-        }
-
-        const bal = netSalary - expensesSum;
-        if (sumBalEl) {
-            sumBalEl.textContent = money(bal);
-            sumBalEl.style.color = bal < 0 ? "#ef4444" : "#34d399";
-        }
-    }
-
-    function goToStep(step) {
-        currentStep = Math.max(1, Math.min(totalSteps, step));
-
-        for (let i = 1; i <= totalSteps; i++) {
-            const el = $(`#wizardStep${i}`);
-            if (el) el.classList.toggle("active", i === currentStep);
-        }
-
-        if (badge) badge.textContent = `Passo ${currentStep} de ${totalSteps}`;
-        if (progressFill) progressFill.style.width = `${(currentStep / totalSteps) * 100}%`;
-
-        if (btnPrev) btnPrev.style.display = currentStep > 1 ? "" : "none";
-        if (btnNext) btnNext.style.display = currentStep < totalSteps ? "" : "none";
-        if (btnFinish) btnFinish.style.display = currentStep === totalSteps ? "" : "none";
-        if (btnSkip) btnSkip.style.display = currentStep < totalSteps ? "" : "none";
-
-        if (currentStep === 3) {
-            calculateWizardSummary();
-        }
-    }
-
-    document.querySelectorAll(".wizard-chip").forEach((chip) => {
-        chip.addEventListener("click", (e) => {
-            if (e.target && e.target.tagName.toLowerCase() === "input") return;
-            chip.classList.toggle("selected");
-            calculateWizardSummary();
-        });
-        const input = chip.querySelector(".wizard-chip-val");
-        if (input) {
-            input.addEventListener("input", calculateWizardSummary);
-        }
-    });
-
-    if (btnClose) btnClose.addEventListener("click", () => closeWizard(false));
-    if (btnSkip) btnSkip.addEventListener("click", () => closeWizard(true));
-
-    if (btnPrev) {
-        btnPrev.addEventListener("click", () => goToStep(currentStep - 1));
-    }
-
-    if (btnNext) {
-        btnNext.addEventListener("click", () => {
-            if (currentStep === 1) {
-                const netVal = Number($("#wizardNetSalary")?.value || 0);
-                if (!netVal || netVal <= 0) {
-                    showToast("Por favor, digite seu salário líquido mensal.");
-                    return;
-                }
-            }
-            goToStep(currentStep + 1);
-        });
-    }
-
-    if (btnFinish) {
-        btnFinish.addEventListener("click", () => {
-            const netSalary = Number($("#wizardNetSalary")?.value || 0);
-            const payDay = parseInt($("#wizardSalaryDay")?.value || "5", 10) || 5;
-            const curM = currentMonth();
-
-            if (netSalary > 0) {
-                if (!data.salaryConfig) data.salaryConfig = {};
-                data.salaryConfig.amount = netSalary;
-                data.salaryConfig.payDay = payDay;
-                data.salaryConfig.day = payDay;
-                data.salaryConfig.date = `${curM}-${String(payDay).padStart(2, "0")}`;
-                data.salaryConfig.autoDeposit = true;
-                if (!data.salaries) data.salaries = {};
-                data.salaries[curM] = netSalary;
-                if (!data.salaryConfig.grossAmount) data.salaryConfig.grossAmount = 0;
-                if (!data.salaryConfig.benefitsAmount) data.salaryConfig.benefitsAmount = 0;
-            }
-
-            if (!Array.isArray(data.recurringBills)) data.recurringBills = [];
-            if (!data.budgets) data.budgets = {};
-
-            let totalBudgetsFromWizard = 0;
-
-            document.querySelectorAll(".wizard-chip.selected").forEach((chip) => {
-                const kind = chip.dataset.kind || "bill";
-                const cat = chip.dataset.cat || "Moradia";
-                const desc = chip.dataset.desc || "Despesa fixa";
-                const input = chip.querySelector(".wizard-chip-val");
-                const val = Number(input?.value || 0);
-                if (val <= 0) return;
-
-                if (kind === "bill") {
-                    const dayInput = chip.querySelector(".wizard-chip-day-input");
-                    const billDueDay = parseInt(dayInput?.value || "10", 10) || payDay;
-                    const exists = data.recurringBills.some((b) => b.name === desc);
-                    if (!exists) {
-                        data.recurringBills.push({
-                            id: createId(),
-                            name: desc,
-                            amount: val,
-                            category: cat,
-                            startDate: `${curM}-${String(billDueDay).padStart(2, "0")}`,
-                            dueDay: billDueDay,
-                            subscriptionTime: "12:00",
-                            frequency: "monthly",
-                            paidDates: [],
-                            paidMonths: []
-                        });
-                    }
-                } else if (kind === "budget") {
-                    totalBudgetsFromWizard += val;
-                }
-            });
-
-            if (totalBudgetsFromWizard > 0) {
-                data.budgets[curM] = totalBudgetsFromWizard;
-            }
-
-            // Marca que agora o usuário inseriu seus próprios dados reais
-            data.isDemoData = false;
-            sessionStorage.setItem("mf_dismiss_demo_banner", "true");
-
-            saveData();
-            closeWizard(true);
-            showToast("Configuração inicial concluída com sucesso! 🎉");
-            renderAll();
-        });
-    }
-
-    document.querySelectorAll("#btnStartQuickWizard, .btn-start-wizard").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-            e.preventDefault();
-            openWizard();
-        });
-    });
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const forceOpen = urlParams.get("wizard") === "true";
-    const alreadySeen = localStorage.getItem("mf_quickstart_seen") === "true" || localStorage.getItem("mf_quickstart_completed") === "true";
-    const tutorialOverlay = $("#welcomeTutorial");
-    const tutorialActive = tutorialOverlay && !tutorialOverlay.classList.contains("hidden") && tutorialOverlay.style.display !== "none";
-
-    // Abre SOMENTE no 1º acesso ao aplicativo (a menos que acionado explicitamente via URL ?wizard=true ou botão)
-    if (forceOpen || (!alreadySeen && !tutorialActive && (!data.salaryConfig || !data.salaryConfig.amount))) {
-        if (!forceOpen) {
-            localStorage.setItem("mf_quickstart_seen", "true");
-        }
-        setTimeout(openWizard, 250);
     }
 }
 
