@@ -227,34 +227,6 @@
                     <input type="hidden" id="customGoalIcon" value="✈️">
                     <input type="hidden" id="customGoalPurpose" value="Lazer">
 
-                    <div class="goal-icon-chips-row">
-                        <span class="goal-chips-label">Categoria / Ícone:</span>
-                        <div class="goal-icon-chips" id="goalIconChips">
-                            <button type="button" class="goal-icon-chip active" data-icon="✈️" data-suggest="Viagem" data-purpose="Lazer">✈️ Viagem</button>
-                            <button type="button" class="goal-icon-chip" data-icon="🎉" data-suggest="Lazer" data-purpose="Lazer">🎉 Lazer</button>
-                            <button type="button" class="goal-icon-chip" data-icon="💳" data-suggest="Quitar / Pagar" data-purpose="Pagar">💳 Pagar algo</button>
-                            <button type="button" class="goal-icon-chip" data-icon="🛟" data-suggest="Reserva de Emergência" data-purpose="Guardar">🛟 Guardar / Reserva</button>
-                            <button type="button" class="goal-icon-chip" data-icon="🚗" data-suggest="Carro" data-purpose="Compra">🚗 Carro</button>
-                            <button type="button" class="goal-icon-chip" data-icon="🏠" data-suggest="Casa" data-purpose="Compra">🏠 Casa</button>
-                            <button type="button" class="goal-icon-chip" data-icon="💻" data-suggest="Notebook / Tech" data-purpose="Compra">💻 Tech</button>
-                            <button type="button" class="goal-icon-chip" data-icon="🎓" data-suggest="Estudos" data-purpose="Investimento">🎓 Estudos</button>
-                            <button type="button" class="goal-icon-chip" data-icon="🎯" data-suggest="" data-purpose="Meta">🎯 Outro</button>
-                        </div>
-                    </div>
-
-                    <div class="goal-icon-chips-row">
-                        <span class="goal-chips-label">Prazo para atingir a meta:</span>
-                        <div class="goal-icon-chips" id="goalDeadlineChips">
-                            <button type="button" class="goal-icon-chip goal-deadline-chip" data-days="7">🗓️ 1 Semana</button>
-                            <button type="button" class="goal-icon-chip goal-deadline-chip" data-days="15">📅 15 Dias</button>
-                            <button type="button" class="goal-icon-chip goal-deadline-chip" data-months="1">🌙 1 Mês</button>
-                            <button type="button" class="goal-icon-chip goal-deadline-chip active" data-months="3">📆 3 Meses</button>
-                            <button type="button" class="goal-icon-chip goal-deadline-chip" data-months="6">🗓️ 6 Meses</button>
-                            <button type="button" class="goal-icon-chip goal-deadline-chip" data-years="1">🎆 1 Ano</button>
-                            <button type="button" class="goal-icon-chip goal-deadline-chip" data-custom="true">✏️ Data personalizada</button>
-                        </div>
-                    </div>
-
                     <div class="custom-goal-form-grid">
                         <div class="field">
                             <label for="customGoalTitle">Nome da meta</label>
@@ -269,6 +241,183 @@
                         <div class="field">
                             <label for="customGoalInitial">Já guardado (opcional)</label>
                             <input type="number" id="customGoalInitial" min="0" max="100000000" step="0.01" placeholder="Ex.: 500">
+                        </div>
+
+                        <!-- Gaveta de Categoria da Meta (Padrão split-picker) -->
+                        <div class="field">
+                            <label for="customGoalCategoryButton">Categoria da meta</label>
+                            <div class="category-picker split-picker" id="customGoalCategoryPicker">
+                                <select id="customGoalCategorySelect" class="category-native-select" aria-hidden="true" tabindex="-1">
+                                    <option value="Lazer" data-icon="✈️" data-suggest="Viagem" selected>✈️ Viagem</option>
+                                    <option value="Lazer" data-icon="🎉" data-suggest="Lazer">🎉 Lazer</option>
+                                    <option value="Pagar" data-icon="💳" data-suggest="Quitar / Pagar">💳 Pagar algo</option>
+                                    <option value="Guardar" data-icon="🛟" data-suggest="Reserva de Emergência">🛟 Guardar / Reserva</option>
+                                    <option value="Compra" data-icon="🚗" data-suggest="Carro">🚗 Carro</option>
+                                    <option value="Compra" data-icon="🏠" data-suggest="Casa">🏠 Casa</option>
+                                    <option value="Compra" data-icon="💻" data-suggest="Notebook / Tech">💻 Tech</option>
+                                    <option value="Investimento" data-icon="🎓" data-suggest="Estudos">🎓 Estudos</option>
+                                    <option value="Meta" data-icon="🎯" data-suggest="">🎯 Outro</option>
+                                </select>
+                                <button type="button" id="customGoalCategoryButton" class="category-picker-button split-picker-button" aria-haspopup="listbox" aria-expanded="false" aria-controls="customGoalCategoryOptions">
+                                    <span class="split-picker-button-left">
+                                        <span class="split-picker-icon" id="customGoalCategoryIcon" aria-hidden="true">✈️</span>
+                                        <span class="split-picker-label" id="customGoalCategoryLabel">Viagem (Lazer)</span>
+                                    </span>
+                                    <span class="category-chevron" aria-hidden="true">⌄</span>
+                                </button>
+                                <div class="category-drawer split-drawer" id="customGoalCategoryOptions" role="listbox" aria-label="Escolha a categoria da meta">
+                                    <button type="button" class="category-option split-option selected" role="option" aria-selected="true" data-icon="✈️" data-suggest="Viagem" data-purpose="Lazer" data-label="Viagem (Lazer)">
+                                        <div class="split-option-icon-box">✈️</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Viagem</strong>
+                                            <span class="split-option-desc">Passeios, passagens aéreas e férias</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-icon="🎉" data-suggest="Lazer" data-purpose="Lazer" data-label="Lazer & Diversão">
+                                        <div class="split-option-icon-box">🎉</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Lazer & Diversão</strong>
+                                            <span class="split-option-desc">Shows, restaurantes, hobbies e entretenimento</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-icon="💳" data-suggest="Quitar / Pagar" data-purpose="Pagar" data-label="Pagar algo / Dívida">
+                                        <div class="split-option-icon-box">💳</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Pagar algo / Quitar</strong>
+                                            <span class="split-option-desc">Juntar valor específico para pagar conta ou parcela</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-icon="🛟" data-suggest="Reserva de Emergência" data-purpose="Guardar" data-label="Guardar / Reserva">
+                                        <div class="split-option-icon-box">🛟</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Guardar / Reserva</strong>
+                                            <span class="split-option-desc">Colchão financeiro de emergência e segurança</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-icon="🚗" data-suggest="Carro" data-purpose="Compra" data-label="Carro / Veículo">
+                                        <div class="split-option-icon-box">🚗</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Carro / Veículo</strong>
+                                            <span class="split-option-desc">Compra, entrada, troca ou manutenção</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-icon="🏠" data-suggest="Casa" data-purpose="Compra" data-label="Casa / Reforma">
+                                        <div class="split-option-icon-box">🏠</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Casa / Reforma</strong>
+                                            <span class="split-option-desc">Imóvel, móveis, entrada ou obra</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-icon="💻" data-suggest="Notebook / Tech" data-purpose="Compra" data-label="Tech / Eletrônicos">
+                                        <div class="split-option-icon-box">💻</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Tech / Eletrônicos</strong>
+                                            <span class="split-option-desc">Celular, computador, videogame ou equipamentos</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-icon="🎓" data-suggest="Estudos" data-purpose="Investimento" data-label="Estudos / Cursos">
+                                        <div class="split-option-icon-box">🎓</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Estudos / Cursos</strong>
+                                            <span class="split-option-desc">Faculdade, especializações e certificações</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="category-option split-option" role="option" aria-selected="false" data-icon="🎯" data-suggest="" data-purpose="Meta" data-label="Outro objetivo">
+                                        <div class="split-option-icon-box">🎯</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Outro objetivo</strong>
+                                            <span class="split-option-desc">Meta geral personalizada</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campo para escrever a própria categoria -->
+                        <div class="field custom-category-field">
+                            <label for="customGoalCustomCategory">Ou escreva sua categoria</label>
+                            <input id="customGoalCustomCategory" type="text" maxlength="40" placeholder="Ex.: Casamento, Pet, Investimento..." autocomplete="off">
+                        </div>
+
+                        <!-- Gaveta de Prazo Rápido (Padrão split-picker) -->
+                        <div class="field">
+                            <label for="customGoalDeadlineButton">Prazo para atingir a meta</label>
+                            <div class="split-picker" id="customGoalDeadlinePicker">
+                                <button type="button" id="customGoalDeadlineButton" class="split-picker-button" aria-haspopup="listbox" aria-expanded="false" aria-controls="customGoalDeadlineOptions">
+                                    <span class="split-picker-button-left">
+                                        <span class="split-picker-icon" id="customGoalDeadlineIcon" aria-hidden="true">📆</span>
+                                        <span class="split-picker-label" id="customGoalDeadlineLabel">3 Meses</span>
+                                    </span>
+                                    <span class="split-picker-chevron" aria-hidden="true">⌄</span>
+                                </button>
+                                <div class="split-drawer" id="customGoalDeadlineOptions" role="listbox" aria-label="Escolha o prazo da meta">
+                                    <button type="button" class="split-option" role="option" aria-selected="false" data-days="7" data-icon="🗓️" data-label="1 Semana (7 dias)">
+                                        <div class="split-option-icon-box">🗓️</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">1 Semana (7 dias)</strong>
+                                            <span class="split-option-desc">Meta relâmpago para juntar ou pagar em 7 dias</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="split-option" role="option" aria-selected="false" data-days="15" data-icon="📅" data-label="15 Dias">
+                                        <div class="split-option-icon-box">📅</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">15 Dias</strong>
+                                            <span class="split-option-desc">Prazo quinzenal para metas de curto prazo</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="split-option" role="option" aria-selected="false" data-months="1" data-icon="🌙" data-label="1 Mês (30 dias)">
+                                        <div class="split-option-icon-box">🌙</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">1 Mês (30 dias)</strong>
+                                            <span class="split-option-desc">Objetivo mensal para o ciclo atual</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="split-option selected" role="option" aria-selected="true" data-months="3" data-icon="📆" data-label="3 Meses">
+                                        <div class="split-option-icon-box">📆</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">3 Meses</strong>
+                                            <span class="split-option-desc">Planejamento trimestral equilibrado</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="split-option" role="option" aria-selected="false" data-months="6" data-icon="🗓️" data-label="6 Meses">
+                                        <div class="split-option-icon-box">🗓️</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">6 Meses</strong>
+                                            <span class="split-option-desc">Meta semestral para compras ou viagens</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="split-option" role="option" aria-selected="false" data-years="1" data-icon="🎆" data-label="1 Ano">
+                                        <div class="split-option-icon-box">🎆</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">1 Ano</strong>
+                                            <span class="split-option-desc">Objetivo anual de médio/longo prazo</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                    <button type="button" class="split-option" role="option" aria-selected="false" data-custom="true" data-icon="✏️" data-label="Data personalizada">
+                                        <div class="split-option-icon-box">✏️</div>
+                                        <div class="split-option-text">
+                                            <strong class="split-option-title">Data personalizada</strong>
+                                            <span class="split-option-desc">Escolha o dia, mês e ano exatos no calendário</span>
+                                        </div>
+                                        <span class="split-option-check" aria-hidden="true">✓</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="field">

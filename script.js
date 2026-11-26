@@ -2091,14 +2091,27 @@ function setupCustomGoals() {
     const editIdInput = $("#customGoalEditId");
     const iconInput = $("#customGoalIcon");
     const purposeInput = $("#customGoalPurpose");
+    const customCatInput = $("#customGoalCustomCategory");
     const titleInput = $("#customGoalTitle");
     const targetInput = $("#customGoalTarget");
     const initialInput = $("#customGoalInitial");
     const dateInput = $("#customGoalDate");
     const submitBtn = $("#btnSaveCustomGoal");
     const cancelBtn = $("#btnCancelEditCustomGoal");
-    const chipsContainer = $("#goalIconChips");
-    const deadlineChipsContainer = $("#goalDeadlineChips");
+
+    // Gaveta de Categoria (split-picker)
+    const catPicker = $("#customGoalCategoryPicker");
+    const catBtn = $("#customGoalCategoryButton");
+    const catIconEl = $("#customGoalCategoryIcon");
+    const catLabelEl = $("#customGoalCategoryLabel");
+    const catOptions = $("#customGoalCategoryOptions");
+
+    // Gaveta de Prazo (split-picker)
+    const dlPicker = $("#customGoalDeadlinePicker");
+    const dlBtn = $("#customGoalDeadlineButton");
+    const dlIconEl = $("#customGoalDeadlineIcon");
+    const dlLabelEl = $("#customGoalDeadlineLabel");
+    const dlOptions = $("#customGoalDeadlineOptions");
 
     function setGoalDateOffset({ days = 0, months = 0, years = 0 }) {
         if (!dateInput) return;
@@ -2119,43 +2132,109 @@ function setupCustomGoals() {
         setGoalDateOffset({ months: 3 });
     }
 
-    if (chipsContainer) {
-        chipsContainer.addEventListener("click", (e) => {
-            const chip = e.target.closest(".goal-icon-chip");
-            if (!chip) return;
-            chipsContainer.querySelectorAll(".goal-icon-chip").forEach(c => c.classList.remove("active"));
-            chip.classList.add("active");
-            if (iconInput) iconInput.value = chip.dataset.icon || "🎯";
-            if (purposeInput) purposeInput.value = chip.dataset.purpose || "Meta";
-            if (titleInput && !titleInput.value.trim() && chip.dataset.suggest) {
-                titleInput.value = chip.dataset.suggest;
+    function closeGoalDrawers() {
+        if (catPicker) {
+            catPicker.classList.remove("open");
+            if (catBtn) catBtn.setAttribute("aria-expanded", "false");
+        }
+        if (dlPicker) {
+            dlPicker.classList.remove("open");
+            if (dlBtn) dlBtn.setAttribute("aria-expanded", "false");
+        }
+    }
+
+    if (catBtn && catPicker && catOptions) {
+        catBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (dlPicker) {
+                dlPicker.classList.remove("open");
+                if (dlBtn) dlBtn.setAttribute("aria-expanded", "false");
             }
+            const isOpen = catPicker.classList.toggle("open");
+            catBtn.setAttribute("aria-expanded", String(isOpen));
+        });
+
+        catOptions.addEventListener("click", (e) => {
+            const opt = e.target.closest(".split-option");
+            if (!opt) return;
+            catOptions.querySelectorAll(".split-option").forEach(o => {
+                o.classList.remove("selected");
+                o.setAttribute("aria-selected", "false");
+            });
+            opt.classList.add("selected");
+            opt.setAttribute("aria-selected", "true");
+
+            const icon = opt.dataset.icon || "🎯";
+            const purpose = opt.dataset.purpose || "Meta";
+            const label = opt.dataset.label || opt.querySelector(".split-option-title")?.textContent.trim() || purpose;
+
+            if (iconInput) iconInput.value = icon;
+            if (purposeInput) purposeInput.value = purpose;
+            if (catIconEl) catIconEl.textContent = icon;
+            if (catLabelEl) catLabelEl.textContent = label;
+            if (customCatInput) customCatInput.value = "";
+            if (titleInput && !titleInput.value.trim() && opt.dataset.suggest) {
+                titleInput.value = opt.dataset.suggest;
+            }
+            closeGoalDrawers();
         });
     }
 
-    if (deadlineChipsContainer) {
-        deadlineChipsContainer.addEventListener("click", (e) => {
-            const chip = e.target.closest(".goal-deadline-chip");
-            if (!chip) return;
-            deadlineChipsContainer.querySelectorAll(".goal-deadline-chip").forEach(c => c.classList.remove("active"));
-            chip.classList.add("active");
+    if (dlBtn && dlPicker && dlOptions) {
+        dlBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (catPicker) {
+                catPicker.classList.remove("open");
+                if (catBtn) catBtn.setAttribute("aria-expanded", "false");
+            }
+            const isOpen = dlPicker.classList.toggle("open");
+            dlBtn.setAttribute("aria-expanded", String(isOpen));
+        });
 
-            if (chip.dataset.custom === "true") {
+        dlOptions.addEventListener("click", (e) => {
+            const opt = e.target.closest(".split-option");
+            if (!opt) return;
+            dlOptions.querySelectorAll(".split-option").forEach(o => {
+                o.classList.remove("selected");
+                o.setAttribute("aria-selected", "false");
+            });
+            opt.classList.add("selected");
+            opt.setAttribute("aria-selected", "true");
+
+            const icon = opt.dataset.icon || "📅";
+            const label = opt.dataset.label || opt.querySelector(".split-option-title")?.textContent.trim() || "Prazo";
+            if (dlIconEl) dlIconEl.textContent = icon;
+            if (dlLabelEl) dlLabelEl.textContent = label;
+            closeGoalDrawers();
+
+            if (opt.dataset.custom === "true") {
                 const trigger = $("#customGoalDatePickerTrigger");
                 if (trigger) trigger.click();
                 return;
             }
-            const days = Number(chip.dataset.days || 0);
-            const months = Number(chip.dataset.months || 0);
-            const years = Number(chip.dataset.years || 0);
+            const days = Number(opt.dataset.days || 0);
+            const months = Number(opt.dataset.months || 0);
+            const years = Number(opt.dataset.years || 0);
             setGoalDateOffset({ days, months, years });
         });
     }
 
-    if (dateInput && deadlineChipsContainer) {
+    document.addEventListener("click", (e) => {
+        if (catPicker && !catPicker.contains(e.target) && dlPicker && !dlPicker.contains(e.target)) {
+            closeGoalDrawers();
+        }
+    });
+
+    if (dateInput && dlOptions) {
         dateInput.addEventListener("change", () => {
-            deadlineChipsContainer.querySelectorAll(".goal-deadline-chip").forEach(c => {
-                c.classList.toggle("active", c.dataset.custom === "true");
+            dlOptions.querySelectorAll(".split-option").forEach(o => {
+                const isCust = o.dataset.custom === "true";
+                o.classList.toggle("selected", isCust);
+                o.setAttribute("aria-selected", String(isCust));
+                if (isCust) {
+                    if (dlIconEl) dlIconEl.textContent = "✏️";
+                    if (dlLabelEl) dlLabelEl.textContent = "Data personalizada";
+                }
             });
         });
     }
@@ -2165,6 +2244,7 @@ function setupCustomGoals() {
         if (titleInput) titleInput.value = "";
         if (targetInput) targetInput.value = "";
         if (initialInput) initialInput.value = "";
+        if (customCatInput) customCatInput.value = "";
         if (submitBtn) submitBtn.textContent = "➕ Criar meta";
         if (cancelBtn) cancelBtn.classList.add("hidden");
     }
@@ -2180,7 +2260,8 @@ function setupCustomGoals() {
         const currentAmount = Math.max(0, Number(initialInput?.value || 0));
         const targetDate = dateInput?.value || "";
         const icon = iconInput?.value || "🎯";
-        const purpose = purposeInput?.value || "Meta";
+        const typedCustomCat = (customCatInput?.value || "").trim();
+        const purpose = typedCustomCat || (purposeInput?.value || "Meta");
         const editId = editIdInput?.value || "";
 
         if (!title) {
@@ -2303,15 +2384,28 @@ function setupCustomGoals() {
             if (targetInput) targetInput.value = goal.targetAmount;
             if (initialInput) initialInput.value = goal.currentAmount;
             if (iconInput) iconInput.value = goal.icon || "🎯";
+            if (purposeInput) purposeInput.value = goal.purpose || "Meta";
+            if (catOptions) {
+                let matched = false;
+                catOptions.querySelectorAll(".split-option").forEach(o => {
+                    const isMatch = o.dataset.icon === (goal.icon || "🎯");
+                    o.classList.toggle("selected", isMatch);
+                    o.setAttribute("aria-selected", String(isMatch));
+                    if (isMatch) {
+                        matched = true;
+                        if (catIconEl) catIconEl.textContent = o.dataset.icon || "🎯";
+                        if (catLabelEl) catLabelEl.textContent = o.dataset.label || goal.purpose || "Meta";
+                    }
+                });
+                if (customCatInput) {
+                    const matchedOpt = catOptions.querySelector(".split-option.selected");
+                    customCatInput.value = (matchedOpt && matchedOpt.dataset.purpose === goal.purpose) ? "" : (goal.purpose || "");
+                }
+            }
             if (dateInput) {
                 dateInput.value = goal.targetDate || "";
                 const dpContainer = $("#customGoalDatePickerContainer");
                 if (dpContainer && dpContainer._syncDatePicker) dpContainer._syncDatePicker();
-            }
-            if (chipsContainer) {
-                chipsContainer.querySelectorAll(".goal-icon-chip").forEach(c => {
-                    c.classList.toggle("active", c.dataset.icon === (goal.icon || "🎯"));
-                });
             }
             if (submitBtn) submitBtn.textContent = "💾 Salvar alterações";
             if (cancelBtn) cancelBtn.classList.remove("hidden");
