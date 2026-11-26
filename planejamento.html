@@ -210,6 +210,109 @@
                 </div>
             </section>
 
+            <!-- Metas Personalizadas (Viagem, Carro, Casa, Reserva, etc.) -->
+            <section class="panel custom-goals-panel" id="customGoalsPanel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>🎯 Metas & Sonhos Personalizados</h2>
+                        <p>Crie objetivos como viagem, carro ou reserva com data alvo (dia, mês e ano) e faça aportes para acompanhar a barra verde.</p>
+                    </div>
+                    <div class="panel-actions">
+                        <span class="status-pill" id="customGoalsCountPill">0 metas ativas</span>
+                    </div>
+                </div>
+
+                <form id="customGoalForm" class="custom-goal-form" novalidate>
+                    <input type="hidden" id="customGoalEditId" value="">
+                    <input type="hidden" id="customGoalIcon" value="✈️">
+
+                    <div class="goal-icon-chips-row">
+                        <span class="goal-chips-label">Escolha um ícone:</span>
+                        <div class="goal-icon-chips" id="goalIconChips">
+                            <button type="button" class="goal-icon-chip active" data-icon="✈️" data-suggest="Viagem">✈️ Viagem</button>
+                            <button type="button" class="goal-icon-chip" data-icon="🚗" data-suggest="Carro">🚗 Carro</button>
+                            <button type="button" class="goal-icon-chip" data-icon="🏠" data-suggest="Casa">🏠 Casa</button>
+                            <button type="button" class="goal-icon-chip" data-icon="🛟" data-suggest="Reserva de Emergência">🛟 Reserva</button>
+                            <button type="button" class="goal-icon-chip" data-icon="💻" data-suggest="Notebook / Tech">💻 Tech</button>
+                            <button type="button" class="goal-icon-chip" data-icon="🎓" data-suggest="Estudos">🎓 Estudos</button>
+                            <button type="button" class="goal-icon-chip" data-icon="🎯" data-suggest="">🎯 Outro</button>
+                        </div>
+                    </div>
+
+                    <div class="custom-goal-form-grid">
+                        <div class="field">
+                            <label for="customGoalTitle">Nome da meta</label>
+                            <input type="text" id="customGoalTitle" placeholder="Ex.: Viagem de férias, Carro novo..." maxlength="60" required>
+                        </div>
+
+                        <div class="field">
+                            <label for="customGoalTarget">Valor total da meta (R$)</label>
+                            <input type="number" id="customGoalTarget" min="1" max="100000000" step="0.01" placeholder="Ex.: 10000" required>
+                        </div>
+
+                        <div class="field">
+                            <label for="customGoalInitial">Já guardado (opcional)</label>
+                            <input type="number" id="customGoalInitial" min="0" max="100000000" step="0.01" placeholder="Ex.: 500">
+                        </div>
+
+                        <div class="field">
+                            <label for="customGoalDatePickerTrigger">Data alvo (Dia, Mês e Ano)</label>
+                            <div class="custom-datepicker" id="customGoalDatePickerContainer">
+                                <input type="date" id="customGoalDate" class="datepicker-native-input" tabindex="-1" aria-hidden="true" required>
+                                <button type="button" class="datepicker-trigger" id="customGoalDatePickerTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="customGoalDatePickerDropdown">
+                                    <span class="datepicker-trigger-left">
+                                        <span class="datepicker-icon" aria-hidden="true">📅</span>
+                                        <span class="datepicker-text" id="customGoalDatePickerText">Selecione a data alvo</span>
+                                    </span>
+                                    <span class="datepicker-chevron" aria-hidden="true">⌄</span>
+                                </button>
+                                <div class="datepicker-backdrop" aria-hidden="true"></div>
+                                <div class="datepicker-dropdown" id="customGoalDatePickerDropdown" role="dialog" aria-modal="true" aria-label="Seletor de data da meta" aria-hidden="true">
+                                    <div class="dp-header">
+                                        <button type="button" class="dp-btn-view" title="Alternar para seleção de mês e ano">
+                                            <span class="dp-current-month-year">Novembro de 2026</span>
+                                            <span class="dp-view-chevron" aria-hidden="true">▾</span>
+                                        </button>
+                                        <div class="dp-nav-group">
+                                            <button type="button" class="dp-nav-btn dp-prev-btn" aria-label="Mês anterior">‹</button>
+                                            <button type="button" class="dp-nav-btn dp-next-btn" aria-label="Próximo mês">›</button>
+                                            <button type="button" class="dp-close-btn" aria-label="Fechar calendário">✕</button>
+                                        </div>
+                                    </div>
+                                    <div class="dp-shortcuts">
+                                        <button type="button" class="dp-shortcut-btn dp-today-btn">Hoje</button>
+                                        <button type="button" class="dp-shortcut-btn dp-yesterday-btn">Ontem</button>
+                                    </div>
+                                    <div class="dp-days-view">
+                                        <div class="dp-weekdays">
+                                            <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+                                        </div>
+                                        <div class="dp-grid"></div>
+                                    </div>
+                                    <div class="dp-months-view hidden">
+                                        <div class="dp-year-selector">
+                                            <button type="button" class="dp-nav-btn dp-prev-year-btn" aria-label="Ano anterior">‹</button>
+                                            <span class="dp-year-display">2026</span>
+                                            <button type="button" class="dp-nav-btn dp-next-year-btn" aria-label="Próximo ano">›</button>
+                                        </div>
+                                        <div class="dp-months-grid"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="custom-goal-form-actions">
+                        <button type="submit" class="button button-primary" id="btnSaveCustomGoal">➕ Criar meta</button>
+                        <button type="button" class="button button-secondary hidden" id="btnCancelEditCustomGoal">Cancelar edição</button>
+                    </div>
+                </form>
+
+                <div class="custom-goals-grid" id="customGoalsList">
+                    <div class="empty-state">Nenhuma meta personalizada criada ainda. Crie sua primeira meta acima (viagem, carro, reserva...)!</div>
+                </div>
+            </section>
+
             <!-- Painel para Replicar Planejamento por Vários Meses (Item 5 da Avaliação) -->
             <section class="panel repeat-planning-panel">
                 <div class="panel-heading">

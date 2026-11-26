@@ -424,6 +424,7 @@ function defaultData() {
         },
         budgets: {},
         goals: {},
+        customGoals: [],
         recurringBills: [],
         preferences: {
             language: "auto",
@@ -472,6 +473,14 @@ function loadData() {
             },
             budgets: data.budgets || {},
             goals: data.goals || {},
+            customGoals: Array.isArray(data.customGoals) ? data.customGoals.map(g => ({
+                ...g,
+                targetAmount: Number(g.targetAmount || 0),
+                currentAmount: Number(g.currentAmount || 0),
+                notifiedMilestones: (g.notifiedMilestones && typeof g.notifiedMilestones === "object")
+                    ? g.notifiedMilestones
+                    : { half: false, near: false, complete: false, deadline: false }
+            })) : [],
             preferences: {
                 language: data.preferences?.language || "auto",
                 currency: data.preferences?.currency || "auto"
@@ -1939,6 +1948,7 @@ function setupRepeatPlanning() {
                 );
             }
             renderPlanning();
+    if (typeof renderCustomGoals === "function") renderCustomGoals();
             showToast(`Planejamento replicado com sucesso para todos os 12 meses de ${yr}! 🎉`);
         });
     }
@@ -1981,9 +1991,317 @@ function setupRepeatPlanning() {
                 );
             }
             renderPlanning();
+    if (typeof renderCustomGoals === "function") renderCustomGoals();
             showToast("Planejamento replicado com sucesso para os próximos 12 meses! 🎉");
         });
     }
+}
+
+/* ============================================================
+   METAS & SONHOS PERSONALIZADOS (planejamento.html)
+   ============================================================ */
+function renderCustomGoals() {
+    const listEl = $("#customGoalsList");
+    const countPill = $("#customGoalsCountPill");
+    if (!listEl) return;
+
+    const goals = Array.isArray(data.customGoals) ? data.customGoals : [];
+    if (countPill) {
+        countPill.textContent = `${goals.length} ${goals.length === 1 ? "meta ativa" : "metas ativas"}`;
+    }
+
+    if (goals.length === 0) {
+        listEl.innerHTML = `<div class="empty-state">Nenhuma meta personalizada criada ainda. Crie sua primeira meta acima (viagem, carro, reserva...)!</div>`;
+        return;
+    }
+
+    const todayStr = (typeof todayISO === "function") ? todayISO() : new Date().toISOString().slice(0, 10);
+    const tNow = new Date(todayStr + "T12:00:00");
+
+    listEl.innerHTML = goals.map(g => {
+        const target = Math.max(1, Number(g.targetAmount || 1));
+        const current = Math.max(0, Number(g.currentAmount || 0));
+        const pct = Math.min(100, Math.max(0, (current / target) * 100));
+        const remaining = Math.max(0, target - current);
+        const isDone = pct >= 100;
+
+        let dateLabel = "Sem data alvo";
+        let daysText = "";
+        if (g.targetDate) {
+            const parts = String(g.targetDate).split("-");
+            if (parts.length === 3) {
+                dateLabel = `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            const tEnd = new Date(g.targetDate + "T12:00:00");
+            const diffDays = Math.ceil((tEnd - tNow) / 86400000);
+            if (isDone) {
+                daysText = "✅ Concluída!";
+            } else if (diffDays < 0) {
+                daysText = `⚠️ Prazo vencido há ${Math.abs(diffDays)} dia(s)`;
+            } else if (diffDays === 0) {
+                daysText = "⏳ Vence hoje!";
+            } else {
+                daysText = `⏳ Faltam ${diffDays} dia(s)`;
+            }
+        }
+
+        return `
+            <article class="custom-goal-card ${isDone ? "goal-completed" : ""}" data-goal-id="${escapeHTML(g.id)}">
+                <div class="custom-goal-card-top">
+                    <div class="custom-goal-title-wrap">
+                        <div class="custom-goal-icon-box">${escapeHTML(g.icon || "🎯")}</div>
+                        <div>
+                            <h3>${escapeHTML(g.title)}</h3>
+                            <span class="custom-goal-deadline-text">📅 Meta: ${dateLabel} ${daysText ? `• ${daysText}` : ""}</span>
+                        </div>
+                    </div>
+                    <div class="custom-goal-card-actions">
+                        <button type="button" class="button-icon btn-edit-custom-goal" data-id="${escapeHTML(g.id)}" title="Editar meta" aria-label="Editar meta">✏️</button>
+                        <button type="button" class="button-icon btn-delete-custom-goal" data-id="${escapeHTML(g.id)}" title="Excluir meta" aria-label="Excluir meta">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="custom-goal-amounts">
+                    <span class="custom-goal-saved sensitive-value">${money(current)}</span>
+                    <span class="custom-goal-target sensitive-value">de ${money(target)}</span>
+                </div>
+
+                <div class="progress-track">
+                    <div class="progress-fill goal-fill" style="width: ${pct.toFixed(1)}%;"></div>
+                </div>
+
+                <div class="custom-goal-pct-row">
+                    <span>${Math.round(pct)}% concluído</span>
+                    <span class="sensitive-value">${isDone ? "Objetivo 100% atingido! 🎉" : `Falta ${money(remaining)}`}</span>
+                </div>
+
+                <div class="goal-deposit-row">
+                    <input type="number" class="goal-deposit-input" min="0.01" max="100000000" step="0.01" placeholder="Quantia para adicionar..." aria-label="Quantia para adicionar na meta ${escapeHTML(g.title)}">
+                    <button type="button" class="goal-deposit-btn" data-id="${escapeHTML(g.id)}">+ Adicionar</button>
+                </div>
+            </article>
+        `;
+    }).join("");
+}
+
+function setupCustomGoals() {
+    const form = $("#customGoalForm");
+    const listEl = $("#customGoalsList");
+    if (!form || !listEl) return;
+
+    const editIdInput = $("#customGoalEditId");
+    const iconInput = $("#customGoalIcon");
+    const titleInput = $("#customGoalTitle");
+    const targetInput = $("#customGoalTarget");
+    const initialInput = $("#customGoalInitial");
+    const dateInput = $("#customGoalDate");
+    const submitBtn = $("#btnSaveCustomGoal");
+    const cancelBtn = $("#btnCancelEditCustomGoal");
+    const chipsContainer = $("#goalIconChips");
+
+    // Define data padrão (3 meses à frente) se vazia
+    if (dateInput && !dateInput.value) {
+        const d = new Date();
+        d.setMonth(d.getMonth() + 3);
+        const defIso = d.toISOString().slice(0, 10);
+        dateInput.value = defIso;
+        const dpContainer = $("#customGoalDatePickerContainer");
+        if (dpContainer && dpContainer._syncDatePicker) dpContainer._syncDatePicker();
+    }
+
+    if (chipsContainer) {
+        chipsContainer.addEventListener("click", (e) => {
+            const chip = e.target.closest(".goal-icon-chip");
+            if (!chip) return;
+            chipsContainer.querySelectorAll(".goal-icon-chip").forEach(c => c.classList.remove("active"));
+            chip.classList.add("active");
+            if (iconInput) iconInput.value = chip.dataset.icon || "🎯";
+            if (titleInput && !titleInput.value.trim() && chip.dataset.suggest) {
+                titleInput.value = chip.dataset.suggest;
+            }
+        });
+    }
+
+    function resetGoalForm() {
+        if (editIdInput) editIdInput.value = "";
+        if (titleInput) titleInput.value = "";
+        if (targetInput) targetInput.value = "";
+        if (initialInput) initialInput.value = "";
+        if (submitBtn) submitBtn.textContent = "➕ Criar meta";
+        if (cancelBtn) cancelBtn.classList.add("hidden");
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener("click", resetGoalForm);
+    }
+
+    form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const title = (titleInput?.value || "").trim();
+        const targetAmount = Number(targetInput?.value || 0);
+        const currentAmount = Math.max(0, Number(initialInput?.value || 0));
+        const targetDate = dateInput?.value || "";
+        const icon = iconInput?.value || "🎯";
+        const editId = editIdInput?.value || "";
+
+        if (!title) {
+            showToast("Informe o nome da sua meta (ex.: Viagem, Carro).");
+            return;
+        }
+        if (!targetAmount || targetAmount <= 0) {
+            showToast("Informe um valor total válido para a meta.");
+            return;
+        }
+        if (!targetDate) {
+            showToast("Selecione a data alvo (dia, mês e ano).");
+            return;
+        }
+
+        if (!Array.isArray(data.customGoals)) data.customGoals = [];
+        let savedGoal = null;
+
+        if (editId) {
+            const idx = data.customGoals.findIndex(g => g.id === editId);
+            if (idx !== -1) {
+                data.customGoals[idx] = {
+                    ...data.customGoals[idx],
+                    title,
+                    icon,
+                    targetAmount,
+                    currentAmount,
+                    targetDate
+                };
+                savedGoal = data.customGoals[idx];
+            }
+        } else {
+            savedGoal = {
+                id: "goal_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
+                title,
+                icon,
+                targetAmount,
+                currentAmount,
+                targetDate,
+                notifiedMilestones: { half: false, near: false, complete: false, deadline: false },
+                createdAt: new Date().toISOString()
+            };
+            data.customGoals.unshift(savedGoal);
+        }
+
+        if (savedGoal && window.MFNotifications && typeof window.MFNotifications.checkCustomGoalMilestones === "function") {
+            window.MFNotifications.checkCustomGoalMilestones(savedGoal);
+        }
+
+        saveData();
+        if (window.MFActivityLogger) {
+            window.MFActivityLogger.log(
+                "planning",
+                editId ? "CUSTOM_GOAL_UPDATED" : "CUSTOM_GOAL_CREATED",
+                editId ? `Meta atualizada: ${title}` : `Nova meta criada: ${title}`,
+                `Objetivo de ${money(targetAmount)} com prazo em ${targetDate}`,
+                { goalId: savedGoal?.id, targetAmount, currentAmount, targetDate }
+            );
+        }
+
+        if (window.MFAchievements && typeof window.MFAchievements.check === "function") {
+            window.MFAchievements.check();
+        }
+
+        resetGoalForm();
+        renderCustomGoals();
+        showToast(editId ? "Meta atualizada com sucesso!" : "Meta criada com sucesso! 🎯");
+    });
+
+    listEl.addEventListener("click", async (e) => {
+        const depositBtn = e.target.closest(".goal-deposit-btn");
+        if (depositBtn) {
+            const id = depositBtn.dataset.id;
+            const card = depositBtn.closest(".custom-goal-card");
+            const input = card?.querySelector(".goal-deposit-input");
+            const addVal = Number(input?.value || 0);
+            if (!addVal || addVal <= 0) {
+                showToast("Digite uma quantia válida para adicionar na meta.");
+                return;
+            }
+            const goal = (data.customGoals || []).find(g => g.id === id);
+            if (!goal) return;
+
+            goal.currentAmount = Number(goal.currentAmount || 0) + addVal;
+            if (input) input.value = "";
+
+            if (window.MFNotifications && typeof window.MFNotifications.checkCustomGoalMilestones === "function") {
+                window.MFNotifications.checkCustomGoalMilestones(goal);
+            }
+
+            saveData();
+            if (window.MFActivityLogger) {
+                window.MFActivityLogger.log(
+                    "planning",
+                    "CUSTOM_GOAL_DEPOSIT",
+                    `Aporte na meta: ${goal.title}`,
+                    `Adicionado ${money(addVal)} (Total guardado: ${money(goal.currentAmount)} de ${money(goal.targetAmount)})`,
+                    { goalId: goal.id, added: addVal, currentAmount: goal.currentAmount }
+                );
+            }
+            if (window.MFAchievements && typeof window.MFAchievements.check === "function") {
+                window.MFAchievements.check();
+            }
+
+            renderCustomGoals();
+            showToast(`+${money(addVal)} adicionado à meta "${goal.title}"! 💚`);
+            return;
+        }
+
+        const editBtn = e.target.closest(".btn-edit-custom-goal");
+        if (editBtn) {
+            const id = editBtn.dataset.id;
+            const goal = (data.customGoals || []).find(g => g.id === id);
+            if (!goal) return;
+
+            if (editIdInput) editIdInput.value = goal.id;
+            if (titleInput) titleInput.value = goal.title;
+            if (targetInput) targetInput.value = goal.targetAmount;
+            if (initialInput) initialInput.value = goal.currentAmount;
+            if (iconInput) iconInput.value = goal.icon || "🎯";
+            if (dateInput) {
+                dateInput.value = goal.targetDate || "";
+                const dpContainer = $("#customGoalDatePickerContainer");
+                if (dpContainer && dpContainer._syncDatePicker) dpContainer._syncDatePicker();
+            }
+            if (chipsContainer) {
+                chipsContainer.querySelectorAll(".goal-icon-chip").forEach(c => {
+                    c.classList.toggle("active", c.dataset.icon === (goal.icon || "🎯"));
+                });
+            }
+            if (submitBtn) submitBtn.textContent = "💾 Salvar alterações";
+            if (cancelBtn) cancelBtn.classList.remove("hidden");
+            form.scrollIntoView({ behavior: "smooth", block: "center" });
+            return;
+        }
+
+        const delBtn = e.target.closest(".btn-delete-custom-goal");
+        if (delBtn) {
+            const id = delBtn.dataset.id;
+            const goal = (data.customGoals || []).find(g => g.id === id);
+            if (!goal) return;
+
+            const confirmed = await showConfirmDialog({
+                title: "Excluir meta?",
+                message: `Tem certeza de que deseja remover a meta "${goal.title}"?`,
+                confirmLabel: "Excluir meta"
+            });
+            if (!confirmed) return;
+
+            data.customGoals = (data.customGoals || []).filter(g => g.id !== id);
+            saveData();
+            if (window.MFAchievements && typeof window.MFAchievements.check === "function") {
+                window.MFAchievements.check();
+            }
+            renderCustomGoals();
+            showToast("Meta removida.");
+        }
+    });
+
+    renderCustomGoals();
 }
 
 function renderSettings() {
@@ -2848,6 +3166,7 @@ function renderAll() {
     renderCategoryChart();
     renderTransactions();
     renderPlanning();
+    if (typeof renderCustomGoals === "function") renderCustomGoals();
     renderSettings();
     renderAgenda();
     renderHistoricalReports();
@@ -6683,6 +7002,7 @@ function handleBudgetSubmit(event) {
     }
 
     renderPlanning();
+    if (typeof renderCustomGoals === "function") renderCustomGoals();
     showToast("Limite mensal atualizado!");
 }
 
@@ -6728,6 +7048,7 @@ function handleGoalSubmit(event) {
     }
 
     renderPlanning();
+    if (typeof renderCustomGoals === "function") renderCustomGoals();
     showToast("Meta de economia atualizada!");
 }
 
@@ -6933,6 +7254,7 @@ async function importBackup(file) {
             salaryConfig: importedData.salaryConfig || { amount: 0, date: "", day: 5, autoDeposit: true },
             budgets: importedData.budgets,
             goals: importedData.goals,
+            customGoals: Array.isArray(importedData.customGoals) ? importedData.customGoals : [],
             recurringBills: Array.isArray(importedData.recurringBills) ? importedData.recurringBills : []
         };
 
@@ -8354,7 +8676,45 @@ function init() {
             return document.visibilityState === "visible" && (typeof document.hasFocus === "function" ? document.hasFocus() : true);
         },
 
+        _queue: [],
+        _isShowing: false,
+
+        playNotifSound() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                const now = ctx.currentTime;
+                const notes = [880, 1174.66]; // A5 -> D6 (toque suave e cristalino)
+                notes.forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = "sine";
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.09);
+                    gain.gain.setValueAtTime(0, now + idx * 0.09);
+                    gain.gain.linearRampToValueAtTime(0.16, now + idx * 0.09 + 0.015);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.28);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + idx * 0.09);
+                    osc.stop(now + idx * 0.09 + 0.3);
+                });
+            } catch (e) {}
+        },
+
         showInAppNotification(title, body, options = {}) {
+            this._queue.push({ title, body, options });
+            if (!this._isShowing) {
+                this._processQueue();
+            }
+        },
+
+        _processQueue() {
+            if (this._isShowing || this._queue.length === 0) return;
+
+            const { title, body, options } = this._queue.shift();
+            this._isShowing = true;
+
             let container = document.getElementById("mfInAppNotificationContainer");
             if (!container) {
                 container = document.createElement("div");
@@ -8387,6 +8747,23 @@ function init() {
                 });
             }
 
+            let finished = false;
+            const finishAndNext = () => {
+                if (finished) return;
+                finished = true;
+                if (notifEl.parentNode) notifEl.parentNode.removeChild(notifEl);
+                this._isShowing = false;
+                if (this._queue.length > 0) {
+                    setTimeout(() => this._processQueue(), 180);
+                }
+            };
+
+            const removeNotif = () => {
+                if (notifEl.classList.contains("fade-out")) return;
+                notifEl.classList.add("fade-out");
+                setTimeout(finishAndNext, 320);
+            };
+
             const closeBtn = notifEl.querySelector(".mf-notif-close");
             if (closeBtn) {
                 closeBtn.addEventListener("click", (e) => {
@@ -8395,18 +8772,78 @@ function init() {
                 });
             }
 
-            function removeNotif() {
-                if (notifEl.classList.contains("fade-out")) return;
-                notifEl.classList.add("fade-out");
-                setTimeout(() => {
-                    if (notifEl.parentNode) notifEl.parentNode.removeChild(notifEl);
-                }, 260);
+            container.appendChild(notifEl);
+            this.playNotifSound();
+
+            const durationMs = Number(options.durationMs || 4200);
+            setTimeout(removeNotif, durationMs);
+        },
+
+        checkCustomGoalMilestones(goal) {
+            if (!goal || !goal.targetAmount || goal.targetAmount <= 0) return false;
+            if (!goal.notifiedMilestones) {
+                goal.notifiedMilestones = { half: false, near: false, complete: false, deadline: false };
             }
 
-            container.appendChild(notifEl);
+            const pct = (Number(goal.currentAmount || 0) / Number(goal.targetAmount)) * 100;
+            let updated = false;
 
-            // Auto-remover após 5 segundos
-            setTimeout(removeNotif, 5000);
+            if (pct >= 100 && !goal.notifiedMilestones.complete) {
+                goal.notifiedMilestones.complete = true;
+                goal.notifiedMilestones.near = true;
+                goal.notifiedMilestones.half = true;
+                updated = true;
+                this.send(
+                    `🏆 Meta Conquistada: ${goal.title}!`,
+                    `Parabéns! Você atingiu 100% do objetivo (${money(goal.targetAmount)})!`,
+                    { tag: `goal-complete-${goal.id}`, url: "./planejamento.html", iconEmoji: goal.icon || "🏆" }
+                );
+            } else if (pct >= 80 && pct < 100 && !goal.notifiedMilestones.near) {
+                goal.notifiedMilestones.near = true;
+                goal.notifiedMilestones.half = true;
+                updated = true;
+                this.send(
+                    `🚀 Quase completando: ${goal.title}!`,
+                    `Você já juntou ${Math.round(pct)}% (${money(goal.currentAmount)} de ${money(goal.targetAmount)}). Falta pouco!`,
+                    { tag: `goal-near-${goal.id}`, url: "./planejamento.html", iconEmoji: goal.icon || "🚀" }
+                );
+            } else if (pct >= 50 && pct < 80 && !goal.notifiedMilestones.half) {
+                goal.notifiedMilestones.half = true;
+                updated = true;
+                this.send(
+                    `🎯 Metade da meta atingida: ${goal.title}!`,
+                    `Você chegou a ${Math.round(pct)}% do objetivo (${money(goal.currentAmount)} de ${money(goal.targetAmount)}). Continue assim!`,
+                    { tag: `goal-half-${goal.id}`, url: "./planejamento.html", iconEmoji: goal.icon || "🎯" }
+                );
+            }
+
+            if (goal.targetDate && pct < 100 && !goal.notifiedMilestones.deadline) {
+                const todayStr = (typeof todayISO === "function") ? todayISO() : new Date().toISOString().slice(0, 10);
+                const tNow = new Date(todayStr + "T12:00:00");
+                const tEnd = new Date(goal.targetDate + "T12:00:00");
+                const diffDays = Math.ceil((tEnd - tNow) / 86400000);
+                if (diffDays >= 0 && diffDays <= 7) {
+                    goal.notifiedMilestones.deadline = true;
+                    updated = true;
+                    const msgDay = diffDays === 0 ? "vence hoje" : `vence em ${diffDays} ${diffDays === 1 ? "dia" : "dias"}`;
+                    this.send(
+                        `⏳ Prazo da meta próximo: ${goal.title}`,
+                        `Sua meta ${msgDay} e está em ${Math.round(pct)}%. Que tal fazer um aporte?`,
+                        { tag: `goal-deadline-${goal.id}`, url: "./planejamento.html", iconEmoji: "⏳" }
+                    );
+                }
+            }
+
+            return updated;
+        },
+
+        checkAllCustomGoals() {
+            if (!data || !Array.isArray(data.customGoals)) return;
+            let anyUpdated = false;
+            data.customGoals.forEach(g => {
+                if (this.checkCustomGoalMilestones(g)) anyUpdated = true;
+            });
+            if (anyUpdated && typeof saveData === "function") saveData();
         },
 
         async send(title, body, options = {}) {
@@ -9075,10 +9512,12 @@ function init() {
                 ...(!Array.isArray(data.goals) ? Object.entries(data.goals || {}).filter(([, v]) => Number(v) > 0).map(([k]) => k) : [])
             ]).size;
 
-            const hasAnyGoal = goalMonthsCount >= 1;
-            const goalMet = data.goals && (Array.isArray(data.goals)
+            const customGoals = Array.isArray(data.customGoals) ? data.customGoals : [];
+            const hasAnyGoal = goalMonthsCount >= 1 || customGoals.length >= 1;
+            const customGoalCompleted = customGoals.some(g => Number(g.targetAmount || 0) > 0 && Number(g.currentAmount || 0) >= Number(g.targetAmount));
+            const goalMet = customGoalCompleted || (data.goals && (Array.isArray(data.goals)
                 ? data.goals.some(g => (g.current || 0) >= (g.target || 1))
-                : (Number(data.goals[curM] || 0) > 0 && currentBalance >= Number(data.goals[curM])));
+                : (Number(data.goals[curM] || 0) > 0 && currentBalance >= Number(data.goals[curM]))));
 
             const isCloudConnected = Boolean(
                 localStorage.getItem("meuFinanceiro_session") ||
@@ -9114,7 +9553,7 @@ function init() {
                 wealth_diamond: saveRate >= 0.20 && curMonthTxs.length >= 3,
                 wealth_30_percent: saveRate >= 0.30 && curMonthTxs.length >= 5,
                 wealth_50_tx: txs.length >= 50 && distinctDays >= 5,
-                wealth_beacon: Boolean(goalMet && curMonthTxs.length >= 1),
+                wealth_beacon: Boolean(goalMet && (curMonthTxs.length >= 1 || customGoalCompleted)),
                 wealth_netherite: currentBalance >= 5000 && txs.length >= 5 && distinctDays >= 2,
                 wealth_fortress: currentBalance >= 10000 && txs.length >= 10 && distinctDays >= 5,
 
@@ -9867,6 +10306,7 @@ function init() {
     setupTransactionsPage();
     setupReports();
     setupRepeatPlanning();
+    if (typeof setupCustomGoals === "function") setupCustomGoals();
     setupDemoBanner();
     setupWelcomeTutorial();
     setupQuickStartWizard();
@@ -9886,6 +10326,7 @@ function init() {
         if (window.MFNotifications) {
             if (typeof window.MFNotifications.checkBillsDue === "function") window.MFNotifications.checkBillsDue();
             if (typeof window.MFNotifications.checkSalaryDay === "function") window.MFNotifications.checkSalaryDay();
+            if (typeof window.MFNotifications.checkAllCustomGoals === "function") window.MFNotifications.checkAllCustomGoals();
         }
     }, 1500);
 
