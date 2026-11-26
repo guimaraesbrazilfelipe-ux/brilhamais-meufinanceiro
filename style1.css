@@ -11292,6 +11292,68 @@ body.privacy-mode .breakdown-val {
     text-align: right;
 }
 
+/* Badge Anti-Burla */
+.ach-anticheat-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #34d399;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    margin-left: auto;
+}
+
+/* Barra de Níveis de Dificuldade */
+.ach-levels-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    margin-top: 16px;
+    margin-bottom: 10px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+}
+
+.ach-levels-bar::-webkit-scrollbar {
+    display: none;
+}
+
+.ach-level-btn {
+    background: #0d1422;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 12px;
+    padding: 9px 15px;
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.ach-level-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #f8fafc;
+}
+
+.ach-level-btn.active {
+    background: linear-gradient(135deg, rgba(124, 93, 250, 0.22), rgba(16, 185, 129, 0.14));
+    border-color: rgba(124, 93, 250, 0.55);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(124, 93, 250, 0.2);
+}
+
 /* Barra de Categorias */
 .ach-categories-bar {
     display: flex;
@@ -11337,8 +11399,74 @@ body.privacy-mode .breakdown-val {
     box-shadow: 0 4px 16px rgba(124, 93, 250, 0.45);
 }
 
-/* Grid de Conquistas */
+/* Grid de Conquistas Organizado por Nível */
 .achievements-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.ach-level-section {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.ach-level-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.ach-level-section-title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ach-level-section-title-group h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.ach-level-section-title-group p {
+    margin: 2px 0 0;
+    font-size: 12.5px;
+    color: #94a3b8;
+}
+
+.ach-level-pill {
+    padding: 5px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.ach-level-pill.tier-common { background: rgba(16, 185, 129, 0.14); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+.ach-level-pill.tier-rare { background: rgba(56, 189, 248, 0.14); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+.ach-level-pill.tier-epic { background: rgba(168, 85, 247, 0.16); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.35); }
+.ach-level-pill.tier-legendary { background: rgba(250, 204, 21, 0.15); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.35); }
+
+.ach-level-progress-pill {
+    font-size: 12px;
+    font-weight: 700;
+    color: #cbd5e1;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ach-level-cards-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
     gap: 16px;

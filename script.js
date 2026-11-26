@@ -8005,6 +8005,7 @@ function init() {
         if (!listEl) return;
 
         let currentFilter = "all";
+    let currentLevelFilter = "all";
 
         function renderTimeline(categoryFilter) {
             if (categoryFilter !== undefined) currentFilter = categoryFilter;
@@ -8629,61 +8630,90 @@ function init() {
     window.MFNotifications = MFNotifications;
 
     /* ============================================================
-       SISTEMA DE CONQUISTAS GAMIFICADO BRILHACASH
+       SISTEMA DE CONQUISTAS GAMIFICADO BRILHACASH (COM ANTI-BURLA)
        ============================================================ */
     const MF_ACHIEVEMENTS_KEY = "meuFinanceiro_achievements_v1";
     const MF_STREAK_KEY = "meuFinanceiro_daily_streak_v1";
+    const INTERNAL_UNLOCK_TOKEN = Symbol("MF_INTERNAL_UNLOCK_GUARD");
+
+    function computeIntegrityHash(payloadStr) {
+        const salt = "BrilhaCash_Integrity_v2_9f4a";
+        const str = salt + "::" + payloadStr;
+        let h1 = 0xdeadbeef ^ str.length;
+        let h2 = 0x41c6ce57 ^ str.length;
+        for (let i = 0; i < str.length; i++) {
+            const ch = str.charCodeAt(i);
+            h1 = Math.imul(h1 ^ ch, 2654435761);
+            h2 = Math.imul(h2 ^ ch, 1597334677);
+        }
+        h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+        h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+        return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+    }
 
     const ACHIEVEMENT_DEFINITIONS = [
         // 🌱 FUNDAÇÃO & HÁBITOS ESSENCIAIS
-        { id: "overworld_wood", title: "Primeiro Registro", desc: "Registre seu 1º lançamento (receita ou despesa) no BrilhaCash.", category: "overworld", categoryName: "Fundação", icon: "🌱", xp: 50, tier: "common" },
-        { id: "overworld_shelter", title: "Base Sólida", desc: "Defina sua renda mensal nas configurações para guiar o orçamento.", category: "overworld", categoryName: "Fundação", icon: "🏛️", xp: 50, tier: "common" },
-        { id: "overworld_craft", title: "Engrenagem Fixa", desc: "Cadastre sua primeira conta fixa ou assinatura recorrente.", category: "overworld", categoryName: "Fundação", icon: "⚙️", xp: 50, tier: "common" },
-        { id: "overworld_chest", title: "Cofre de Sonhos", desc: "Crie sua primeira meta financeira no Planejamento.", category: "overworld", categoryName: "Fundação", icon: "🎯", xp: 50, tier: "common" },
-        { id: "overworld_torch", title: "Escudo de Privacidade", desc: "Ative o Modo Privacidade para ocultar valores na tela.", category: "overworld", categoryName: "Fundação", icon: "🛡️", xp: 30, tier: "common" },
+        { id: "overworld_wood", title: "Primeiro Registro", desc: "Registre seu 1º lançamento (receita ou despesa) válido no BrilhaCash.", category: "overworld", categoryName: "Fundação", icon: "🌱", xp: 40, tier: "common", stateDependent: true },
+        { id: "overworld_shelter", title: "Base Sólida", desc: "Defina sua renda mensal nas configurações para guiar o orçamento.", category: "overworld", categoryName: "Fundação", icon: "🏛️", xp: 40, tier: "common", stateDependent: true },
+        { id: "overworld_craft", title: "Engrenagem Fixa", desc: "Cadastre sua primeira conta fixa ou assinatura recorrente.", category: "overworld", categoryName: "Fundação", icon: "⚙️", xp: 40, tier: "common", stateDependent: true },
+        { id: "overworld_chest", title: "Cofre de Sonhos", desc: "Crie sua primeira meta financeira no Planejamento.", category: "overworld", categoryName: "Fundação", icon: "🎯", xp: 40, tier: "common", stateDependent: true },
+        { id: "overworld_torch", title: "Escudo de Privacidade", desc: "Ative o Modo Privacidade para ocultar valores na tela.", category: "overworld", categoryName: "Fundação", icon: "🛡️", xp: 25, tier: "common" },
+        { id: "overworld_notes", title: "Memória Detalhada", desc: "Adicione uma observação descritiva em qualquer lançamento.", category: "overworld", categoryName: "Fundação", icon: "📝", xp: 30, tier: "common", stateDependent: true },
+        { id: "overworld_category", title: "Diversidade de Gastos", desc: "Registre despesas em pelo menos 3 categorias diferentes.", category: "overworld", categoryName: "Fundação", icon: "🗂️", xp: 40, tier: "common", stateDependent: true },
+        { id: "overworld_shared", title: "Parceria Transparente", desc: "Registre sua primeira despesa compartilhada (50/50 ou parceiro).", category: "overworld", categoryName: "Fundação", icon: "🤝", xp: 40, tier: "common", stateDependent: true },
+        { id: "overworld_currency", title: "Visão Global", desc: "Personalize o idioma ou a moeda principal nas Configurações.", category: "overworld", categoryName: "Fundação", icon: "🌐", xp: 30, tier: "common" },
+        { id: "overworld_first_income", title: "Fluxo Positivo", desc: "Tenha receitas registradas e feche o balanço atual acima de zero.", category: "overworld", categoryName: "Fundação", icon: "💵", xp: 40, tier: "common", stateDependent: true },
         { id: "overworld_bed", title: "Sincronia na Nuvem", desc: "Faça login com Supabase para manter seus dados seguros em qualquer lugar.", category: "overworld", categoryName: "Fundação", icon: "☁️", xp: 100, tier: "rare" },
 
         // ⚔️ CAÇADOR DE BOLETOS & GASTOS
-        { id: "combat_first_mob", title: "Boleto Aniquilado", desc: "Pague e liquide sua primeira conta fixa no painel.", category: "combat", categoryName: "Caçador de Boletos", icon: "⚔️", xp: 50, tier: "common" },
-        { id: "combat_combo", title: "Pontualidade Tripla", desc: "Pague 3 contas seguidas antes ou no dia do vencimento.", category: "combat", categoryName: "Caçador de Boletos", icon: "⚡", xp: 100, tier: "rare" },
-        { id: "combat_exterminator", title: "Mês Impecável", desc: "Quite 100% de todas as contas fixas do mês atual.", category: "combat", categoryName: "Caçador de Boletos", icon: "💥", xp: 150, tier: "epic" },
+        { id: "combat_first_mob", title: "Boleto Aniquilado", desc: "Pague e liquide sua primeira conta fixa no painel.", category: "combat", categoryName: "Caçador de Boletos", icon: "⚔️", xp: 50, tier: "common", stateDependent: true },
+        { id: "combat_combo", title: "Pontualidade Tripla", desc: "Pague 3 contas fixas distintas com sucesso no painel.", category: "combat", categoryName: "Caçador de Boletos", icon: "⚡", xp: 100, tier: "rare", stateDependent: true },
+        { id: "combat_five_bills", title: "Gestor de Recorrências", desc: "Mantenha 5 ou mais contas fixas pagas com sucesso.", category: "combat", categoryName: "Caçador de Boletos", icon: "🧾", xp: 120, tier: "rare", stateDependent: true },
+        { id: "combat_exterminator", title: "Mês Impecável", desc: "Quite 100% de todas as contas fixas cadastradas no mês atual.", category: "combat", categoryName: "Caçador de Boletos", icon: "💥", xp: 180, tier: "epic", stateDependent: true },
         { id: "combat_iron_armor", title: "Imunidade a Juros", desc: "Passe o mês inteiro sem deixar nenhuma conta vencer em atraso.", category: "combat", categoryName: "Caçador de Boletos", icon: "🛡️", xp: 100, tier: "rare" },
-        { id: "combat_potion", title: "Injeção de Capital", desc: "Cadastre uma receita extra ou rendimento avulso no sistema.", category: "combat", categoryName: "Caçador de Boletos", icon: "🧪", xp: 50, tier: "common" },
+        { id: "combat_potion", title: "Injeção de Capital", desc: "Cadastre uma receita extra ou rendimento avulso no sistema.", category: "combat", categoryName: "Caçador de Boletos", icon: "🧪", xp: 50, tier: "common", stateDependent: true },
         { id: "combat_shield_block", title: "Corte Estratégico", desc: "Cancele ou exclua uma despesa recorrente que não agrega valor.", category: "combat", categoryName: "Caçador de Boletos", icon: "✂️", xp: 50, tier: "common" },
 
         // 💎 MESTRIA PATRIMONIAL & APORTES
-        { id: "wealth_iron", title: "Primeira Reserva", desc: "Acumule um saldo positivo em conta superior a R$ 500,00.", category: "wealth", categoryName: "Mestria & Patrimônio", icon: "🪙", xp: 75, tier: "common" },
-        { id: "wealth_gold", title: "Mentalidade Poupador", desc: "Economize e retenha pelo menos 10% da sua renda em um mês.", category: "wealth", categoryName: "Mestria & Patrimônio", icon: "🥇", xp: 100, tier: "rare" },
-        { id: "wealth_diamond", title: "Aportador de Elite", desc: "Poupe mais de 20% da sua renda mensal líquida.", category: "wealth", categoryName: "Mestria & Patrimônio", icon: "💎", xp: 200, tier: "epic" },
-        { id: "wealth_fortune", title: "Superávit Notável", desc: "Feche um mês com mais de R$ 1.000,00 de saldo líquido positivo.", category: "wealth", categoryName: "Mestria & Patrimônio", icon: "📈", xp: 150, tier: "rare" },
-        { id: "wealth_netherite", title: "Patrimônio Blindado", desc: "Acumule mais de R$ 5.000,00 de patrimônio líquido em caixa.", category: "wealth", categoryName: "Mestria & Patrimônio", icon: "🏆", xp: 300, tier: "legendary" },
-        { id: "wealth_beacon", title: "Meta Conquistada", desc: "Atinga 100% do objetivo estipulado em uma meta financeira.", category: "wealth", categoryName: "Mestria & Patrimônio", icon: "✨", xp: 250, tier: "epic" },
+        { id: "wealth_iron", title: "Primeira Reserva", desc: "Acumule um saldo positivo real superior a R$ 500,00.", category: "wealth", categoryName: "Mestria & Patrimônio", icon: "🪙", xp: 50, tier: "common", stateDependent: true },
+        { id: "wealth_gold", title: "Mentalidade Poupador", desc: "Economize >= 10% da renda mensal (mínimo 3 lançamentos no mês).", category: "wealth", categoryName: "Mestria & Patrimônio", icon: "🥇", xp: 100, tier: "rare", stateDependent: true },
+        { id: "wealth_fortune", title: "Superávit Notável", desc: "Feche o período com mais de R$ 1.000,00 de saldo líquido positivo.", category: "wealth", categoryName: "Mestria & Patrimônio", icon: "📈", xp: 130, tier: "rare", stateDependent: true },
+        { id: "wealth_diamond", title: "Aportador de Elite", desc: "Poupe >= 20% da renda mensal líquida (mínimo 3 lançamentos no mês).", category: "wealth", categoryName: "Mestria & Patrimônio", icon: "💎", xp: 200, tier: "epic", stateDependent: true },
+        { id: "wealth_30_percent", title: "Poupador Implacável", desc: "Alcance >= 30% de taxa de economia (mínimo 5 lançamentos no mês).", category: "wealth", categoryName: "Mestria & Patrimônio", icon: "🔥", xp: 250, tier: "epic", stateDependent: true },
+        { id: "wealth_50_tx", title: "Disciplina de Ferro", desc: "Registre 50 movimentações reais em pelo menos 5 dias diferentes.", category: "wealth", categoryName: "Mestria & Patrimônio", icon: "🧱", xp: 220, tier: "epic", stateDependent: true },
+        { id: "wealth_beacon", title: "Meta Conquistada", desc: "Atinga 100% do objetivo estipulado em uma meta financeira.", category: "wealth", categoryName: "Mestria & Patrimônio", icon: "✨", xp: 250, tier: "epic", stateDependent: true },
+        { id: "wealth_netherite", title: "Patrimônio Blindado", desc: "Acumule > R$ 5.000,00 de saldo líquido com histórico real (>= 5 registros em 2+ dias).", category: "wealth", categoryName: "Mestria & Patrimônio", icon: "🏆", xp: 350, tier: "legendary", stateDependent: true },
+        { id: "wealth_fortress", title: "Fortaleza de Caixa", desc: "Acumule > R$ 10.000,00 de saldo líquido com histórico real (>= 10 registros em 5+ dias).", category: "wealth", categoryName: "Mestria & Patrimônio", icon: "🏰", xp: 500, tier: "legendary", stateDependent: true },
 
         // 🛡️ BLINDAGEM ORÇAMENTÁRIA & TETOS
-        { id: "plan_shield", title: "Teto Orçamentário", desc: "Defina limites de gastos por categoria no Planejamento.", category: "plan", categoryName: "Blindagem & Tetos", icon: "🛡️", xp: 50, tier: "common" },
-        { id: "plan_guardian", title: "Disciplina Rigorosa", desc: "Feche o mês sem estourar nenhum dos seus tetos orçamentários.", category: "plan", categoryName: "Blindagem & Tetos", icon: "🏰", xp: 150, tier: "epic" },
-        { id: "plan_no_spend", title: "Consumo Consciente", desc: "Passe um dia útil sem registrar nenhuma despesa supérflua.", category: "plan", categoryName: "Blindagem & Tetos", icon: "🧘", xp: 75, tier: "rare" },
-        { id: "plan_peaceful_week", title: "Semana Equilibrada", desc: "Acumule 3 dias de consumo consciente dentro do mesmo mês.", category: "plan", categoryName: "Blindagem & Tetos", icon: "🌿", xp: 150, tier: "epic" },
-        { id: "plan_prophet", title: "Visão Preditiva", desc: "Consulte a Projeção Financeira de 30/60/90 dias.", category: "plan", categoryName: "Blindagem & Tetos", icon: "🔮", xp: 50, tier: "common" },
+        { id: "plan_shield", title: "Teto Orçamentário", desc: "Defina limites de gastos no Planejamento.", category: "plan", categoryName: "Blindagem & Tetos", icon: "🛡️", xp: 45, tier: "common", stateDependent: true },
+        { id: "plan_prophet", title: "Visão Preditiva", desc: "Consulte a Projeção Financeira de 30/60/90 dias.", category: "plan", categoryName: "Blindagem & Tetos", icon: "🔮", xp: 45, tier: "common" },
+        { id: "plan_no_spend", title: "Consumo Consciente", desc: "Passe um dia útil sem registrar nenhuma despesa supérflua.", category: "plan", categoryName: "Blindagem & Tetos", icon: "🧘", xp: 80, tier: "rare" },
+        { id: "plan_multi_month", title: "Visão de Longo Prazo", desc: "Defina metas ou limites orçamentários em pelo menos 3 meses distintos.", category: "plan", categoryName: "Blindagem & Tetos", icon: "📆", xp: 120, tier: "rare", stateDependent: true },
+        { id: "plan_guardian", title: "Disciplina Rigorosa", desc: "Feche o mês sem estourar nenhum dos seus tetos orçamentários.", category: "plan", categoryName: "Blindagem & Tetos", icon: "🏰", xp: 180, tier: "epic" },
+        { id: "plan_peaceful_week", title: "Semana Equilibrada", desc: "Acumule 3 dias de consumo consciente dentro do mesmo mês.", category: "plan", categoryName: "Blindagem & Tetos", icon: "🌿", xp: 180, tier: "epic" },
+        { id: "plan_six_months", title: "Planejador Semestral", desc: "Defina orçamentos planejados para pelo menos 6 meses diferentes.", category: "plan", categoryName: "Blindagem & Tetos", icon: "🗺️", xp: 220, tier: "epic", stateDependent: true },
 
         // 🔥 CONSTÂNCIA, HÁBITOS & STREAK
-        { id: "streak_3", title: "Passos da Disciplina", desc: "Mantenha uma sequência ativa de 3 dias consecutivos no app.", category: "streak", categoryName: "Constância & Foco", icon: "🔥", xp: 50, tier: "common" },
-        { id: "streak_7", title: "Semana Imbatível", desc: "Complete 7 dias consecutivos acompanhando suas finanças.", category: "streak", categoryName: "Constância & Foco", icon: "⚡", xp: 100, tier: "rare" },
-        { id: "streak_14", title: "Hábito Consolidado", desc: "Mantenha 14 dias seguidos de organização financeira ininterrupta.", category: "streak", categoryName: "Constância & Foco", icon: "🌟", xp: 200, tier: "epic" },
+        { id: "streak_3", title: "Passos da Disciplina", desc: "Mantenha uma sequência verificada de 3 dias consecutivos no app.", category: "streak", categoryName: "Constância & Foco", icon: "🔥", xp: 50, tier: "common" },
+        { id: "streak_7", title: "Semana Imbatível", desc: "Complete 7 dias consecutivos acompanhando suas finanças.", category: "streak", categoryName: "Constância & Foco", icon: "⚡", xp: 110, tier: "rare" },
+        { id: "streak_14", title: "Hábito Consolidado", desc: "Mantenha 14 dias seguidos de organização financeira ininterrupta.", category: "streak", categoryName: "Constância & Foco", icon: "🌟", xp: 220, tier: "epic" },
         { id: "streak_30", title: "Mestre da Constância", desc: "Complete 30 dias consecutivos de foco inabalável!", category: "streak", categoryName: "Constância & Foco", icon: "👑", xp: 400, tier: "legendary" },
-        { id: "streak_century", title: "Clube dos 100", desc: "Registre mais de 100 movimentações totais no BrilhaCash.", category: "streak", categoryName: "Constância & Foco", icon: "📜", xp: 300, tier: "legendary" },
+        { id: "streak_60", title: "Lenda Inabalável", desc: "Complete 60 dias consecutivos verificados usando o BrilhaCash!", category: "streak", categoryName: "Constância & Foco", icon: "🔱", xp: 600, tier: "legendary" },
+        { id: "streak_century", title: "Clube dos 100", desc: "Registre 100 movimentações reais em pelo menos 10 dias distintos.", category: "streak", categoryName: "Constância & Foco", icon: "📜", xp: 350, tier: "legendary", stateDependent: true },
 
         // ⚡ AUTOMAÇÃO, INTELIGÊNCIA & TECH
+        { id: "redstone_signal", title: "Sentinela Ativo", desc: "Ative as notificações push do BrilhaCash para alertas em tempo real.", category: "redstone", categoryName: "Automação & Tech", icon: "🔔", xp: 45, tier: "common" },
+        { id: "redstone_scanner", title: "Decodificador Ágil", desc: "Cole e decodifique um boleto pela linha digitável inteligente.", category: "redstone", categoryName: "Automação & Tech", icon: "📠", xp: 50, tier: "common" },
+        { id: "redstone_auditor", title: "Auditoria Financeira", desc: "Exporte um relatório de atividades ou planilha em formato CSV.", category: "redstone", categoryName: "Automação & Tech", icon: "📊", xp: 50, tier: "common" },
         { id: "redstone_automator", title: "Automação Bancária", desc: "Importe um extrato bancário em formato OFX ou CSV.", category: "redstone", categoryName: "Automação & Tech", icon: "⚙️", xp: 100, tier: "rare" },
-        { id: "redstone_scanner", title: "Decodificador Ágil", desc: "Cole e decodifique um boleto pela linha digitável inteligente.", category: "redstone", categoryName: "Automação & Tech", icon: "📠", xp: 75, tier: "common" },
-        { id: "redstone_signal", title: "Sentinela Ativo", desc: "Ative as notificações push do BrilhaCash para alertas em tempo real.", category: "redstone", categoryName: "Automação & Tech", icon: "🔔", xp: 50, tier: "common" },
-        { id: "redstone_auditor", title: "Auditoria Financeira", desc: "Exporte um relatório de atividades ou planilha em formato CSV.", category: "redstone", categoryName: "Automação & Tech", icon: "📊", xp: 75, tier: "common" },
         { id: "redstone_biometrics", title: "Cofre Biométrico", desc: "Ative o bloqueio seguro por biometria ou PIN no app.", category: "redstone", categoryName: "Automação & Tech", icon: "🔐", xp: 100, tier: "rare" },
 
         // 👑 LIBERDADE SUPREMA & INDEPENDÊNCIA
+        { id: "end_master_250", title: "Veterano BrilhaCash", desc: "Registre 250 movimentações reais distribuídas em pelo menos 15 dias distintos.", category: "end", categoryName: "Liberdade Suprema", icon: "🎖️", xp: 500, tier: "legendary", stateDependent: true },
         { id: "end_dragon", title: "Rumo à Independência", desc: "Feche 3 meses seguidos no azul com taxa de poupança superior a 10%.", category: "end", categoryName: "Liberdade Suprema", icon: "👑", xp: 500, tier: "legendary" },
         { id: "end_elytra", title: "Voo da Tranquilidade", desc: "Acumule reservas suficientes para cobrir 3 meses de contas fixas.", category: "end", categoryName: "Liberdade Suprema", icon: "🦅", xp: 500, tier: "legendary" },
-        { id: "end_totem", title: "Segurança Vitalícia", desc: "Estruture uma Reserva de Emergência de pelo menos 6x seus custos mensais.", category: "end", categoryName: "Liberdade Suprema", icon: "💎", xp: 400, tier: "legendary" }
+        { id: "end_totem", title: "Segurança Vitalícia", desc: "Estruture uma Reserva de Emergência de pelo menos 6x seus custos mensais.", category: "end", categoryName: "Liberdade Suprema", icon: "💎", xp: 600, tier: "legendary" }
     ];
 
     const MFAchievements = {
@@ -8692,10 +8722,33 @@ function init() {
         getState() {
             try {
                 const raw = localStorage.getItem(MF_ACHIEVEMENTS_KEY);
-                if (raw) return JSON.parse(raw);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && typeof parsed === "object" && parsed.unlocked) {
+                        const unlockedKeys = Object.keys(parsed.unlocked).sort();
+                        const recomputedXP = unlockedKeys.reduce((sum, id) => {
+                            const d = ACHIEVEMENT_DEFINITIONS.find(def => def.id === id);
+                            return sum + (d ? d.xp : 0);
+                        }, 0);
+                        const expectedSig = computeIntegrityHash(JSON.stringify({ u: unlockedKeys, xp: recomputedXP }));
+                        if (parsed._sig && parsed._sig === expectedSig) {
+                            parsed.totalXP = recomputedXP;
+                            return parsed;
+                        }
+                        // Anti-burla: assinatura inválida ou adulterada no localStorage -> reseta estado corrompido
+                        if (parsed._sig && parsed._sig !== expectedSig) {
+                            console.warn("Integridade das conquistas falhou (possível adulteração local). Recalculando a partir dos dados reais.");
+                            return { unlocked: {}, totalXP: 0, streak: this.getStreak() };
+                        }
+                        // Migração transparente de versão anterior sem _sig
+                        parsed.totalXP = recomputedXP;
+                        this.saveState(parsed);
+                        return parsed;
+                    }
+                }
             } catch (e) {}
             return {
-                unlocked: {}, // { [id]: { unlockedAt: ISO, xp: number } }
+                unlocked: {},
                 totalXP: 0,
                 streak: this.getStreak()
             };
@@ -8703,8 +8756,53 @@ function init() {
 
         saveState(state) {
             try {
+                const unlockedKeys = Object.keys(state.unlocked || {}).sort();
+                const recomputedXP = unlockedKeys.reduce((sum, id) => {
+                    const d = ACHIEVEMENT_DEFINITIONS.find(def => def.id === id);
+                    return sum + (d ? d.xp : 0);
+                }, 0);
+                state.totalXP = recomputedXP;
+                state._sig = computeIntegrityHash(JSON.stringify({ u: unlockedKeys, xp: recomputedXP }));
                 localStorage.setItem(MF_ACHIEVEMENTS_KEY, JSON.stringify(state));
             } catch (e) {}
+        },
+
+        getGenuineTransactions(txs) {
+            const seen = new Map();
+            return (txs || []).filter(t => {
+                const amt = Number(t.amount || 0);
+                if (!isFinite(amt) || amt <= 0 || amt > 10000000) return false;
+                const desc = String(t.description || "").trim().toLowerCase();
+                const dateStr = String(t.date || "").slice(0, 10);
+                const sig = `${t.type || "despesa"}|${desc}|${amt.toFixed(2)}|${dateStr}`;
+                const createdMs = t.createdAt ? new Date(t.createdAt).getTime() : 0;
+                if (seen.has(sig)) {
+                    const prevMs = seen.get(sig);
+                    // Anti-spam: ignora lançamentos idênticos no mesmo dia dentro de 2 minutos
+                    if (!createdMs || !prevMs || Math.abs(createdMs - prevMs) < 120000) {
+                        return false;
+                    }
+                }
+                seen.set(sig, createdMs);
+                return true;
+            });
+        },
+
+        getDistinctDays(txs) {
+            const set = new Set();
+            (txs || []).forEach(t => {
+                if (t.date) set.add(String(t.date).slice(0, 10));
+            });
+            return set.size;
+        },
+
+        revoke(id, token) {
+            if (token !== INTERNAL_UNLOCK_TOKEN) return false;
+            const state = this.getState();
+            if (!state.unlocked || !state.unlocked[id]) return false;
+            delete state.unlocked[id];
+            this.saveState(state);
+            return true;
         },
 
         getStreak() {
@@ -8712,6 +8810,13 @@ function init() {
                 const raw = localStorage.getItem(MF_STREAK_KEY);
                 if (raw) {
                     const parsed = JSON.parse(raw);
+                    if (parsed._sig) {
+                        const expected = computeIntegrityHash(`streak:${parsed.count}:${parsed.lastDate}:${parsed.lastTs || 0}`);
+                        if (parsed._sig !== expected) {
+                            console.warn("Integridade da sequência diária violada. Reiniciando sequência.");
+                            return 1;
+                        }
+                    }
                     const today = (typeof todayISO === "function") ? todayISO() : new Date().toISOString().slice(0, 10);
                     const lastDate = parsed.lastDate;
 
@@ -8719,7 +8824,6 @@ function init() {
                         return parsed.count || 1;
                     }
 
-                    // Verifica se o último dia foi ontem
                     const yesterday = new Date();
                     yesterday.setDate(yesterday.getDate() - 1);
                     const yISO = yesterday.toISOString().slice(0, 10);
@@ -8728,7 +8832,6 @@ function init() {
                         return parsed.count || 1;
                     }
 
-                    // Se passou mais de 1 dia, reinicia streak para 1
                     return 1;
                 }
             } catch (e) {}
@@ -8738,27 +8841,38 @@ function init() {
         updateStreak() {
             try {
                 const today = (typeof todayISO === "function") ? todayISO() : new Date().toISOString().slice(0, 10);
+                const nowMs = Date.now();
                 const raw = localStorage.getItem(MF_STREAK_KEY);
-                let current = { count: 1, lastDate: today };
+                let current = { count: 1, lastDate: today, lastTs: nowMs };
 
                 if (raw) {
                     const parsed = JSON.parse(raw);
-                    if (parsed.lastDate === today) {
+                    const sigValid = !parsed._sig || parsed._sig === computeIntegrityHash(`streak:${parsed.count}:${parsed.lastDate}:${parsed.lastTs || 0}`);
+
+                    if (!sigValid) {
+                        current = { count: 1, lastDate: today, lastTs: nowMs };
+                    } else if (parsed.lastDate === today) {
                         return parsed.count;
-                    }
-
-                    const yesterday = new Date();
-                    yesterday.setDate(yesterday.getDate() - 1);
-                    const yISO = yesterday.toISOString().slice(0, 10);
-
-                    if (parsed.lastDate === yISO) {
-                        current.count = (parsed.count || 1) + 1;
                     } else {
-                        current.count = 1;
+                        const yesterday = new Date();
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        const yISO = yesterday.toISOString().slice(0, 10);
+                        const elapsedHours = parsed.lastTs ? (nowMs - parsed.lastTs) / 3600000 : 24;
+
+                        // Anti-burla de relógio: impede avanço se relógio foi voltado ou se passaram menos de 6h desde o último registro de dia diferente
+                        if (parsed.lastDate === yISO && elapsedHours >= 6) {
+                            current.count = (parsed.count || 1) + 1;
+                        } else if (parsed.lastDate === yISO && elapsedHours < 6) {
+                            current.count = parsed.count || 1;
+                        } else {
+                            current.count = 1;
+                        }
                     }
                 }
 
                 current.lastDate = today;
+                current.lastTs = nowMs;
+                current._sig = computeIntegrityHash(`streak:${current.count}:${current.lastDate}:${current.lastTs}`);
                 localStorage.setItem(MF_STREAK_KEY, JSON.stringify(current));
                 return current.count;
             } catch (e) {
@@ -8876,7 +8990,11 @@ function init() {
             }, 4500);
         },
 
-        unlock(id) {
+        unlock(id, token) {
+            if (token !== INTERNAL_UNLOCK_TOKEN) {
+                console.warn("Bloqueado pelo sistema Anti-Burla: conquistas só podem ser desbloqueadas por ações reais validadas.");
+                return false;
+            }
             const def = this.definitions.find(d => d.id === id);
             if (!def) return false;
 
@@ -8923,71 +9041,120 @@ function init() {
             return true;
         },
 
+        checkAll() {
+            return this.check();
+        },
+
         check() {
             if (!data) return;
 
             const streak = this.updateStreak();
-            const txs = data.transactions || [];
+            const rawTxs = data.transactions || [];
+            const txs = this.getGenuineTransactions(rawTxs);
+            const distinctDays = this.getDistinctDays(txs);
             const bills = data.recurringBills || [];
             const curM = (typeof todayISO === "function") ? todayISO().slice(0, 7) : new Date().toISOString().slice(0, 7);
+            const curMonthTxs = txs.filter(t => String(t.date || "").startsWith(curM));
 
-            // 1. Mundo Exterior
-            if (txs.length >= 1) this.unlock("overworld_wood");
-            if (data.salaryConfig && Number(data.salaryConfig.amount) > 0) this.unlock("overworld_shelter");
-            if (bills.length >= 1) this.unlock("overworld_craft");
-            const hasAnyGoal = data.goals && (Array.isArray(data.goals)
-                ? data.goals.length >= 1
-                : Object.values(data.goals).some(v => Number(v) > 0));
-            if (hasAnyGoal) this.unlock("overworld_chest");
-            if (localStorage.getItem("meuFinanceiro.privacy") === "true" || localStorage.getItem("meuFinanceiro_privacyMode") === "true") this.unlock("overworld_torch");
-            if (localStorage.getItem("meuFinanceiro_session") || (window.supabaseClient && window.supabaseClient.auth)) this.unlock("overworld_bed");
+            const totals = (typeof getMonthlySummary === "function") ? getMonthlySummary(curM) : { balance: 0, income: 0 };
+            const currentBalance = Number(totals.balance || 0);
+            const currentIncome = Number(totals.income || 0);
+            const saveRate = (currentIncome > 0 && currentBalance > 0) ? (currentBalance / currentIncome) : 0;
 
-            // 2. Caçador de Boletos
             const totalPaidBills = bills.reduce((acc, b) => acc + (b.paidMonths ? b.paidMonths.length : 0), 0);
-            if (totalPaidBills >= 1) this.unlock("combat_first_mob");
-            if (totalPaidBills >= 3) this.unlock("combat_combo");
-            if (bills.length > 0 && bills.every(b => (b.paidMonths || []).includes(curM))) {
-                this.unlock("combat_exterminator");
-            }
-            if (txs.some(t => t.type === "receita" && t.category !== "Salário")) {
-                this.unlock("combat_potion");
-            }
+            const distinctPaidBillsCount = bills.filter(b => b.paidMonths && b.paidMonths.length > 0).length;
+            const expenseCategories = new Set(txs.filter(t => t.type !== "receita").map(t => t.category).filter(Boolean));
+            const budgetMonthsCount = data.budgets ? Object.values(data.budgets).filter(v => Number(v) > 0).length : 0;
+            const goalMonthsCount = data.goals
+                ? (Array.isArray(data.goals)
+                    ? data.goals.length
+                    : Object.values(data.goals).filter(v => Number(v) > 0).length)
+                : 0;
+            const totalPlannedMonths = new Set([
+                ...Object.entries(data.budgets || {}).filter(([, v]) => Number(v) > 0).map(([k]) => k),
+                ...(!Array.isArray(data.goals) ? Object.entries(data.goals || {}).filter(([, v]) => Number(v) > 0).map(([k]) => k) : [])
+            ]).size;
 
-            // 3. Minerador de Diamantes
-            const currentBalance = (typeof calculateTotals === "function") ? calculateTotals().balance : 0;
-            if (currentBalance >= 500) this.unlock("wealth_iron");
-            if (currentBalance >= 1000) this.unlock("wealth_fortune");
-            if (currentBalance >= 5000) this.unlock("wealth_netherite");
-
-            const currentIncome = (typeof calculateTotals === "function") ? calculateTotals().income : 0;
-            if (currentIncome > 0 && currentBalance > 0) {
-                const saveRate = currentBalance / currentIncome;
-                if (saveRate >= 0.10) this.unlock("wealth_gold");
-                if (saveRate >= 0.20) this.unlock("wealth_diamond");
-            }
-
+            const hasAnyGoal = goalMonthsCount >= 1;
             const goalMet = data.goals && (Array.isArray(data.goals)
                 ? data.goals.some(g => (g.current || 0) >= (g.target || 1))
                 : (Number(data.goals[curM] || 0) > 0 && currentBalance >= Number(data.goals[curM])));
-            if (goalMet) {
-                this.unlock("wealth_beacon");
+
+            const isCloudConnected = Boolean(
+                localStorage.getItem("meuFinanceiro_session") ||
+                (window.MFAuth && typeof window.MFAuth.getCurrentUser === "function" && window.MFAuth.getCurrentUser())
+            );
+
+            // Mapa de avaliação de condições reais (anti-burla)
+            const conditions = {
+                // Nível 1 & Fundação
+                overworld_wood: txs.length >= 1,
+                overworld_shelter: Boolean(data.salaryConfig && Number(data.salaryConfig.amount) > 0),
+                overworld_craft: bills.length >= 1,
+                overworld_chest: hasAnyGoal,
+                overworld_torch: localStorage.getItem("meuFinanceiro.privacy") === "true" || localStorage.getItem("meuFinanceiro_privacyMode") === "true",
+                overworld_notes: txs.some(t => String(t.notes || "").trim().length >= 3),
+                overworld_category: expenseCategories.size >= 3,
+                overworld_shared: txs.some(t => t.splitType === "shared_50" || t.splitType === "partner"),
+                overworld_currency: Boolean(data.preferences && ((data.preferences.language && data.preferences.language !== "auto") || (data.preferences.currency && data.preferences.currency !== "auto"))),
+                overworld_first_income: currentIncome > 0 && currentBalance > 0 && txs.length >= 1,
+                overworld_bed: isCloudConnected,
+
+                // Caçador de Boletos
+                combat_first_mob: totalPaidBills >= 1,
+                combat_combo: distinctPaidBillsCount >= 3 || totalPaidBills >= 3,
+                combat_five_bills: distinctPaidBillsCount >= 5 || totalPaidBills >= 5,
+                combat_exterminator: bills.length > 0 && bills.every(b => (b.paidMonths || []).includes(curM)),
+                combat_potion: txs.some(t => t.type === "receita" && t.category !== "Salário"),
+
+                // Mestria & Patrimônio (com trava anti-cheat de histórico real)
+                wealth_iron: currentBalance >= 500 && txs.length >= 1,
+                wealth_fortune: currentBalance >= 1000 && txs.length >= 2,
+                wealth_gold: saveRate >= 0.10 && curMonthTxs.length >= 3,
+                wealth_diamond: saveRate >= 0.20 && curMonthTxs.length >= 3,
+                wealth_30_percent: saveRate >= 0.30 && curMonthTxs.length >= 5,
+                wealth_50_tx: txs.length >= 50 && distinctDays >= 5,
+                wealth_beacon: Boolean(goalMet && curMonthTxs.length >= 1),
+                wealth_netherite: currentBalance >= 5000 && txs.length >= 5 && distinctDays >= 2,
+                wealth_fortress: currentBalance >= 10000 && txs.length >= 10 && distinctDays >= 5,
+
+                // Blindagem & Tetos
+                plan_shield: budgetMonthsCount > 0,
+                plan_multi_month: totalPlannedMonths >= 3,
+                plan_six_months: budgetMonthsCount >= 6,
+
+                // Constância & Foco
+                streak_3: streak >= 3,
+                streak_7: streak >= 7,
+                streak_14: streak >= 14,
+                streak_30: streak >= 30,
+                streak_60: streak >= 60,
+                streak_century: txs.length >= 100 && distinctDays >= 10,
+
+                // Automação & Tech
+                redstone_automator: localStorage.getItem("meuFinanceiro_used_ofx") === "true",
+                redstone_scanner: localStorage.getItem("meuFinanceiro_used_barcode") === "true",
+                redstone_signal: Boolean(window.MFNotifications && window.MFNotifications.hasPermission()),
+                redstone_biometrics: localStorage.getItem("meuFinanceiro_app_lock_enabled") === "true",
+
+                // Liberdade Suprema
+                end_master_250: txs.length >= 250 && distinctDays >= 15
+            };
+
+            const currentState = this.getState();
+
+            for (const def of this.definitions) {
+                if (!(def.id in conditions)) continue;
+                const met = Boolean(conditions[def.id]);
+                const alreadyUnlocked = Boolean(currentState.unlocked && currentState.unlocked[def.id]);
+
+                if (met && !alreadyUnlocked) {
+                    this.unlock(def.id, INTERNAL_UNLOCK_TOKEN);
+                } else if (!met && alreadyUnlocked && def.stateDependent) {
+                    // Anti-burla: se o usuário apagou os lançamentos/salário/contas falsos que desbloquearam a conquista, revoga!
+                    this.revoke(def.id, INTERNAL_UNLOCK_TOKEN);
+                }
             }
-
-            // 4. Defesa & Tetos
-            if (data.budgets && Object.keys(data.budgets).length > 0) this.unlock("plan_shield");
-            if (txs.length >= 100) this.unlock("streak_century");
-
-            // 5. Streaks
-            if (streak >= 3) this.unlock("streak_3");
-            if (streak >= 7) this.unlock("streak_7");
-            if (streak >= 14) this.unlock("streak_14");
-            if (streak >= 30) this.unlock("streak_30");
-
-            // 6. Redstone
-            if (localStorage.getItem("meuFinanceiro_used_ofx") === "true") this.unlock("redstone_automator");
-            if (localStorage.getItem("meuFinanceiro_used_barcode") === "true") this.unlock("redstone_scanner");
-            if (window.MFNotifications && window.MFNotifications.hasPermission()) this.unlock("redstone_signal");
-            if (localStorage.getItem("meuFinanceiro_app_lock_enabled") === "true") this.unlock("redstone_biometrics");
         }
     };
 
@@ -9148,8 +9315,8 @@ function init() {
             const currentDay = now.getDate();
             const daysLeft = Math.max(1, totalDaysInMonth - currentDay + 1);
 
-            const totals = (typeof calculateTotals === "function") ? calculateTotals() : { balance: 0, income: 0, expense: 0 };
             const curM = (typeof todayISO === "function") ? todayISO().slice(0, 7) : new Date().toISOString().slice(0, 7);
+            const totals = (typeof getMonthlySummary === "function") ? getMonthlySummary(curM) : { balance: 0, income: 0, expenses: 0 };
 
             // Contas fixas restantes a pagar no mês
             const pendingBills = (data.recurringBills || [])
@@ -9168,10 +9335,11 @@ function init() {
         },
 
         getRadarProjection() {
-            const totals = (typeof calculateTotals === "function") ? calculateTotals() : { balance: 0, income: 0, expense: 0 };
+            const curM = (typeof todayISO === "function") ? todayISO().slice(0, 7) : new Date().toISOString().slice(0, 7);
+            const totals = (typeof getMonthlySummary === "function") ? getMonthlySummary(curM) : { balance: 0, income: 0, expenses: 0 };
             const baseSalary = data.salaryConfig && Number(data.salaryConfig.amount) ? Number(data.salaryConfig.amount) : totals.income;
             const monthlyFixedBills = (data.recurringBills || []).reduce((acc, b) => acc + Number(b.amount || 0), 0);
-            const estimatedAvgExpense = Math.max(monthlyFixedBills, totals.expense);
+            const estimatedAvgExpense = Math.max(monthlyFixedBills, totals.expenses || totals.expense || 0);
             const netMonthlyFlow = baseSalary - estimatedAvgExpense;
 
             const curBalance = totals.balance;
@@ -9344,7 +9512,7 @@ function init() {
             if (enabled) {
                 localStorage.setItem("meuFinanceiro_app_lock_enabled", "true");
                 localStorage.setItem("meuFinanceiro_app_lock_pin", pin || "1234");
-                if (window.MFAchievements) window.MFAchievements.unlock("redstone_biometrics");
+                if (window.MFAchievements) window.MFAchievements.check();
             } else {
                 localStorage.removeItem("meuFinanceiro_app_lock_enabled");
             }
@@ -9762,6 +9930,7 @@ function setupAchievementsPage() {
     if (!window.MFAchievements) return;
 
     let currentFilter = "all";
+    let currentLevelFilter = "all";
 
     function render() {
         const state = window.MFAchievements.getState();
@@ -9805,24 +9974,35 @@ function setupAchievementsPage() {
             countText.textContent = `${totalUnlocked}/${totalCount} (${totalPct}%)`;
         }
 
-        // Renderiza Grid de Conquistas
+        // Renderiza Grid de Conquistas Organizado por Nível
         const grid = document.getElementById("achievementsGrid");
         if (!grid) return;
 
-        const filteredDefs = currentFilter === "all" ? defs : defs.filter(d => d.category === currentFilter);
+        const filteredDefs = defs.filter(d => {
+            const matchCat = currentFilter === "all" || d.category === currentFilter;
+            const matchLevel = currentLevelFilter === "all" || (d.tier || "common") === currentLevelFilter;
+            return matchCat && matchLevel;
+        });
 
         const tierDisplayNames = {
-            common: "Bronze",
-            rare: "Prata",
-            epic: "Ouro",
-            legendary: "Diamante"
+            common: "Nível 1 • Fácil",
+            rare: "Nível 2 • Médio",
+            epic: "Nível 3 • Difícil",
+            legendary: "Nível 4 • Lendário"
         };
 
-        grid.innerHTML = filteredDefs.map(ach => {
+        const levelGroups = [
+            { tier: "common", title: "Nível 1 — Fácil (Iniciante)", badge: "🟢 Bronze", desc: "Primeiros passos rápidos para organizar suas finanças." },
+            { tier: "rare", title: "Nível 2 — Médio (Intermediário)", badge: "🔵 Prata", desc: "Hábitos consistentes, economia e automação inteligente." },
+            { tier: "epic", title: "Nível 3 — Difícil (Avançado)", badge: "🟣 Ouro", desc: "Metas exigentes, alta taxa de poupança e disciplina contínua." },
+            { tier: "legendary", title: "Nível 4 — Lendário (Mestre)", badge: "🟡 Diamante", desc: "Conquistas raras de longo prazo e independência financeira." }
+        ];
+
+        const renderCard = (ach) => {
             const isUnlocked = Boolean(state.unlocked && state.unlocked[ach.id]);
             const unlockedData = state.unlocked ? state.unlocked[ach.id] : null;
             const unlockedDateStr = unlockedData ? new Date(unlockedData.unlockedAt).toLocaleDateString("pt-BR") : "";
-            const tierName = tierDisplayNames[ach.tier] || "Comum";
+            const tierName = tierDisplayNames[ach.tier] || "Nível 1 • Fácil";
 
             return `
                 <div class="achievement-card tier-${ach.tier || "common"} ${isUnlocked ? "unlocked" : "locked"}" data-id="${ach.id}">
@@ -9846,8 +10026,48 @@ function setupAchievementsPage() {
                     </div>
                 </div>
             `;
-        }).join("");
+        };
+
+        const sectionsHtml = levelGroups
+            .filter(g => currentLevelFilter === "all" || g.tier === currentLevelFilter)
+            .map(group => {
+                const groupItems = filteredDefs.filter(d => (d.tier || "common") === group.tier);
+                if (groupItems.length === 0) return "";
+                const groupUnlockedCount = groupItems.filter(d => Boolean(state.unlocked && state.unlocked[d.id])).length;
+
+                return `
+                    <section class="ach-level-section level-${group.tier}">
+                        <div class="ach-level-section-header">
+                            <div class="ach-level-section-title-group">
+                                <span class="ach-level-pill tier-${group.tier}">${group.badge}</span>
+                                <div>
+                                    <h3>${group.title}</h3>
+                                    <p>${group.desc}</p>
+                                </div>
+                            </div>
+                            <span class="ach-level-progress-pill">${groupUnlockedCount}/${groupItems.length} concluídas</span>
+                        </div>
+                        <div class="ach-level-cards-grid">
+                            ${groupItems.map(renderCard).join("")}
+                        </div>
+                    </section>
+                `;
+            })
+            .filter(Boolean)
+            .join("");
+
+        grid.innerHTML = sectionsHtml || `<div class="empty-state">Nenhuma conquista encontrada para esta combinação de nível e categoria.</div>`;
     }
+
+    // Filtros por nível de dificuldade
+    document.querySelectorAll(".ach-level-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".ach-level-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            currentLevelFilter = btn.dataset.achLevel || "all";
+            render();
+        });
+    });
 
     // Filtros por categoria
     document.querySelectorAll(".ach-filter-btn").forEach(btn => {
@@ -9962,7 +10182,7 @@ function setupAutomationModals() {
             }
 
             localStorage.setItem("meuFinanceiro_used_barcode", "true");
-            if (window.MFAchievements) window.MFAchievements.unlock("redstone_scanner");
+            if (window.MFAchievements) window.MFAchievements.check();
             closeBoleto();
             if (typeof showToast === "function") showToast("Dados do boleto preenchidos com sucesso! ⚡");
         });
@@ -10119,7 +10339,7 @@ function setupAutomationModals() {
 
             saveData();
             localStorage.setItem("meuFinanceiro_used_ofx", "true");
-            if (window.MFAchievements) window.MFAchievements.unlock("redstone_automator");
+            if (window.MFAchievements) window.MFAchievements.check();
 
             if (window.MFActivityLogger) {
                 window.MFActivityLogger.log(
