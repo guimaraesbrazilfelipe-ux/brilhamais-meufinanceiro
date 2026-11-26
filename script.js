@@ -8935,8 +8935,11 @@ function init() {
             if (txs.length >= 1) this.unlock("overworld_wood");
             if (data.salaryConfig && Number(data.salaryConfig.amount) > 0) this.unlock("overworld_shelter");
             if (bills.length >= 1) this.unlock("overworld_craft");
-            if (data.goals && data.goals.length >= 1) this.unlock("overworld_chest");
-            if (localStorage.getItem("meuFinanceiro_privacyMode") === "true") this.unlock("overworld_torch");
+            const hasAnyGoal = data.goals && (Array.isArray(data.goals)
+                ? data.goals.length >= 1
+                : Object.values(data.goals).some(v => Number(v) > 0));
+            if (hasAnyGoal) this.unlock("overworld_chest");
+            if (localStorage.getItem("meuFinanceiro.privacy") === "true" || localStorage.getItem("meuFinanceiro_privacyMode") === "true") this.unlock("overworld_torch");
             if (localStorage.getItem("meuFinanceiro_session") || (window.supabaseClient && window.supabaseClient.auth)) this.unlock("overworld_bed");
 
             // 2. Caçador de Boletos
@@ -8963,7 +8966,10 @@ function init() {
                 if (saveRate >= 0.20) this.unlock("wealth_diamond");
             }
 
-            if (data.goals && data.goals.some(g => (g.current || 0) >= (g.target || 1))) {
+            const goalMet = data.goals && (Array.isArray(data.goals)
+                ? data.goals.some(g => (g.current || 0) >= (g.target || 1))
+                : (Number(data.goals[curM] || 0) > 0 && currentBalance >= Number(data.goals[curM])));
+            if (goalMet) {
                 this.unlock("wealth_beacon");
             }
 

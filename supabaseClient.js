@@ -624,7 +624,7 @@ async function pushAllLocalDataToCloud(userId, localData) {
             start_date: sc.date || null,
             pay_day: Number(sc.day || 5),
             auto_deposit: sc.autoDeposit !== false,
-            has13th: Boolean(sc.has13th),
+            has_13th: Boolean(sc.has13th),
             thirteenth_amount: Number(sc.thirteenthAmount || 0),
             updated_at: new Date().toISOString()
         });

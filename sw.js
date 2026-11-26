@@ -9,7 +9,7 @@
  * ==============================================================================
  */
 
-const CACHE_NAME = "brilhacash-v16";
+const CACHE_NAME = "brilhacash-v17";
 
 const PRECACHE_ASSETS = [
     "./",
@@ -34,7 +34,10 @@ const PRECACHE_ASSETS = [
     "icons/icon-maskable-192.png",
     "icons/icon-maskable-512.png",
     "icons/apple-touch-icon.png",
-    "icons/favicon.png",
+    "icons/favicon.png"
+];
+
+const EXTERNAL_ASSETS = [
     "https://cdn.jsdelivr.net/npm/chart.js",
     "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
 ];
@@ -42,8 +45,9 @@ const PRECACHE_ASSETS = [
 // 1. Instalação: Cacheia os arquivos do núcleo do aplicativo (Shell)
 self.addEventListener("install", (event) => {
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(PRECACHE_ASSETS);
+        caches.open(CACHE_NAME).then(async (cache) => {
+            await cache.addAll(PRECACHE_ASSETS);
+            await Promise.allSettled(EXTERNAL_ASSETS.map((url) => cache.add(url)));
         }).then(() => {
             return self.skipWaiting();
         })
@@ -132,7 +136,7 @@ self.addEventListener("fetch", (event) => {
                 }
                 return networkResponse;
             }).catch(() => {
-                // Se offline e não há cache, o erro é propagado silenciosamente
+                return cachedResponse || Response.error();
             });
 
             // Retorna imediatamente do cache se existir, ou aguarda o fetch de rede
