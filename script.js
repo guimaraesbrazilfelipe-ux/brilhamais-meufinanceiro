@@ -1389,6 +1389,18 @@ function renderMonthlyChart() {
 
     const balanceTrendValues = incomeValues.map((inc, idx) => Number((inc - (expenseValues[idx] || 0)).toFixed(2)));
 
+    const kpiPillsEl = $("#monthlyChartKpiPills");
+    if (kpiPillsEl) {
+        const totInc = incomeValues.reduce((a, b) => a + b, 0);
+        const totExp = expenseValues.reduce((a, b) => a + b, 0);
+        const totNet = totInc - totExp;
+        kpiPillsEl.innerHTML = `
+            <span class="chart-kpi-pill kpi-inc"><i></i> Receitas: <strong class="sensitive-value">${money(totInc)}</strong></span>
+            <span class="chart-kpi-pill kpi-exp"><i></i> Despesas: <strong class="sensitive-value">${money(totExp)}</strong></span>
+            <span class="chart-kpi-pill kpi-net"><i></i> Saldo: <strong class="sensitive-value">${money(totNet)}</strong></span>
+        `;
+    }
+
     if (monthlyChart) {
         monthlyChart.destroy();
     }
@@ -1785,30 +1797,45 @@ function renderCategoryChart() {
             if (!chartArea) return;
             const cx = (chartArea.left + chartArea.right) / 2;
             const cy = (chartArea.top + chartArea.bottom) / 2;
+            const meta = chart.getDatasetMeta(0);
+            const innerR = (meta && meta.data && meta.data[0]) ? Math.max(24, meta.data[0].innerRadius - 6) : 44;
+
             ctx.save();
+            // Anel interno sutil estilo fintech
+            ctx.beginPath();
+            ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
+            ctx.strokeStyle = "rgba(124, 93, 250, 0.25)";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.fillStyle = "#94a3b8";
-            ctx.font = "700 10px Inter, system-ui, sans-serif";
-            ctx.fillText("TOTAL GASTO", cx, cy - 12);
-            ctx.fillStyle = "#f8fafc";
+            ctx.font = "700 9.5px Inter, system-ui, sans-serif";
+            ctx.fillText("TOTAL GASTO", cx, cy - 11);
+            ctx.fillStyle = total > 0 ? "#f8fafc" : "#cbd5e1";
             ctx.font = "800 15px Inter, system-ui, sans-serif";
-            ctx.fillText(money(total), cx, cy + 8);
+            ctx.fillText(money(total), cx, cy + 9);
             ctx.restore();
         }
     };
+
+    const isEmptyCat = entries.length === 0 || total <= 0;
 
     categoryChart = new Chart(canvas, {
         type: "doughnut",
         plugins: [centerTotalPlugin],
         data: {
-            labels,
+            labels: isEmptyCat ? ["Sem despesas no período"] : labels,
             datasets: [{
-                data: values,
-                backgroundColor: labels.map((_, index) => MODERN_COLORS[index % MODERN_COLORS.length]),
-                borderColor: "#0f172a",
-                borderWidth: 3,
-                hoverOffset: 10
+                data: isEmptyCat ? [1] : values,
+                backgroundColor: isEmptyCat
+                    ? ["rgba(148, 163, 184, 0.14)"]
+                    : labels.map((_, index) => MODERN_COLORS[index % MODERN_COLORS.length]),
+                borderColor: isEmptyCat ? "rgba(124, 93, 250, 0.35)" : "#0f172a",
+                borderWidth: isEmptyCat ? 2 : 3,
+                hoverOffset: isEmptyCat ? 0 : 10,
+                borderRadius: isEmptyCat ? 0 : 4
             }]
         },
         options: {
@@ -1818,6 +1845,7 @@ function renderCategoryChart() {
             plugins: {
                 legend: { display: false },
                 tooltip: {
+                    enabled: !isEmptyCat,
                     backgroundColor: "rgba(15, 23, 42, 0.96)",
                     titleColor: "#f8fafc",
                     bodyColor: "#cbd5e1",
@@ -1840,10 +1868,9 @@ function renderCategoryChart() {
 
     if (!entries.length) {
         legend.innerHTML = `
-            <div class="chart-empty-state">
-                <span class="chart-empty-icon">🍰</span>
-                <p>Nenhuma despesa registrada para o período selecionado.</p>
-                <a href="lancamentos.html" class="button button-primary empty-state-cta">+ Fazer lançamento</a>
+            <div class="chart-empty-compact">
+                <span>🍰 Nenhuma despesa neste período.</span>
+                <a href="lancamentos.html" class="button button-primary button-sm">+ Lançar</a>
             </div>
         `;
         return;
